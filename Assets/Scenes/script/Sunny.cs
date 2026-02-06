@@ -1,5 +1,4 @@
 using UnityEngine;
-using System.Collections;
 
 public enum SunnyType
 {
@@ -10,90 +9,102 @@ public enum SunnyType
     Green
 }
 
+[RequireComponent(typeof(SunnyMovement))]
 public class Sunny : MonoBehaviour
 {
-    public SunnyType SunnyType;
-    private FlaskController currentFlask;
-    private Coroutine moveCoroutine;
+    [Header("Sunny Data")]
+    public SunnyType sunnyType;
 
-    // Manual movement settings
-    [SerializeField] private float moveSpeed = 5.0f;
-    [SerializeField] private float stoppingDistance = 0.1f;
+    [Header("Movement")]
+    public float moveSpeed = 5f;
+    public float stoppingDistance = 0.5f;
+
+    // =========================
+    // INTERNAL STATE
+    // =========================
+    private FlaskController currentFlask;
+    private SunnyMovement movement;
+
+    // =========================
+    // UNITY
+    // =========================
+    private void Awake()
+    {
+        movement = GetComponent<SunnyMovement>();
+
+        if (movement == null)
+        {
+            Debug.LogError("SunnyMovement TIDAK ditemukan di " + gameObject.name);
+        }
+        else
+        {
+            movement.SetData(moveSpeed, stoppingDistance);
+        }
+    }
+
+    // =========================
+    // FLASK API
+    // =========================
+    public FlaskController GetFlask()
+    {
+        return currentFlask;
+    }
 
     public void SetFlask(FlaskController flask)
     {
         currentFlask = flask;
     }
 
-    public FlaskController GetFlask()
+    public bool HasFlask()
     {
-        return currentFlask;
+        return currentFlask != null;
     }
 
-    void OnMouseDown()
-    {
-        GameManager.Instance.SelectSunny(this);
-    }
+    // =========================
+// BRANCH API (WAJIB UNTUK SORTING)
+// =========================
+private Branch currentBranch;
 
+public void SetCurrentBranch(Branch branch)
+{
+    currentBranch = branch;
+}
+
+public Branch GetCurrentBranch()    
+{
+    return currentBranch;
+}
+
+public bool HasBranch()
+{
+    return currentBranch != null;
+}
+
+
+    // =========================
+    // MOVE API (INI YANG DICARI ERROR)
+    // =========================
     public void MoveTo(Vector3 targetPosition)
     {
-        Debug.Log($"Sunny: MoveTo called. Target: {targetPosition}, Current: {transform.position}");
-        if (moveCoroutine != null)
-        {
-            StopCoroutine(moveCoroutine);
-        }
-        moveCoroutine = StartCoroutine(MoveCoroutine(targetPosition));
+        if (movement == null) return;
+
+        movement.MoveTo(targetPosition);
     }
 
-    public void StopMoving()
+    public bool IsMoving()
     {
-        if (moveCoroutine != null)
-        {
-            StopCoroutine(moveCoroutine);
-            moveCoroutine = null;
-        }
-        
-        // Also stop animation if present
-        Animator anim = GetComponent<Animator>();
-        if (anim != null)
-        {
-            anim.SetBool("IsRunning", false);
-        }
+        return movement != null && movement.IsMoving;
     }
 
-    private IEnumerator MoveCoroutine(Vector3 target)
+    private void OnMouseDown()
+{
+    if (GameManager.Instance == null)
     {
-        Animator anim = GetComponent<Animator>();
-        if (anim != null)
-        {
-            anim.SetBool("IsRunning", true);
-        }
-
-        while (Vector3.Distance(transform.position, target) > stoppingDistance)
-        {
-            float step = moveSpeed * Time.deltaTime;
-            transform.position = Vector3.MoveTowards(transform.position, target, step);
-            
-            // Optional: Face direction
-            Vector3 direction = (target - transform.position).normalized;
-            if (direction != Vector3.zero)
-            {
-                Quaternion lookRotation = Quaternion.LookRotation(direction);
-                transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 10f);
-            }
-
-            yield return null;
-        }
-        
-        Debug.Log("Sunny: Reached destination.");
-
-
-        // Ensure we land exactly there? Optional.
-        // transform.position = target; 
-
-        if (anim != null)
-        {
-            anim.SetBool("IsRunning", false);
-        }
+        Debug.LogError("GameManager TIDAK ADA");
+        return;
     }
+
+    GameManager.Instance.SelectSunny(this);
+}
+
 }

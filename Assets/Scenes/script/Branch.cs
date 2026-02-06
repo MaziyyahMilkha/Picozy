@@ -1,134 +1,92 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(BoxCollider2D))]
-public class BranchPoint : MonoBehaviour
+[RequireComponent(typeof(BoxCollider))]
+public class Branch : MonoBehaviour
 {
-    public enum BranchDirection
-    {
-        Left,
-        Right,
-        Up,
-        Down,
-        Any
-    }
+    public enum BranchDirection { Left, Right, Up, Down, Any }
 
-    [Header("Branch Settings")]
-    public BranchDirection branchDirection = BranchDirection.Any;
-    public bool isActive = true;
+    [Header("Stand Points")]
+    public Transform[] standPoints = new Transform[3];
 
-    [Header("Stand Point")]
-    public Transform standPoint;
-
-    [Header("Visual Effect")]
-    public bool enableBounce = true;
-    public float bounceAmount = 0.15f;
-    public float bounceSpeed = 12f;
-
-    [Header("Debug")]
-    public bool showDebug = true;
-
-    private Vector3 originalPosition;
-    private float bounceTimer;
+    private Sunny[] slots;
 
     private void Awake()
     {
-        originalPosition = transform.position;
-
-        // Auto create StandPoint if missing
-        if (standPoint == null)
-        {
-            GameObject point = new GameObject("StandPoint");
-            point.transform.SetParent(transform);
-            point.transform.localPosition = Vector3.zero;
-            standPoint = point.transform;
-        }
-
-        // Pastikan collider adalah trigger
-        GetComponent<BoxCollider2D>().isTrigger = true;
-    }
-
-    private void Update()
-    {
-        if (!enableBounce) return;
-        if (bounceTimer <= 0) return;
-
-        bounceTimer -= Time.deltaTime;
-
-        float offset = Mathf.Sin(Time.time * bounceSpeed) * bounceAmount;
-        transform.position = originalPosition + Vector3.up * offset;
-
-        if (bounceTimer <= 0)
-        {
-            transform.position = originalPosition;
-        }
+        slots = new Sunny[standPoints.Length];
+        GetComponent<BoxCollider>().isTrigger = true;
     }
 
     // =========================
-    // INTERACTION
+    // SLOT API
     // =========================
 
-    public bool CanBeUsed()
+    public bool IsSlotEmpty(int index)
     {
-        return isActive;
+        if (index < 0 || index >= slots.Length) return false;
+        return slots[index] == null;
     }
 
-    public bool IsDirectionAllowed(Vector2 moveDirection)
+    public Vector3 GetSlotPosition(int index)
     {
-        switch (branchDirection)
-        {
-            case BranchDirection.Left:
-                return moveDirection.x < 0;
-            case BranchDirection.Right:
-                return moveDirection.x > 0;
-            case BranchDirection.Up:
-                return moveDirection.y > 0;
-            case BranchDirection.Down:
-                return moveDirection.y < 0;
-            case BranchDirection.Any:
-                return true;
-        }
+        return standPoints[index].position;
+    }
+
+    public void AddSunnyAtSlot(Sunny sunny, int index)
+    {
+        if (!IsSlotEmpty(index)) return;
+
+        slots[index] = sunny;
+        sunny.SetCurrentBranch(this);
+        sunny.transform.position = standPoints[index].position;
+
+        Debug.Log($"Sunny masuk {name} → Slot_{index + 1}");
+    }
+
+    public void RemoveSunny(Sunny sunny)
+    {
+        for (int i = 0; i < slots.Length; i++)
+            if (slots[i] == sunny)
+                slots[i] = null;
+    }
+
+    // =========================
+    // FUNGSI TAMBAHAN UNTUK GAME MANAGER
+    // =========================
+
+    // Mengecek apakah masih ada slot kosong
+    public bool HasSpace()
+    {
+        foreach (var s in slots)
+            if (s == null) return true;
         return false;
     }
 
-    public void OnSunnyLanded()
+    // Ambil posisi slot kosong pertama
+    public Vector3 GetNextSlotPosition()
     {
-        if (!isActive) return;
-
-        if (enableBounce)
-            bounceTimer = 0.2f;
-
-        if (showDebug)
-            Debug.Log("Sunny mendarat di dahan: " + name);
-    }
-
-    // =========================
-    // TRIGGER
-    // =========================
-
-    private void OnTriggerEnter2D(Collider2D collision)
-    {
-        if (!isActive) return;
-
-        SunnyMovement sunny = collision.GetComponent<SunnyMovement>();
-        if (sunny != null)
+        for (int i = 0; i < slots.Length; i++)
         {
-            OnSunnyLanded();
+            if (slots[i] == null)
+                return standPoints[i].position;
         }
+        // Jika tidak ada slot kosong, kembalikan posisi branch sendiri
+        return transform.position;
     }
 
-#if UNITY_EDITOR
-    private void OnDrawGizmos()
+    // Tambahkan Sunny ke slot kosong pertama
+    public void AddSunny(Sunny sunny)
     {
-        if (!showDebug) return;
-
-        Gizmos.color = isActive ? Color.green : Color.red;
-        Gizmos.DrawWireCube(transform.position, GetComponent<BoxCollider2D>().size);
-
-        if (standPoint != null)
+        for (int i = 0; i < slots.Length; i++)
         {
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawSphere(standPoint.position, 0.1f);
+            if (slots[i] == null)
+            {
+                AddSunnyAtSlot(sunny, i);
+                return;
+            }
         }
+
+        Debug.LogWarning("Branch penuh, tidak bisa menambahkan Sunny!");
     }
-#endif
 }
