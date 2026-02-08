@@ -1,27 +1,51 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(BoxCollider))]
 public class Branch : MonoBehaviour
 {
-    public enum BranchDirection { Left, Right, Up, Down, Any }
-
     [Header("Stand Points")]
     public Transform[] standPoints = new Transform[3];
 
+    [Header("Click Priority")]
+    public LayerMask sunnyLayer;
+
     private Sunny[] slots;
+    private bool isBreaking = false;
 
     private void Awake()
     {
         slots = new Sunny[standPoints.Length];
-        GetComponent<BoxCollider>().isTrigger = true;
+        GetComponent<BoxCollider>().isTrigger = false;
+    }
+
+    // 🟢 INIT SLOT SAAT GAME MULAI
+    private void Start()
+    {
+        InitSlotsFromScene();
+    }
+
+    void InitSlotsFromScene()
+    {
+        for (int i = 0; i < standPoints.Length; i++)
+        {
+            Transform point = standPoints[i];
+            if (point == null) continue;
+
+            Sunny sunny = point.GetComponentInChildren<Sunny>();
+            if (sunny == null) continue;
+
+            slots[i] = sunny;
+            sunny.SetCurrentBranch(this);
+            sunny.transform.position = point.position;
+
+            Debug.Log($"INIT SLOT → {sunny.name} di {name} slot {i}");
+        }
     }
 
     // =========================
     // SLOT API
     // =========================
-
     public bool IsSlotEmpty(int index)
     {
         if (index < 0 || index >= slots.Length) return false;
@@ -35,49 +59,115 @@ public class Branch : MonoBehaviour
 
     public void AddSunnyAtSlot(Sunny sunny, int index)
     {
-        if (!IsSlotEmpty(index)) return;
+        if (isBreaking) return;
+        if (sunny == null) return;
+        if (index < 0 || index >= slots.Length) return;
+
+        // 🔁 BOLEH TIMPA SLOT
+        if (slots[index] != null)
+        {
+            slots[index].SetCurrentBranch(null);
+            slots[index] = null;
+        }
 
         slots[index] = sunny;
         sunny.SetCurrentBranch(this);
         sunny.transform.position = standPoints[index].position;
 
-        Debug.Log($"Sunny masuk {name} → Slot_{index + 1}");
+        Debug.Log($"Sunny masuk {name} → Slot {index}");
+
+        CheckBreakCondition();
     }
 
     public void RemoveSunny(Sunny sunny)
     {
+        if (isBreaking) return;
+
         for (int i = 0; i < slots.Length; i++)
             if (slots[i] == sunny)
                 slots[i] = null;
     }
 
     // =========================
-    // FUNGSI TAMBAHAN UNTUK GAME MANAGER
+    // BREAK LOGIC
     // =========================
+    void CheckBreakCondition()
+    {
+        if (isBreaking) return;
 
-    // Mengecek apakah masih ada slot kosong
+        foreach (Sunny s in slots)
+            if (s == null) return;
+
+        SunnyKind kind = slots[0].kind;
+
+        foreach (Sunny s in slots)
+            if (s.kind != kind)
+                return;
+
+        BreakBranch();
+    }
+
+    void BreakBranch()
+    {
+        if (isBreaking) return;
+
+        isBreaking = true;
+        Debug.Log("BRANCH PECAH: " + name);
+
+        GetComponent<Collider>().enabled = false;
+        StartCoroutine(BreakAnimation());
+    }
+
+    IEnumerator BreakAnimation()
+    {
+        foreach (Sunny s in slots)
+        {
+            if (s == null) continue;
+
+            if (!s.TryGetComponent<Rigidbody>(out _))
+            {
+                Rigidbody rb = s.gameObject.AddComponent<Rigidbody>();
+                rb.useGravity = true;
+            }
+        }
+
+        Rigidbody branchRb = gameObject.AddComponent<Rigidbody>();
+        branchRb.useGravity = true;
+
+        yield return new WaitForSeconds(2f);
+
+        foreach (Sunny s in slots)
+            if (s != null)
+                Destroy(s.gameObject);
+
+        Destroy(gameObject);
+    }
+
+    // =========================
+    // AUTO SLOT
+    // =========================
     public bool HasSpace()
     {
-        foreach (var s in slots)
+        if (isBreaking) return false;
+
+        foreach (Sunny s in slots)
             if (s == null) return true;
         return false;
     }
 
-    // Ambil posisi slot kosong pertama
     public Vector3 GetNextSlotPosition()
     {
         for (int i = 0; i < slots.Length; i++)
-        {
             if (slots[i] == null)
                 return standPoints[i].position;
-        }
-        // Jika tidak ada slot kosong, kembalikan posisi branch sendiri
+
         return transform.position;
     }
 
-    // Tambahkan Sunny ke slot kosong pertama
     public void AddSunny(Sunny sunny)
     {
+        if (isBreaking) return;
+
         for (int i = 0; i < slots.Length; i++)
         {
             if (slots[i] == null)
@@ -86,7 +176,5 @@ public class Branch : MonoBehaviour
                 return;
             }
         }
-
-        Debug.LogWarning("Branch penuh, tidak bisa menambahkan Sunny!");
     }
 }

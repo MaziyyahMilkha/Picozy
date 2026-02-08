@@ -1,20 +1,32 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(Collider))]
 public class SlotPoint : MonoBehaviour
 {
-    public Branch parentBranch;
     public int slotIndex; // 0,1,2
+    private Branch parentBranch;
+    private Collider col;
 
+    private void Awake()
+    {
+        col = GetComponent<Collider>();
 
-    private void OnMouseDown()
+        // 🔑 AUTO ambil Branch dari parent
+        parentBranch = GetComponentInParent<Branch>();
+
+        if (parentBranch == null)
+        {
+            Debug.LogError("SlotPoint TIDAK menemukan Branch di parent: " + name);
+        }
+    }
+
+    private void Update()
 {
-    Debug.Log("SlotPoint clicked: " + name + " ParentBranch: " + (parentBranch != null ? parentBranch.name : "NULL"));
-    if (GameManager.Instance == null) return;
-    GameManager.Instance.MoveSelectedSunnyToSpecificSlot(parentBranch, slotIndex);
+    if (parentBranch == null) return;
+
+    // 🔥 SLOT SELALU BISA DIKLIK
+    col.enabled = true;
 }
 
-
+    
 }
-

@@ -7,8 +7,60 @@ public class GameManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null) Instance = this;
-        else Destroy(gameObject);
+        if (Instance == null)
+        {
+            Instance = this;
+            Debug.Log("GameManager aktif: " + gameObject.name);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    // =========================
+    // INPUT HANDLER (FIX UTAMA)
+    // =========================
+    private void Update()
+    {
+        if (!Input.GetMouseButtonDown(0)) return;
+
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        RaycastHit[] hits = Physics.RaycastAll(ray);
+
+        if (hits.Length == 0) return;
+
+        // 🔑 SORT: yang PALING DEPAN diproses dulu
+        System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+
+        foreach (RaycastHit hit in hits)
+        {
+            // 🟢 PRIORITAS 1 — SUNNY
+            Sunny sunny = hit.collider.GetComponent<Sunny>();
+            if (sunny != null)
+            {
+                SelectSunny(sunny);
+                return;
+            }
+
+            // 🟡 PRIORITAS 2 — SLOT POINT
+            SlotPoint slot = hit.collider.GetComponent<SlotPoint>();
+            if (slot != null)
+            {
+                Branch b = slot.GetComponentInParent<Branch>();
+                if (b != null)
+                    MoveSelectedSunnyToSpecificSlot(b, slot.slotIndex);
+                return;
+            }
+
+            // 🔵 PRIORITAS 3 — BRANCH
+            Branch branch = hit.collider.GetComponent<Branch>();
+            if (branch != null)
+            {
+                MoveSelectedSunnyToBranch(branch);
+                return;
+            }
+        }
     }
 
     // =========================
@@ -28,62 +80,58 @@ public class GameManager : MonoBehaviour
     public void MoveSelectedSunnyToBranch(Branch branch)
     {
         if (selectedSunny == null) return;
-        if (!branch.HasSpace()) 
+        if (!branch.HasSpace())
         {
             Debug.Log("Branch penuh!");
             return;
         }
 
-        Debug.Log("Moving Sunny " + selectedSunny.name + " to branch " + branch.name);
+        Sunny movingSunny = selectedSunny;
+        selectedSunny = null;
 
-        Branch oldBranch = selectedSunny.GetCurrentBranch();
+        Branch oldBranch = movingSunny.GetCurrentBranch();
         if (oldBranch != null)
-            oldBranch.RemoveSunny(selectedSunny);
+            oldBranch.RemoveSunny(movingSunny);
 
         Vector3 target = branch.GetNextSlotPosition();
-        Debug.Log("Target position: " + target);
 
-        SunnyMovement move = selectedSunny.GetComponent<SunnyMovement>();
-        if (move == null)
-        {
-            Debug.LogError("SunnyMovement not found on " + selectedSunny.name);
-            return;
-        }
+        SunnyMovement move = movingSunny.GetComponent<SunnyMovement>();
+        if (move == null) return;
 
         move.MoveTo(target, () =>
         {
-            branch.AddSunny(selectedSunny);
-            Debug.Log("Sunny moved!");
+            branch.AddSunny(movingSunny);
         });
-
-        selectedSunny = null;
     }
 
     // =========================
-    // MOVE SUNNY TO SPECIFIC SLOT (Optional)
+    // MOVE SUNNY TO SPECIFIC SLOT
     // =========================
     public void MoveSelectedSunnyToSpecificSlot(Branch branch, int slotIndex)
     {
         if (selectedSunny == null) return;
         if (!branch.IsSlotEmpty(slotIndex)) return;
 
-        Branch old = selectedSunny.GetCurrentBranch();
+        Sunny movingSunny = selectedSunny;
+        selectedSunny = null;
+
+        Branch old = movingSunny.GetCurrentBranch();
         if (old != null)
-            old.RemoveSunny(selectedSunny);
+            old.RemoveSunny(movingSunny);
 
         Vector3 target = branch.GetSlotPosition(slotIndex);
 
-        SunnyMovement move = selectedSunny.GetComponent<SunnyMovement>();
+        SunnyMovement move = movingSunny.GetComponent<SunnyMovement>();
+        if (move == null) return;
+
         move.MoveTo(target, () =>
         {
-            branch.AddSunnyAtSlot(selectedSunny, slotIndex);
+            branch.AddSunnyAtSlot(movingSunny, slotIndex);
         });
-
-        selectedSunny = null;
     }
 
     // =========================
-    // FLASK (AMAN, TIDAK DIUBAH)
+    // FLASK (TIDAK DIUBAH)
     // =========================
     public void SelectFlask(FlaskController flask)
     {

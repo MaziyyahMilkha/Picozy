@@ -1,5 +1,12 @@
 using UnityEngine;
 
+public enum SunnyKind
+{
+    Jamur,
+    Tomat,
+    Matahari
+}
+
 public enum SunnyType
 {
     Red,
@@ -12,8 +19,9 @@ public enum SunnyType
 [RequireComponent(typeof(SunnyMovement))]
 public class Sunny : MonoBehaviour
 {
-    [Header("Sunny Data")]
-    public SunnyType sunnyType;
+    [Header("Sunny Identity")]
+    public SunnyKind kind;          // 🔥 INI UNTUK SORT & PECAH
+    public SunnyType sunnyType;     // 🎨 WARNA (OPSIONAL)
 
     [Header("Movement")]
     public float moveSpeed = 5f;
@@ -24,6 +32,7 @@ public class Sunny : MonoBehaviour
     // =========================
     private FlaskController currentFlask;
     private SunnyMovement movement;
+    private Branch currentBranch;
 
     // =========================
     // UNITY
@@ -45,49 +54,34 @@ public class Sunny : MonoBehaviour
     // =========================
     // FLASK API
     // =========================
-    public FlaskController GetFlask()
+    public FlaskController GetFlask() => currentFlask;
+    public void SetFlask(FlaskController flask) => currentFlask = flask;
+    public bool HasFlask() => currentFlask != null;
+
+    // =========================
+    // BRANCH API
+    // =========================
+    public void SetCurrentBranch(Branch branch)
     {
-        return currentFlask;
+        currentBranch = branch;
     }
 
-    public void SetFlask(FlaskController flask)
+    public Branch GetCurrentBranch()
     {
-        currentFlask = flask;
+        return currentBranch;
     }
 
-    public bool HasFlask()
+    public bool HasBranch()
     {
-        return currentFlask != null;
+        return currentBranch != null;
     }
 
     // =========================
-// BRANCH API (WAJIB UNTUK SORTING)
-// =========================
-private Branch currentBranch;
-
-public void SetCurrentBranch(Branch branch)
-{
-    currentBranch = branch;
-}
-
-public Branch GetCurrentBranch()    
-{
-    return currentBranch;
-}
-
-public bool HasBranch()
-{
-    return currentBranch != null;
-}
-
-
-    // =========================
-    // MOVE API (INI YANG DICARI ERROR)
+    // MOVE API
     // =========================
     public void MoveTo(Vector3 targetPosition)
     {
         if (movement == null) return;
-
         movement.MoveTo(targetPosition);
     }
 
@@ -97,14 +91,13 @@ public bool HasBranch()
     }
 
     private void OnMouseDown()
-{
-    if (GameManager.Instance == null)
     {
-        Debug.LogError("GameManager TIDAK ADA");
-        return;
+        if (GameManager.Instance == null)
+        {
+            Debug.LogError("GameManager TIDAK ADA");
+            return;
+        }
+
+        GameManager.Instance.SelectSunny(this);
     }
-
-    GameManager.Instance.SelectSunny(this);
-}
-
 }

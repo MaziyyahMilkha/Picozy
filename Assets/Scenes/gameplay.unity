@@ -235,9 +235,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 4
   arriveDistance: 0.05
-  rotateTowardsTarget: 1
-  rotateSpeed: 10
-  showDebug: 1
 --- !u!65 &1074774
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -592,9 +589,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 4
   arriveDistance: 0.05
-  rotateTowardsTarget: 1
-  rotateSpeed: 10
-  showDebug: 1
 --- !u!65 &126490407
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -923,9 +917,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 4
   arriveDistance: 0.05
-  rotateTowardsTarget: 1
-  rotateSpeed: 10
-  showDebug: 1
 --- !u!65 &223830429
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1055,9 +1046,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 4
   arriveDistance: 0.05
-  rotateTowardsTarget: 1
-  rotateSpeed: 10
-  showDebug: 1
 --- !u!65 &289764914
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1300,19 +1288,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3d50b18ba52816b4d9424526a98c76e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  branchDirection: 4
-  isActive: 1
-  standPoints:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  enableBounce: 1
-  bounceAmount: 0.05
-  bounceSpeed: 12
-  showDebug: 1
-  originalPosition: {x: 0, y: 0, z: 0}
-  bounceTimer: 0
-  slots: []
 --- !u!1 &318668819
 GameObject:
   m_ObjectHideFlags: 0
@@ -1694,6 +1669,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f7ee9a4729ec3d945b4dca89f251f47e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  direction: 0
   standPoints:
   - {fileID: 0}
   - {fileID: 0}
@@ -2033,9 +2009,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 4
   arriveDistance: 0.05
-  rotateTowardsTarget: 1
-  rotateSpeed: 10
-  showDebug: 1
 --- !u!65 &561742456
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2244,8 +2217,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 636186694}
-  - component: {fileID: 636186696}
-  - component: {fileID: 636186697}
   m_Layer: 0
   m_Name: Slot_02
   m_TagString: Untagged
@@ -2268,41 +2239,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1582260694}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &636186696
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 636186693}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 80623e31f08e8d34593ceafef8c7b1ed, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  parentBranch: {fileID: 1582260707}
-  slotIndex: 1
---- !u!65 &636186697
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 636186693}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 0.011641136, y: 0.05000004, z: 0.009404132}
-  m_Center: {x: -0.00047109625, y: -0.000000015894573, z: -0.0026024934}
 --- !u!1001 &645633908
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2598,9 +2534,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 4
   arriveDistance: 0.05
-  rotateTowardsTarget: 1
-  rotateSpeed: 10
-  showDebug: 1
 --- !u!1001 &797512995
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2710,19 +2643,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3d50b18ba52816b4d9424526a98c76e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  branchDirection: 4
-  isActive: 1
-  standPoints:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  enableBounce: 1
-  bounceAmount: 0.05
-  bounceSpeed: 12
-  showDebug: 1
-  originalPosition: {x: 0, y: 0, z: 0}
-  bounceTimer: 0
-  slots: []
 --- !u!114 &797512999
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3543,8 +3463,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1140039217}
-  - component: {fileID: 1140039219}
-  - component: {fileID: 1140039220}
   m_Layer: 0
   m_Name: Slot_01
   m_TagString: Untagged
@@ -3567,41 +3485,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1582260694}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1140039219
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1140039216}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 80623e31f08e8d34593ceafef8c7b1ed, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  parentBranch: {fileID: 1582260707}
-  slotIndex: 0
---- !u!65 &1140039220
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1140039216}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 0.009281917, y: 0.001999989, z: 0.009491356}
-  m_Center: {x: -0.00010806521, y: 0.000000005587936, z: -0.0024216066}
 --- !u!1 &1196938675
 GameObject:
   m_ObjectHideFlags: 0
@@ -3864,9 +3747,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 4
   arriveDistance: 0.05
-  rotateTowardsTarget: 1
-  rotateSpeed: 10
-  showDebug: 1
 --- !u!65 &1305959692
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4159,19 +4039,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3d50b18ba52816b4d9424526a98c76e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  branchDirection: 4
-  isActive: 1
-  standPoints:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  enableBounce: 1
-  bounceAmount: 0.05
-  bounceSpeed: 12
-  showDebug: 1
-  originalPosition: {x: 0, y: 0, z: 0}
-  bounceTimer: 0
-  slots: []
 --- !u!65 &1368956408
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4731,9 +4598,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 4
   arriveDistance: 0.05
-  rotateTowardsTarget: 1
-  rotateSpeed: 10
-  showDebug: 1
 --- !u!65 &1467655743
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4753,8 +4617,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 1.829671, y: 1.2210844, z: 1}
+  m_Center: {x: -0.027656183, y: 0.11054207, z: 9.3172886e-11}
 --- !u!54 &1467655744
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -5040,9 +4904,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 4
   arriveDistance: 0.05
-  rotateTowardsTarget: 1
-  rotateSpeed: 10
-  showDebug: 1
 --- !u!65 &1498681059
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -5302,9 +5163,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 4
   arriveDistance: 0.05
-  rotateTowardsTarget: 1
-  rotateSpeed: 10
-  showDebug: 1
 --- !u!65 &1537024237
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -5420,7 +5278,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1558762247}
   - component: {fileID: 1558762249}
-  - component: {fileID: 1558762250}
+  - component: {fileID: 1558762248}
   m_Layer: 0
   m_Name: Slot_03
   m_TagString: Untagged
@@ -5443,7 +5301,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1582260694}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1558762249
+--- !u!114 &1558762248
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -5455,9 +5313,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80623e31f08e8d34593ceafef8c7b1ed, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  parentBranch: {fileID: 1582260707}
-  slotIndex: 2
---- !u!65 &1558762250
+  parentBranch: {fileID: 0}
+  slotIndex: 0
+--- !u!65 &1558762249
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -5476,8 +5334,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.009981783, y: 0.002, z: 0.010359126}
-  m_Center: {x: -0.00037601986, y: 1.5963995e-18, z: -0.0021457712}
+  m_Size: {x: 0.002, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1001 &1582260693
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5560,9 +5418,6 @@ PrefabInstance:
       addedObject: {fileID: 1582260696}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 08e1335b3f324b64abc64917bae87dc4, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1582260695}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 08e1335b3f324b64abc64917bae87dc4, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 1582260702}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 08e1335b3f324b64abc64917bae87dc4, type: 3}
       insertIndex: -1
@@ -5573,22 +5428,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 08e1335b3f324b64abc64917bae87dc4, type: 3}
   m_PrefabInstance: {fileID: 1582260693}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1582260695
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 547504734}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c49b4cc203aa6414fae5c798d1d0e7d6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_EventMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_MaxRayIntersections: 0
 --- !u!20 &1582260696
 Camera:
   m_ObjectHideFlags: 0
@@ -5659,8 +5498,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.043508753, y: 0.0025210553, z: 0.0035395701}
-  m_Center: {x: -0.001315409, y: -0.0000000027318796, z: 0.000350305}
+  m_Size: {x: 0.043508753, y: 0.0025210553, z: 0.013952721}
+  m_Center: {x: -0.001315409, y: -0.0000000027318796, z: -0.004856272}
 --- !u!114 &1582260707
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5673,6 +5512,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f7ee9a4729ec3d945b4dca89f251f47e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  direction: 0
   standPoints:
   - {fileID: 1140039217}
   - {fileID: 1685344375}
@@ -6071,19 +5911,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3d50b18ba52816b4d9424526a98c76e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  branchDirection: 4
-  isActive: 1
-  standPoints:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  enableBounce: 1
-  bounceAmount: 0.15
-  bounceSpeed: 12
-  showDebug: 1
-  originalPosition: {x: 0, y: 0, z: 0}
-  bounceTimer: 0
-  slots: []
 --- !u!65 &1819166538
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -6393,19 +6220,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3d50b18ba52816b4d9424526a98c76e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  branchDirection: 4
-  isActive: 1
-  standPoints:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  enableBounce: 1
-  bounceAmount: 0.15
-  bounceSpeed: 12
-  showDebug: 1
-  originalPosition: {x: 0, y: 0, z: 0}
-  bounceTimer: 0
-  slots: []
 --- !u!65 &1899317077
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -6638,9 +6452,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 4
   arriveDistance: 0.05
-  rotateTowardsTarget: 1
-  rotateSpeed: 10
-  showDebug: 1
 --- !u!4 &1958894350 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 08e1335b3f324b64abc64917bae87dc4, type: 3}
@@ -6739,9 +6550,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 4
   arriveDistance: 0.05
-  rotateTowardsTarget: 1
-  rotateSpeed: 10
-  showDebug: 1
 --- !u!65 &1973068975
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -7201,19 +7009,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3d50b18ba52816b4d9424526a98c76e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  branchDirection: 4
-  isActive: 1
-  standPoints:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  enableBounce: 1
-  bounceAmount: 0.05
-  bounceSpeed: 12
-  showDebug: 1
-  originalPosition: {x: 0, y: 0, z: 0}
-  bounceTimer: 0
-  slots: []
 --- !u!114 &2124310955
 MonoBehaviour:
   m_ObjectHideFlags: 0
