@@ -1,29 +1,32 @@
 using UnityEngine;
 using System.Collections;
 
-public class AwakeSequence : MonoBehaviour
+public class CameraManager : MonoBehaviour
 {
-    public GameObject target;   // object yang mau diatur
-    public float cooldown = 2f; // waktu tunggu (detik)
+    [Header("Camera Sequence")]
+    [SerializeField] private float cooldown = 0f;
+
+    private Camera cam;
 
     void Awake()
     {
+        Debug.Log("AwakeSequence jalan di: " + gameObject.name);
+
+        cam = GetComponent<Camera>(); // AUTO AMBIL CAMERA SENDIRI
+    
+        if (cam == null)
+        {
+            Debug.LogError("Tidak ada komponen Camera di object ini!");
+            return;
+        }
+
         StartCoroutine(Sequence());
     }
 
     IEnumerator Sequence()
     {
-        // GET (pastikan ada)
-        if (target == null)
-            target = gameObject;
-
-        // MATIKAN
-        target.SetActive(false);
-
-        // TUNGGU
+        cam.enabled = false;
         yield return new WaitForSeconds(cooldown);
-
-        // NYALAKAN LAGI
-        target.SetActive(true);
+        cam.enabled = true;
     }
 }

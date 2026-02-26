@@ -3,12 +3,7 @@ guid: 50626165b9085674ab138426c340081f
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects:
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: M_Bunga_Matahari
-    second: {fileID: 2100000, guid: 3aa0277856ff42943b7886d9249439c9, type: 2}
+  externalObjects: {}
   materials:
     materialImportMode: 2
     materialName: 0

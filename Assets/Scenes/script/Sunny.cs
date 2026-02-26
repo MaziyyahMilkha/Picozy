@@ -4,7 +4,9 @@ public enum SunnyKind
 {
     Jamur,
     Tomat,
-    Matahari
+    Matahari,
+    Daisy,
+    Kelapa
 }
 
 public enum SunnyType
@@ -13,15 +15,15 @@ public enum SunnyType
     Blue,
     Yellow,
     Purple,
-    Green
+    Brown
 }
 
 [RequireComponent(typeof(SunnyMovement))]
 public class Sunny : MonoBehaviour
 {
     [Header("Sunny Identity")]
-    public SunnyKind kind;          // 🔥 INI UNTUK SORT & PECAH
-    public SunnyType sunnyType;     // 🎨 WARNA (OPSIONAL)
+    public SunnyKind kind;
+    public SunnyType sunnyType;
 
     [Header("Movement")]
     public float moveSpeed = 5f;
@@ -33,6 +35,19 @@ public class Sunny : MonoBehaviour
     private FlaskController currentFlask;
     private SunnyMovement movement;
     private Branch currentBranch;
+
+    // =========================
+    // RESET DATA
+    // =========================
+    private Vector3 startPosition;
+    private Branch startBranch;
+
+    // =========================
+    // UNDO GLOBAL DATA (PINDAH KE SINI)
+    // =========================
+    private Branch undoBranch;
+    private Vector3 undoPosition;
+    private bool hasUndoData = false;
 
     // =========================
     // UNITY
@@ -49,6 +64,9 @@ public class Sunny : MonoBehaviour
         {
             movement.SetData(moveSpeed, stoppingDistance);
         }
+
+        startPosition = transform.position;
+        startBranch = GetComponentInParent<Branch>();
     }
 
     // =========================
@@ -77,7 +95,23 @@ public class Sunny : MonoBehaviour
     }
 
     // =========================
-    // MOVE API
+    // MOVE API (DENGAN UNDO)
+    // =========================
+    public void MoveToBranch(Branch targetBranch)
+    {
+        if (targetBranch == null) return;
+
+        // SIMPAN UNDO
+        SaveUndoState();
+
+        if (currentBranch != null)
+            currentBranch.RemoveSunny(this);
+
+        targetBranch.AddSunny(this);
+    }
+
+    // =========================
+    // MOVEMENT API
     // =========================
     public void MoveTo(Vector3 targetPosition)
     {
@@ -90,14 +124,52 @@ public class Sunny : MonoBehaviour
         return movement != null && movement.IsMoving;
     }
 
-    private void OnMouseDown()
+    // =========================
+    // RESET API
+    // =========================
+    public void ResetToStart()
     {
-        if (GameManager.Instance == null)
-        {
-            Debug.LogError("GameManager TIDAK ADA");
-            return;
-        }
+        transform.position = startPosition;
 
-        GameManager.Instance.SelectSunny(this);
+        if (startBranch != null)
+        {
+            startBranch.AddSunny(this);
+        }
     }
+
+    // =========================
+    // SAVE UNDO
+    // =========================
+    public void SaveUndoState()
+    {
+        undoBranch = currentBranch;
+        undoPosition = transform.position;
+        hasUndoData = true;
+    }
+
+    // =========================
+    // EXECUTE UNDO
+    // =========================
+    public void UndoMove()
+    {
+        if (!hasUndoData) return;
+
+        if (currentBranch != null)
+            currentBranch.RemoveSunny(this);
+
+        if (undoBranch != null)
+            undoBranch.AddSunny(this);
+
+        transform.position = undoPosition;
+        currentBranch = undoBranch;
+
+        hasUndoData = false;
+    }
+
+    private void OnDisable()
+{
+    if (GameManager.Instance != null)
+        GameManager.Instance.CheckLevelComplete();
+}
+
 }

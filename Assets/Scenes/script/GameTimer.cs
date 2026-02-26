@@ -67,4 +67,32 @@ public class GameTimer : MonoBehaviour
             star3.color = inactiveColor;
         }
     }
+
+    public int GetStarCount()
+    {
+        if (currentTime > 120) return 3;
+        if (currentTime > 60) return 2;
+        return 1;
+    }
+
+    public bool IsTimeUp()
+    {
+        return currentTime <= 0;
+    }
+
+    public void StopTimer()
+    {
+        enabled = false;
+    }
+
+    // =========================
+    // RESET TIMER (TAMBAHAN)
+    // =========================
+    public void ResetTimer()
+    {
+        enabled = true;
+        currentTime = totalTime;
+        UpdateTimerText();
+        UpdateStars();
+    }
 }

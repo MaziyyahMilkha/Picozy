@@ -26,22 +26,31 @@ public class Branch : MonoBehaviour
     }
 
     void InitSlotsFromScene()
-    {
-        for (int i = 0; i < standPoints.Length; i++)
-        {
-            Transform point = standPoints[i];
-            if (point == null) continue;
+{
+    Sunny[] allSunny = FindObjectsOfType<Sunny>();
 
-            Sunny sunny = point.GetComponentInChildren<Sunny>();
+    for (int i = 0; i < standPoints.Length; i++)
+    {
+        Transform point = standPoints[i];
+        if (point == null) continue;
+
+        foreach (Sunny sunny in allSunny)
+        {
             if (sunny == null) continue;
 
-            slots[i] = sunny;
-            sunny.SetCurrentBranch(this);
-            sunny.transform.position = point.position;
+            float distance = Vector3.Distance(sunny.transform.position, point.position);
 
-            Debug.Log($"INIT SLOT → {sunny.name} di {name} slot {i}");
+            if (distance < 0.2f) // toleransi jarak
+            {
+                slots[i] = sunny;
+                sunny.SetCurrentBranch(this);
+                sunny.transform.position = point.position;
+
+                Debug.Log($"INIT SLOT → {sunny.name} di {name} slot {i}");
+            }
         }
     }
+}
 
     // =========================
     // SLOT API
@@ -63,7 +72,6 @@ public class Branch : MonoBehaviour
         if (sunny == null) return;
         if (index < 0 || index >= slots.Length) return;
 
-        // 🔁 BOLEH TIMPA SLOT
         if (slots[index] != null)
         {
             slots[index].SetCurrentBranch(null);
@@ -175,6 +183,30 @@ public class Branch : MonoBehaviour
                 AddSunnyAtSlot(sunny, i);
                 return;
             }
+        }
+    }
+    public int GetSlotIndex(Sunny sunny)
+    {
+        for (int i = 0; i < slots.Length; i++)
+        {
+            if (slots[i] == sunny)
+                return i;
+    }
+    return -1;
+}
+
+    // =========================
+    // RESET BRANCH (TAMBAHAN)
+    // =========================
+    public void ResetBranch()
+    {
+        isBreaking = false;
+
+        GetComponent<Collider>().enabled = true;
+
+        for (int i = 0; i < slots.Length; i++)
+        {
+            slots[i] = null;
         }
     }
 }

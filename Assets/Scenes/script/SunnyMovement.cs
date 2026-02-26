@@ -28,8 +28,7 @@ public class SunnyMovement : MonoBehaviour
 
     public void MoveTo(Vector3 target, Action onComplete = null)
     {
-        if (moveCoroutine != null)
-            StopCoroutine(moveCoroutine);
+        if (isMoving) return;
 
         targetPosition = target;
         moveCoroutine = StartCoroutine(MoveRoutine(onComplete));
