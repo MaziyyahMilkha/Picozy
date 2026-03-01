@@ -458,7 +458,7 @@ MonoBehaviour:
   - {fileID: 1011876989}
   leftDahanPrefab: {fileID: 8607963642836748035, guid: 747bba672866ab744956a2f5d6498563, type: 3}
   rightDahanPrefab: {fileID: 4430118134066505314, guid: fc7ae19ee92a7c54c86a220dc184b18c, type: 3}
-  karakterPrefab: {fileID: 7955873401426165627, guid: 81ff3296dc4f8a1419e9a928e03ee656, type: 3}
+  characterPrefab: {fileID: 7955873401426165627, guid: 81ff3296dc4f8a1419e9a928e03ee656, type: 3}
 --- !u!4 &701578254
 Transform:
   m_ObjectHideFlags: 0
@@ -624,6 +624,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mainCamera: {fileID: 1106833746}
+  selectScale: 1.08
+  shakeDuration: 0.15
+  shakeStrength: 0.08
 --- !u!114 &794093509
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -636,9 +639,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcb305c25011b374aa31ef0c0448fb6e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  winPanel: {fileID: 0}
-  losePanel: {fileID: 0}
-  nextSceneName: 
 --- !u!114 &794093510
 MonoBehaviour:
   m_ObjectHideFlags: 0

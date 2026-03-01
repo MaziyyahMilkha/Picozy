@@ -72,10 +72,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   standPoints:
-  - {fileID: 9042813420772807402}
-  - {fileID: 1521995643301996502}
-  - {fileID: 99403053029928783}
   - {fileID: 4860274589356345590}
+  - {fileID: 99403053029928783}
+  - {fileID: 1521995643301996502}
+  - {fileID: 9042813420772807402}
 --- !u!1 &8228446118522357748
 GameObject:
   m_ObjectHideFlags: 0

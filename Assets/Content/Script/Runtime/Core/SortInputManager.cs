@@ -1,3 +1,6 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class SortInputManager : MonoBehaviour
@@ -7,7 +10,16 @@ public class SortInputManager : MonoBehaviour
     [Header("References")]
     [SerializeField] private Camera mainCamera;
 
-    private SortKarakter selectedKarakter;
+    [Header("Feedback")]
+    [SerializeField] private float selectScale = 1.08f;
+    [SerializeField] private float shakeDuration = 0.15f;
+    [SerializeField] private float shakeStrength = 0.08f;
+
+    private SortDahan selectedDahan;
+    private SortKind? selectedKind;
+    private int selectedCount;
+    private Vector3 selectedDahanBaseScale;
+    private static readonly List<int> _groupSlots = new List<int>(8);
 
     private void Awake()
     {
@@ -25,57 +37,94 @@ public class SortInputManager : MonoBehaviour
         if (!Input.GetMouseButtonDown(0)) return;
 
         Ray ray = mainCamera != null ? mainCamera.ScreenPointToRay(Input.mousePosition) : Camera.main.ScreenPointToRay(Input.mousePosition);
-        if (!Physics.Raycast(ray, out RaycastHit hit, 200f)) return;
+        if (!Physics.Raycast(ray, out RaycastHit hit, 200f)) { Deselect(); return; }
 
-        if (selectedKarakter != null)
+        SortDahan hitDahan = hit.collider.GetComponent<SortDahan>();
+        if (hitDahan == null)
         {
-            SortDahan dahan = hit.collider.GetComponent<SortDahan>();
-            if (dahan != null)
-            {
-                TryMoveToDahan(dahan);
-                return;
-            }
+            SortKarakter hitCharacter = hit.collider.GetComponent<SortKarakter>();
+            if (hitCharacter != null)
+                hitDahan = hitCharacter.GetDahan();
         }
+        if (hitDahan == null) { Deselect(); return; }
 
-        SortKarakter karakter = hit.collider.GetComponent<SortKarakter>();
-        if (karakter != null)
+        if (selectedDahan != null)
         {
-            if (karakter.IsMoving()) return;
-            selectedKarakter = karakter;
+            TryMoveToDahan(hitDahan);
             return;
         }
 
-        selectedKarakter = null;
+        SelectDahan(hitDahan);
     }
 
-    private void TryMoveToDahan(SortDahan dahan)
+    private void SelectDahan(SortDahan dahan)
     {
-        if (selectedKarakter == null) return;
-        if (selectedKarakter.IsMoving()) return;
-        if (!dahan.HasSpace()) return;
-        if (selectedKarakter.GetDahan() == dahan) return;
-        if (!dahan.CanAccept(selectedKarakter)) return;
+        Deselect();
+        if (dahan == null) return;
 
-        SortKarakter moving = selectedKarakter;
-        selectedKarakter = null;
+        _groupSlots.Clear();
+        dahan.GetTopGroup(out SortKind? kind, out int count, _groupSlots);
+        if (!kind.HasValue || count <= 0) return;
 
-        SortDahan oldDahan = moving.GetDahan();
-        if (oldDahan != null)
-            oldDahan.RemoveKarakter(moving);
+        selectedDahan = dahan;
+        selectedKind = kind.Value;
+        selectedCount = count;
+        selectedDahanBaseScale = dahan.transform.localScale;
+        dahan.transform.localScale = selectedDahanBaseScale * selectScale;
+    }
 
-        Vector3 targetPos = dahan.GetNextSlotPosition();
-        moving.MoveTo(targetPos, () =>
+    private void Deselect()
+    {
+        if (selectedDahan != null)
         {
-            dahan.AddKarakter(moving);
-            NotifyMoveDone();
-        });
+            selectedDahan.transform.localScale = selectedDahanBaseScale;
+            selectedDahan = null;
+        }
+        selectedKind = null;
+        selectedCount = 0;
     }
 
-    private void NotifyMoveDone()
+    private void TryMoveToDahan(SortDahan dest)
     {
+        if (selectedDahan == null || !selectedKind.HasValue || selectedCount <= 0) { Deselect(); return; }
+        if (selectedDahan == dest) { Deselect(); return; }
+
         var gameplay = SortGameplayManager.Instance;
-        if (gameplay != null)
-            gameplay.CheckLevelComplete();
+        if (gameplay == null) { Deselect(); return; }
+
+        if (gameplay.CanMove(selectedDahan, dest, selectedKind.Value, selectedCount))
+        {
+            SortDahan from = selectedDahan;
+            int count = selectedCount;
+            Deselect();
+            gameplay.DoMove(from, dest, count);
+        }
+        else
+        {
+            var dahanToShake = selectedDahan;
+            StartCoroutine(ShakeInvalidRoutine(dahanToShake, Deselect));
+        }
+    }
+
+    private IEnumerator ShakeInvalidRoutine(SortDahan dahan, Action onDone)
+    {
+#if UNITY_ANDROID || UNITY_IOS
+        Handheld.Vibrate();
+#endif
+        if (dahan == null) { onDone?.Invoke(); yield break; }
+        Transform t = dahan.transform;
+        Vector3 pos = t.position;
+        float elapsed = 0f;
+        while (elapsed < shakeDuration)
+        {
+            elapsed += Time.deltaTime;
+            float x = UnityEngine.Random.Range(-1f, 1f) * shakeStrength;
+            float y = UnityEngine.Random.Range(-1f, 1f) * shakeStrength;
+            t.position = pos + new Vector3(x, y, 0f);
+            yield return null;
+        }
+        t.position = pos;
+        onDone?.Invoke();
     }
 
     private void OnDestroy()

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using UnityEditorInternal;
@@ -54,14 +55,18 @@ public class SortLevelAssetEditor : Editor
         SerializedProperty rightDahans = data.FindPropertyRelative("rightDahans");
 
         EditorGUILayout.Space(4f);
-        slotPerDahan.intValue = Mathf.Clamp(EditorGUILayout.IntField("Slot per dahan", slotPerDahan.intValue), 1, MaxSlots);
-        kindMask.intValue = EditorGUILayout.MaskField("Kind yang dipakai", kindMask.intValue & 0x1F, KindNamesForMask) & 0x1F;
-        randomEachPlay.boolValue = EditorGUILayout.Toggle("Random tiap play", randomEachPlay.boolValue);
+        slotPerDahan.intValue = Mathf.Clamp(EditorGUILayout.IntField("Slots per branch", slotPerDahan.intValue), 1, MaxSlots);
+        kindMask.intValue = EditorGUILayout.MaskField("Kinds", kindMask.intValue & 0x1F, KindNamesForMask) & 0x1F;
+        randomEachPlay.boolValue = EditorGUILayout.Toggle("Random each play", randomEachPlay.boolValue);
 
         int kindCount = CountKinds(kindMask.intValue);
         int slotsPer = Mathf.Clamp(slotPerDahan.intValue, 1, MaxSlots);
+        int totalDahans = leftDahans.arraySize + rightDahans.arraySize;
+        int totalSlots = totalDahans * slotsPer;
+        int filledSlots = kindCount * slotsPer;
+        int kosongCount = totalSlots - filledSlots;
         if (kindCount > 0)
-            EditorGUILayout.HelpBox("Tiap kind tepat " + slotsPer + " (sesuai slot/dahan). Sisanya Kosong.", MessageType.Info);
+            EditorGUILayout.HelpBox("Filled: " + filledSlots + " (" + kindCount + " kinds × " + slotsPer + "). Empty: " + kosongCount + ". Total: " + totalSlots, MessageType.Info);
 
         EditorGUILayout.Space(4f);
 
@@ -78,7 +83,7 @@ public class SortLevelAssetEditor : Editor
             leftList = new ReorderableList(serializedObject, leftDahans, true, true, true, true)
             {
                 elementHeight = DahanRowHeight,
-                drawHeaderCallback = r => EditorGUI.LabelField(r, "Kiri (1,2,3,4)"),
+                drawHeaderCallback = r => EditorGUI.LabelField(r, "Left (1,2,3,4)"),
                 drawElementCallback = (rect, index, active, focused) => DrawDahanRow(rect, data, leftDahans.GetArrayElementAtIndex(index), index, "L" + (index + 1), true)
             };
             leftList.onAddCallback = l => { leftDahans.arraySize++; InitEntry(leftDahans.GetArrayElementAtIndex(leftDahans.arraySize - 1)); };
@@ -88,7 +93,7 @@ public class SortLevelAssetEditor : Editor
             rightList = new ReorderableList(serializedObject, rightDahans, true, true, true, true)
             {
                 elementHeight = DahanRowHeight,
-                drawHeaderCallback = r => EditorGUI.LabelField(r, "Kanan (4,3,2,1)"),
+                drawHeaderCallback = r => EditorGUI.LabelField(r, "Right (4,3,2,1)"),
                 drawElementCallback = (rect, index, active, focused) => DrawDahanRow(rect, data, rightDahans.GetArrayElementAtIndex(index), index, "R" + (index + 1), false)
             };
             rightList.onAddCallback = l => { rightDahans.arraySize++; InitEntry(rightDahans.GetArrayElementAtIndex(rightDahans.arraySize - 1)); };
@@ -102,9 +107,9 @@ public class SortLevelAssetEditor : Editor
         EditorGUILayout.EndVertical();
         EditorGUILayout.BeginVertical(GUILayout.Width(80f));
         GUILayout.Space(22f);
-        if (leftList.index >= 0 && leftList.index < leftDahans.arraySize && GUILayout.Button("→\nKanan"))
+        if (leftList.index >= 0 && leftList.index < leftDahans.arraySize && GUILayout.Button("→\nRight"))
             MoveBetween(leftDahans, rightDahans, leftList.index);
-        if (rightList.index >= 0 && rightList.index < rightDahans.arraySize && GUILayout.Button("←\nKiri"))
+        if (rightList.index >= 0 && rightList.index < rightDahans.arraySize && GUILayout.Button("←\nLeft"))
             MoveBetween(rightDahans, leftDahans, rightList.index);
         EditorGUILayout.EndVertical();
         EditorGUILayout.BeginVertical(GUILayout.Width(halfW));
@@ -124,8 +129,8 @@ public class SortLevelAssetEditor : Editor
                 EditorGUILayout.Space(6f);
                 EditorGUILayout.BeginVertical(EditorStyles.helpBox);
                 EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField("Edit dahan " + editLabel + " — drag untuk ubah urutan", EditorStyles.boldLabel);
-                if (GUILayout.Button("Tutup", GUILayout.Width(50f)))
+                EditorGUILayout.LabelField("Edit " + editLabel + " (drag to reorder)", EditorStyles.boldLabel);
+                if (GUILayout.Button("Close", GUILayout.Width(50f)))
                 { editingIndex = -1; slotEditList = null; }
                 EditorGUILayout.EndHorizontal();
                 EnsureSlotEditList(editSlots);
@@ -139,9 +144,9 @@ public class SortLevelAssetEditor : Editor
 
         ValidateAndWarn(leftDahans, rightDahans, kindMask.intValue, slotPerDahan.intValue);
         EditorGUILayout.Space(4f);
-        if (GUILayout.Button("Randomize (" + Mathf.Clamp(slotPerDahan.intValue, 1, MaxSlots) + " per kind, sisanya Kosong)"))
-            RandomizeLevel(data);
-        if (GUILayout.Button("Urutkan (non-Kosong ke kiri per dahan)"))
+        if (GUILayout.Button("Randomize"))
+            DoRandomizeOnly(data);
+        if (GUILayout.Button("Compact (non-empty to left per branch)"))
         {
             int sc = Mathf.Clamp(slotPerDahan.intValue, 1, MaxSlots);
             CompactAllDahans(leftDahans, sc);
@@ -175,7 +180,7 @@ public class SortLevelAssetEditor : Editor
         EditorGUI.LabelField(new Rect(rect.x, centerY - 1f, 30f, lineH), label, EditorStyles.miniBoldLabel);
         float chipStartX = rect.x + 32f;
         DrawSlotChips(new Rect(chipStartX, centerY - ChipHeight * 0.5f, rect.width - 32f - 58f, ChipHeight), slots, slotCount, isLeft);
-        if (GUI.Button(new Rect(rect.xMax - 56f, centerY - 2f, 56f, lineH + 4f), isEditing ? "Tutup" : "Edit"))
+        if (GUI.Button(new Rect(rect.xMax - 56f, centerY - 2f, 56f, lineH + 4f), isEditing ? "Close" : "Edit"))
         {
             if (isEditing) { editingIndex = -1; slotEditList = null; }
             else { editingLeft = isLeft; editingIndex = entryIndex; slotEditList = null; }
@@ -218,7 +223,7 @@ public class SortLevelAssetEditor : Editor
             slotEditList = new ReorderableList(serializedObject, slots, true, false, false, false)
             {
                 elementHeight = SlotRowHeight,
-                drawHeaderCallback = r => EditorGUI.LabelField(r, "Urutan slot — drag baris untuk pindah"),
+                drawHeaderCallback = r => EditorGUI.LabelField(r, "Slot order (drag to reorder)"),
                 drawElementCallback = (rect, index, active, focused) =>
                 {
                     if (index >= slots.arraySize) return;
@@ -319,7 +324,7 @@ public class SortLevelAssetEditor : Editor
         {
             if ((kindMask & (1 << i)) == 0) continue;
             if (counts[i] != slotPerDahan)
-                EditorGUILayout.HelpBox("Kind \"" + KindNames[i] + "\" harus tepat " + slotPerDahan + ", sekarang: " + counts[i], MessageType.Warning);
+                EditorGUILayout.HelpBox("Kind \"" + KindNames[i] + "\" should be " + slotPerDahan + ", got " + counts[i], MessageType.Warning);
         }
     }
 
@@ -369,7 +374,7 @@ public class SortLevelAssetEditor : Editor
             slots.GetArrayElementAtIndex(i).enumValueIndex = (int)e.slots[i];
     }
 
-    private static void Shuffle<T>(System.Collections.Generic.IList<T> list)
+    private static void Shuffle<T>(IList<T> list)
     {
         var r = new System.Random();
         for (int i = list.Count - 1; i > 0; i--)
@@ -379,19 +384,25 @@ public class SortLevelAssetEditor : Editor
         }
     }
 
-    private void RandomizeLevel(SerializedProperty data)
+    private void DoRandomizeOnly(SerializedProperty data)
     {
         var slotPerDahan = data.FindPropertyRelative("slotPerDahan");
         var kindMask = data.FindPropertyRelative("kindMask");
         var leftDahans = data.FindPropertyRelative("leftDahans");
         var rightDahans = data.FindPropertyRelative("rightDahans");
         int slotCount = Mathf.Clamp(slotPerDahan.intValue, 1, MaxSlots);
-        var kinds = new System.Collections.Generic.List<SortKind>(GetKindsFromMask(kindMask.intValue));
-        if (kinds.Count == 0) { EditorUtility.DisplayDialog("Randomize", "Pilih minimal 1 kind.", "OK"); return; }
+        var kinds = new List<SortKind>(GetKindsFromMask(kindMask.intValue));
+        if (kinds.Count == 0) { EditorUtility.DisplayDialog("Randomize", "Select at least 1 kind.", "OK"); return; }
 
-        var pile = new System.Collections.Generic.List<SortKind>();
+        int totalDahans = leftDahans.arraySize + rightDahans.arraySize;
+        int totalSlots = totalDahans * slotCount;
+        int filledCount = kinds.Count * slotCount;
+        int kosongCount = totalSlots - filledCount;
+        if (kosongCount < 0) { EditorUtility.DisplayDialog("Randomize", "Not enough slots for " + kinds.Count + " kinds. Add branches or reduce kinds.", "OK"); return; }
+
+        var pile = new List<SortKind>();
         foreach (var k in kinds) for (int i = 0; i < slotCount; i++) pile.Add(k);
-        for (int i = 0; i < slotCount; i++) pile.Add(SortKind.Kosong);
+        for (int i = 0; i < kosongCount; i++) pile.Add(SortKind.Kosong);
         Shuffle(pile);
 
         int idx = 0;

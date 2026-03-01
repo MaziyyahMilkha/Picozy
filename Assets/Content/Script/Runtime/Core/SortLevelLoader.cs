@@ -4,18 +4,17 @@ using UnityEngine;
 public class SortLevelLoader : MonoBehaviour
 {
     [Header("Level")]
-    [Tooltip("Isi dengan asset level. Kosong = tidak load.")]
     [SerializeField] private SortLevelAsset currentLevel;
     [SerializeField] private SortLevelDatabase database;
 
-    [Header("Spawn posisi (drag Transform di scene)")]
+    [Header("Spawn")]
     [SerializeField] private Transform[] leftSpawnPoints = new Transform[0];
     [SerializeField] private Transform[] rightSpawnPoints = new Transform[0];
 
     [Header("Prefab")]
     [SerializeField] private GameObject leftDahanPrefab;
     [SerializeField] private GameObject rightDahanPrefab;
-    [SerializeField] private GameObject karakterPrefab;
+    [SerializeField] private GameObject characterPrefab;
 
     private List<SortDahan> spawnedDahans = new List<SortDahan>();
 
@@ -30,14 +29,14 @@ public class SortLevelLoader : MonoBehaviour
         SortLevelData data = currentLevel.GetData();
         if (data == null) return;
 
-        if (karakterPrefab == null)
+        if (characterPrefab == null)
         {
-            Debug.LogError("[SortLevelLoader] karakterPrefab belum diisi.");
+            Debug.LogError("SortLevelLoader: characterPrefab is missing.");
             return;
         }
         if (leftDahanPrefab == null && rightDahanPrefab == null)
         {
-            Debug.LogError("[SortLevelLoader] minimal satu dahan prefab wajib diisi.");
+            Debug.LogError("SortLevelLoader: at least one branch prefab required.");
             return;
         }
         if (leftDahanPrefab == null) leftDahanPrefab = rightDahanPrefab;
@@ -62,7 +61,7 @@ public class SortLevelLoader : MonoBehaviour
         return -1;
     }
 
-        private void Clear()
+    private void Clear()
     {
         for (int i = 0; i < spawnedDahans.Count; i++)
         {
@@ -85,6 +84,7 @@ public class SortLevelLoader : MonoBehaviour
             var dahan = SpawnDahan(leftDahanPrefab, parent, pos);
             if (dahan != null)
             {
+                dahan.SetTopIsHighIndex(true);
                 spawnedDahans.Add(dahan);
                 FillDahan(dahan, leftDahans[i], slotPerDahan, isRight: false);
             }
@@ -97,6 +97,7 @@ public class SortLevelLoader : MonoBehaviour
             var dahan = SpawnDahan(rightDahanPrefab, parent, pos);
             if (dahan != null)
             {
+                dahan.SetTopIsHighIndex(true);
                 spawnedDahans.Add(dahan);
                 FillDahan(dahan, rightDahans[i], slotPerDahan, isRight: true);
             }
@@ -119,28 +120,23 @@ public class SortLevelLoader : MonoBehaviour
         return go.GetComponent<SortDahan>();
     }
 
-    /// <summary>Kiri: slot 1,2,3,4 = index 0,1,2,3. Kanan: visual 4,3,2,1 = data index 3,2,1,0 (Kosong di kiri).</summary>
     private void FillDahan(SortDahan dahan, DahanEntry entry, int slotPerDahan, bool isRight)
     {
         if (dahan == null || entry == null || entry.slots == null) return;
-
         for (int s = 0; s < slotPerDahan && s < entry.slots.Length; s++)
         {
-            int dataIndex = isRight ? (slotPerDahan - 1 - s) : s;
-            SortKind kind = entry.slots[dataIndex];
+            SortKind kind = entry.slots[s];
             if (kind == SortKind.Kosong) continue;
-
             Transform slotParent = dahan.GetSlotTransform(s);
             Vector3 slotPos = slotParent != null ? slotParent.position : dahan.GetSlotPosition(s);
             Transform parent = slotParent != null ? slotParent : dahan.transform;
-            GameObject go = Instantiate(karakterPrefab, slotPos, Quaternion.identity, parent);
-            if (slotParent != null)
-                go.transform.localPosition = Vector3.zero;
-            SortKarakter karakter = go.GetComponent<SortKarakter>();
-            if (karakter != null)
+            GameObject go = Instantiate(characterPrefab, slotPos, Quaternion.identity, parent);
+            if (slotParent != null) go.transform.localPosition = Vector3.zero;
+            SortKarakter character = go.GetComponent<SortKarakter>();
+            if (character != null)
             {
-                karakter.SetKind(kind);
-                dahan.AddKarakterAtSlot(karakter, s);
+                character.SetKind(kind);
+                dahan.AddCharacterAtSlot(character, s);
             }
         }
     }

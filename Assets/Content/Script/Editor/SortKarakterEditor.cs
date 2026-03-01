@@ -13,7 +13,7 @@ public class SortKarakterEditor : Editor
         SerializedProperty kind = serializedObject.FindProperty("kind");
         SerializedProperty kindVisuals = serializedObject.FindProperty("kindVisuals");
 
-        EditorGUILayout.PropertyField(kind, new GUIContent("Kind (default Tomat)"));
+        EditorGUILayout.PropertyField(kind, new GUIContent("Kind"));
 
         EditorGUILayout.Space(4f);
         EditorGUILayout.LabelField("Visual per kind", EditorStyles.boldLabel);
@@ -21,7 +21,7 @@ public class SortKarakterEditor : Editor
         if (kindVisuals.arraySize != KindLabels.Length)
         {
             EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("Resize ke " + KindLabels.Length + " (sesuai enum)"))
+                if (GUILayout.Button("Resize to " + KindLabels.Length))
                 kindVisuals.arraySize = KindLabels.Length;
             EditorGUILayout.EndHorizontal();
         }

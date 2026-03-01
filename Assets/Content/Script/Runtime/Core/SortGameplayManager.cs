@@ -1,21 +1,14 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class SortGameplayManager : MonoBehaviour
 {
     public static SortGameplayManager Instance { get; private set; }
+    public static event Action OnLevelComplete;
 
-    [Header("Panels")]
-    [SerializeField] private GameObject winPanel;
-    [SerializeField] private GameObject losePanel;
-
-    [Header("Level")]
-    [SerializeField] private string nextSceneName = "";
-
-    private bool levelCompleted;
-    private bool levelFailed;
-
-    public int Score { get; private set; }
+    private static readonly List<int> _tempSlots = new List<int>(8);
+    private static readonly List<int> _tempDestSlots = new List<int>(8);
 
     private void Awake()
     {
@@ -27,68 +20,64 @@ public class SortGameplayManager : MonoBehaviour
         Instance = this;
     }
 
+    public bool CanMove(SortDahan source, SortDahan dest, SortKind kind, int count)
+    {
+        if (source == null || dest == null || source == dest || count <= 0) return false;
+        if (dest.GetEmptySlotCount() < count) return false;
+        SortKind? topDest = dest.GetTopKind();
+        if (topDest.HasValue && topDest.Value != kind) return false;
+        return true;
+    }
+
+    public void DoMove(SortDahan source, SortDahan dest, int count, Action onComplete = null)
+    {
+        if (source == null || dest == null || count <= 0) { onComplete?.Invoke(); return; }
+
+        source.GetTopGroup(out _, out int actualCount, _tempSlots);
+        if (actualCount == 0 || _tempSlots.Count == 0) { onComplete?.Invoke(); return; }
+
+        int moveCount = Mathf.Min(count, actualCount, _tempSlots.Count);
+        dest.GetNextEmptySlotIndicesForAdd(moveCount, _tempDestSlots);
+        if (_tempDestSlots.Count < moveCount) { onComplete?.Invoke(); return; }
+
+        var moving = new List<SortKarakter>(moveCount);
+        for (int i = 0; i < moveCount; i++)
+        {
+            var c = source.RemoveCharacterAtSlot(_tempSlots[i]);
+            if (c != null)
+            {
+                c.transform.SetParent(dest.transform, true);
+                moving.Add(c);
+            }
+        }
+
+        if (moving.Count == 0) { onComplete?.Invoke(); return; }
+
+        int moveCountFinal = moving.Count;
+        int arrived = 0;
+        for (int i = 0; i < moving.Count && i < _tempDestSlots.Count; i++)
+        {
+            int slotIndex = _tempDestSlots[i];
+            Vector3 targetPos = dest.GetSlotPosition(slotIndex);
+            SortKarakter c = moving[i];
+            c.MoveTo(targetPos, () =>
+            {
+                dest.AddCharacterAtSlot(c, slotIndex);
+                arrived++;
+                if (arrived >= moveCountFinal)
+                {
+                    dest.CompactSlots();
+                    onComplete?.Invoke();
+                    CheckLevelComplete();
+                }
+            });
+        }
+    }
+
     public void CheckLevelComplete()
     {
-        if (levelCompleted || levelFailed) return;
-
-        SortKarakter[] all = FindObjectsOfType<SortKarakter>();
-        if (all.Length == 0)
-            Win();
-    }
-
-    public void Win()
-    {
-        if (levelCompleted) return;
-        levelCompleted = true;
-
-        RequestPause(true);
-        if (winPanel != null)
-            winPanel.SetActive(true);
-
-        Debug.Log("Level selesai!");
-    }
-
-    public void Lose()
-    {
-        if (levelFailed) return;
-        levelFailed = true;
-
-        RequestPause(true);
-        if (losePanel != null)
-            losePanel.SetActive(true);
-
-        Debug.Log("Level gagal!");
-    }
-
-    public void RequestPause(bool pause)
-    {
-        if (SortGameManager.Instance != null)
-            SortGameManager.Instance.SetTimeScale(pause ? 0f : 1f);
-        else
-            Time.timeScale = pause ? 0f : 1f;
-    }
-
-    public void Restart()
-    {
-        Time.timeScale = 1f;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-    }
-
-    public void NextLevel()
-    {
-        Time.timeScale = 1f;
-        if (!string.IsNullOrEmpty(nextSceneName))
-            SceneManager.LoadScene(nextSceneName);
-    }
-
-    public void AddScore(int value)
-    {
-        Score += value;
-    }
-
-    public void ResetScore()
-    {
-        Score = 0;
+        if (FindObjectsOfType<SortKarakter>().Length == 0)
+            OnLevelComplete?.Invoke();
     }
 
     private void OnDestroy()
