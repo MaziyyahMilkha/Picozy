@@ -2,16 +2,16 @@ using System;
 using UnityEngine;
 
 [Serializable]
-public class DahanEntry
+public class BranchEntry
 {
     public SortKind[] slots = new SortKind[8];
 
-    public bool IsEmpty(int slotPerDahan)
+    public bool IsEmpty(int slotsPerBranch)
     {
         if (slots == null) return true;
-        int n = Mathf.Min(slotPerDahan, slots.Length);
+        int n = Mathf.Min(slotsPerBranch, slots.Length);
         for (int i = 0; i < n; i++)
-            if (slots[i] != SortKind.Kosong) return false;
+            if (slots[i] != SortKind.Empty) return false;
         return true;
     }
 }
@@ -19,9 +19,12 @@ public class DahanEntry
 [Serializable]
 public class SortLevelData
 {
-    public int slotPerDahan = 4;
+    public int slotsPerBranch = 4;
     public int kindMask = 15;
-    public bool randomEachPlay = true;
-    public DahanEntry[] leftDahans = new DahanEntry[0];
-    public DahanEntry[] rightDahans = new DahanEntry[0];
+    public float levelDurationSeconds = 60f;
+    public int undoCount = 3;
+    public bool destroyBranchWhenComplete = true;
+    public Sprite backgroundTheme;
+    public BranchEntry[] leftBranches = new BranchEntry[0];
+    public BranchEntry[] rightBranches = new BranchEntry[0];
 }

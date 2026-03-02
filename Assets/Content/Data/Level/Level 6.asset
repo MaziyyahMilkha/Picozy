@@ -13,12 +13,11 @@ MonoBehaviour:
   m_Name: Level 6
   m_EditorClassIdentifier: 
   data:
-    slotPerDahan: 4
+    slotsPerBranch: 4
     kindMask: 7
-    randomEachPlay: 1
-    leftDahans:
-    - slots: 02000000020000000000000005000000
-    - slots: 01000000050000000500000005000000
-    rightDahans:
-    - slots: 02000000010000000000000001000000
-    - slots: 00000000020000000100000000000000
+    levelDurationSeconds: 60
+    undoCount: 3
+    destroyBranchWhenComplete: 1
+    backgroundTheme: {fileID: 21300000, guid: c5a34a109c5bd9b4d9ff7bf3ce75b3f6, type: 3}
+    leftBranches: []
+    rightBranches: []

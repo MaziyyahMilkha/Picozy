@@ -89,7 +89,7 @@ public class SortInputManager : MonoBehaviour
         if (selectedDahan == null || !selectedKind.HasValue || selectedCount <= 0) { Deselect(); return; }
         if (selectedDahan == dest) { Deselect(); return; }
 
-        var gameplay = SortGameplayManager.Instance;
+        var gameplay = SortGameplayController.Instance;
         if (gameplay == null) { Deselect(); return; }
 
         if (gameplay.CanMove(selectedDahan, dest, selectedKind.Value, selectedCount))

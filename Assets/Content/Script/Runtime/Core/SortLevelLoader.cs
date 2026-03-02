@@ -73,11 +73,11 @@ public class SortLevelLoader : MonoBehaviour
 
     private void SpawnLevel(SortLevelData data)
     {
-        int slotPerDahan = Mathf.Clamp(data.slotPerDahan, 1, 8);
-        var leftDahans = data.leftDahans ?? new DahanEntry[0];
-        var rightDahans = data.rightDahans ?? new DahanEntry[0];
+        int slotsPerBranch = Mathf.Clamp(data.slotsPerBranch, 1, 8);
+        var leftBranches = data.leftBranches ?? new BranchEntry[0];
+        var rightBranches = data.rightBranches ?? new BranchEntry[0];
 
-        for (int i = 0; i < leftDahans.Length; i++)
+        for (int i = 0; i < leftBranches.Length; i++)
         {
             Transform parent = GetSpawnParent(leftSpawnPoints, i);
             Vector3 pos = parent != null ? parent.position : new Vector3(-3f - i * 2f, 0f, 0f);
@@ -86,11 +86,11 @@ public class SortLevelLoader : MonoBehaviour
             {
                 dahan.SetTopIsHighIndex(true);
                 spawnedDahans.Add(dahan);
-                FillDahan(dahan, leftDahans[i], slotPerDahan, isRight: false);
+                FillBranch(dahan, leftBranches[i], slotsPerBranch, isRight: false);
             }
         }
 
-        for (int i = 0; i < rightDahans.Length; i++)
+        for (int i = 0; i < rightBranches.Length; i++)
         {
             Transform parent = GetSpawnParent(rightSpawnPoints, i);
             Vector3 pos = parent != null ? parent.position : new Vector3(3f + i * 2f, 0f, 0f);
@@ -99,7 +99,7 @@ public class SortLevelLoader : MonoBehaviour
             {
                 dahan.SetTopIsHighIndex(true);
                 spawnedDahans.Add(dahan);
-                FillDahan(dahan, rightDahans[i], slotPerDahan, isRight: true);
+                FillBranch(dahan, rightBranches[i], slotsPerBranch, isRight: true);
             }
         }
     }
@@ -120,13 +120,13 @@ public class SortLevelLoader : MonoBehaviour
         return go.GetComponent<SortDahan>();
     }
 
-    private void FillDahan(SortDahan dahan, DahanEntry entry, int slotPerDahan, bool isRight)
+    private void FillBranch(SortDahan dahan, BranchEntry entry, int slotsPerBranch, bool isRight)
     {
         if (dahan == null || entry == null || entry.slots == null) return;
-        for (int s = 0; s < slotPerDahan && s < entry.slots.Length; s++)
+        for (int s = 0; s < slotsPerBranch && s < entry.slots.Length; s++)
         {
             SortKind kind = entry.slots[s];
-            if (kind == SortKind.Kosong) continue;
+            if (kind == SortKind.Empty) continue;
             Transform slotParent = dahan.GetSlotTransform(s);
             Vector3 slotPos = slotParent != null ? slotParent.position : dahan.GetSlotPosition(s);
             Transform parent = slotParent != null ? slotParent : dahan.transform;

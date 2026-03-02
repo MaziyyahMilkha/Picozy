@@ -8,17 +8,31 @@ public class SortLevelAssetEditor : Editor
 {
     private const float SlotColorStripWidth = 8f;
     private const int MaxSlots = 8;
-    private static readonly string[] KindNames = System.Enum.GetNames(typeof(SortKind));
-    private const int KindCountNoKosong = 5;
-    private static readonly string[] KindNamesForMask = new string[] { "Tomat", "Jamur", "BawangMerah", "Daisy", "Kelapa" };
+    private static string[] KindNames => System.Enum.GetNames(typeof(SortKind));
+    private static int KindCountNoEmpty => System.Enum.GetValues(typeof(SortKind)).Length - 1;
+    private static string[] _cachedKindNamesForMask;
+    private static string[] KindNamesForMask
+    {
+        get
+        {
+            if (_cachedKindNamesForMask != null) return _cachedKindNamesForMask;
+            var all = System.Enum.GetNames(typeof(SortKind));
+            int n = all.Length > 0 ? all.Length - 1 : 0;
+            _cachedKindNamesForMask = new string[n];
+            for (int i = 0; i < n; i++) _cachedKindNamesForMask[i] = all[i];
+            return _cachedKindNamesForMask;
+        }
+    }
     private static readonly Color FilledBg = new Color(0.95f, 0.98f, 1f, 0.6f);
-    private const float DahanRowHeight = 36f;
+    private const float BranchRowHeight = 36f;
     private const float SlotRowHeight = 38f;
-    private const float PaddingRight = 28f;
-    private const float PaddingInner = 10f;
+    private const float PaddingRight = 12f;
+    private const float PaddingInner = 8f;
+    private const float ButtonAreaWidth = 60f;
     private const float ChipWidth = 52f;
     private const float ChipHeight = 26f;
     private const float ChipGap = 5f;
+    private const float LabelWidth = 32f;
     private static readonly Color ChipBorder = new Color(0.45f, 0.45f, 0.5f, 0.6f);
 
     private static Color[] KindColors => SortKindColors.Colors != null && SortKindColors.Colors.Length > 0 ? SortKindColors.Colors : FallbackKindColors;
@@ -33,14 +47,14 @@ public class SortLevelAssetEditor : Editor
     private ReorderableList slotEditList;
     private bool editingLeft;
     private int editingIndex = -1;
-    private SerializedProperty currentSlotPerDahan;
+    private SerializedProperty currentSlotsPerBranch;
     private int currentKindMask;
     private readonly int[] _kindCounts = new int[16];
     private readonly int[] _countWithoutSlot = new int[16];
     private readonly System.Collections.Generic.List<SortKind> _optionKinds = new System.Collections.Generic.List<SortKind>(16);
     private int _cachedKindMask = -1;
     private SortKind[] _cachedAllowedKinds;
-    private int currentSlotCount => currentSlotPerDahan != null ? Mathf.Clamp(currentSlotPerDahan.intValue, 1, MaxSlots) : 4;
+    private int currentSlotCount => currentSlotsPerBranch != null ? Mathf.Clamp(currentSlotsPerBranch.intValue, 1, MaxSlots) : 4;
 
     public override void OnInspectorGUI()
     {
@@ -48,55 +62,104 @@ public class SortLevelAssetEditor : Editor
         SerializedProperty data = serializedObject.FindProperty("data");
         if (data == null) { serializedObject.ApplyModifiedProperties(); return; }
 
-        SerializedProperty slotPerDahan = data.FindPropertyRelative("slotPerDahan");
+        SerializedProperty slotsPerBranch = data.FindPropertyRelative("slotsPerBranch");
         SerializedProperty kindMask = data.FindPropertyRelative("kindMask");
-        SerializedProperty randomEachPlay = data.FindPropertyRelative("randomEachPlay");
-        SerializedProperty leftDahans = data.FindPropertyRelative("leftDahans");
-        SerializedProperty rightDahans = data.FindPropertyRelative("rightDahans");
+        SerializedProperty levelDurationSeconds = data.FindPropertyRelative("levelDurationSeconds");
+        SerializedProperty undoCount = data.FindPropertyRelative("undoCount");
+        SerializedProperty destroyBranchWhenComplete = data.FindPropertyRelative("destroyBranchWhenComplete");
+        SerializedProperty backgroundTheme = data.FindPropertyRelative("backgroundTheme");
+        SerializedProperty leftBranches = data.FindPropertyRelative("leftBranches");
+        SerializedProperty rightBranches = data.FindPropertyRelative("rightBranches");
 
         EditorGUILayout.Space(4f);
-        slotPerDahan.intValue = Mathf.Clamp(EditorGUILayout.IntField("Slots per branch", slotPerDahan.intValue), 1, MaxSlots);
-        kindMask.intValue = EditorGUILayout.MaskField("Kinds", kindMask.intValue & 0x1F, KindNamesForMask) & 0x1F;
-        randomEachPlay.boolValue = EditorGUILayout.Toggle("Random each play", randomEachPlay.boolValue);
+        slotsPerBranch.intValue = Mathf.Clamp(EditorGUILayout.IntField("Slots per branch", slotsPerBranch.intValue), 1, MaxSlots);
+        int maskBits = (1 << KindCountNoEmpty) - 1;
+        int currentMask = kindMask.intValue & maskBits;
+        string kindsLabel = GetKindsMaskSummary(currentMask, maskBits);
+        Rect kindsRect = EditorGUILayout.GetControlRect(true, EditorGUIUtility.singleLineHeight);
+        if (EditorGUI.DropdownButton(kindsRect, new GUIContent("Kinds: " + kindsLabel), FocusType.Passive))
+        {
+            var menu = new GenericMenu();
+            for (int i = 0; i < KindCountNoEmpty; i++)
+            {
+                int idx = i;
+                bool on = (currentMask & (1 << i)) != 0;
+                menu.AddItem(new GUIContent(KindNamesForMask[i]), on, () =>
+                {
+                    serializedObject.Update();
+                    var d = serializedObject.FindProperty("data");
+                    if (d != null)
+                    {
+                        var km = d.FindPropertyRelative("kindMask");
+                        int m = (km.intValue & maskBits) ^ (1 << idx);
+                        km.intValue = m;
+                        serializedObject.ApplyModifiedProperties();
+                    }
+                    Repaint();
+                });
+            }
+            menu.AddSeparator("");
+            menu.AddItem(new GUIContent("Nothing"), currentMask == 0, () =>
+            {
+                serializedObject.Update();
+                var d = serializedObject.FindProperty("data");
+                if (d != null) { d.FindPropertyRelative("kindMask").intValue = 0; serializedObject.ApplyModifiedProperties(); }
+                Repaint();
+            });
+            menu.AddItem(new GUIContent("Everything"), currentMask == maskBits, () =>
+            {
+                serializedObject.Update();
+                var d = serializedObject.FindProperty("data");
+                if (d != null) { d.FindPropertyRelative("kindMask").intValue = maskBits; serializedObject.ApplyModifiedProperties(); }
+                Repaint();
+            });
+            menu.DropDown(kindsRect);
+        }
+        levelDurationSeconds.floatValue = Mathf.Max(0f, EditorGUILayout.FloatField("Level duration (sec)", levelDurationSeconds.floatValue));
+        undoCount.intValue = Mathf.Max(0, EditorGUILayout.IntField("Undo count", undoCount.intValue));
+        if (destroyBranchWhenComplete != null)
+            destroyBranchWhenComplete.boolValue = EditorGUILayout.Toggle("Destroy branch when complete", destroyBranchWhenComplete.boolValue);
+        if (backgroundTheme != null)
+            EditorGUILayout.PropertyField(backgroundTheme, new GUIContent("Background theme"));
 
         int kindCount = CountKinds(kindMask.intValue);
-        int slotsPer = Mathf.Clamp(slotPerDahan.intValue, 1, MaxSlots);
-        int totalDahans = leftDahans.arraySize + rightDahans.arraySize;
-        int totalSlots = totalDahans * slotsPer;
+        int slotsPer = Mathf.Clamp(slotsPerBranch.intValue, 1, MaxSlots);
+        int totalBranches = leftBranches.arraySize + rightBranches.arraySize;
+        int totalSlots = totalBranches * slotsPer;
         int filledSlots = kindCount * slotsPer;
-        int kosongCount = totalSlots - filledSlots;
+        int emptySlotCount = totalSlots - filledSlots;
         if (kindCount > 0)
-            EditorGUILayout.HelpBox("Filled: " + filledSlots + " (" + kindCount + " kinds × " + slotsPer + "). Empty: " + kosongCount + ". Total: " + totalSlots, MessageType.Info);
+            EditorGUILayout.HelpBox("Filled: " + filledSlots + " (" + kindCount + " kinds × " + slotsPer + "). Empty: " + emptySlotCount + ". Total: " + totalSlots, MessageType.Info);
 
         EditorGUILayout.Space(4f);
 
-        currentSlotPerDahan = slotPerDahan;
+        currentSlotsPerBranch = slotsPerBranch;
         currentKindMask = kindMask.intValue;
         if (_cachedKindMask != currentKindMask) { _cachedKindMask = currentKindMask; _cachedAllowedKinds = GetKindsFromMask(currentKindMask); }
-        EnsureSlotsSize(leftDahans, slotPerDahan.intValue);
-        EnsureSlotsSize(rightDahans, slotPerDahan.intValue);
+        EnsureSlotsSize(leftBranches, slotsPerBranch.intValue);
+        EnsureSlotsSize(rightBranches, slotsPerBranch.intValue);
 
-        string leftPath = leftDahans.propertyPath;
-        string rightPath = rightDahans.propertyPath;
+        string leftPath = leftBranches.propertyPath;
+        string rightPath = rightBranches.propertyPath;
         if (leftList == null || leftList.serializedProperty.propertyPath != leftPath)
         {
-            leftList = new ReorderableList(serializedObject, leftDahans, true, true, true, true)
+            leftList = new ReorderableList(serializedObject, leftBranches, true, true, true, true)
             {
-                elementHeight = DahanRowHeight,
-                drawHeaderCallback = r => EditorGUI.LabelField(r, "Left (1,2,3,4)"),
-                drawElementCallback = (rect, index, active, focused) => DrawDahanRow(rect, data, leftDahans.GetArrayElementAtIndex(index), index, "L" + (index + 1), true)
+                elementHeight = BranchRowHeight,
+                drawHeaderCallback = r => EditorGUI.LabelField(r, "Left branches"),
+                drawElementCallback = (rect, index, active, focused) => DrawBranchRow(rect, data, leftBranches.GetArrayElementAtIndex(index), index, "L" + (index + 1), true)
             };
-            leftList.onAddCallback = l => { leftDahans.arraySize++; InitEntry(leftDahans.GetArrayElementAtIndex(leftDahans.arraySize - 1)); };
+            leftList.onAddCallback = l => { leftBranches.arraySize++; InitEntry(leftBranches.GetArrayElementAtIndex(leftBranches.arraySize - 1)); };
         }
         if (rightList == null || rightList.serializedProperty.propertyPath != rightPath)
         {
-            rightList = new ReorderableList(serializedObject, rightDahans, true, true, true, true)
+            rightList = new ReorderableList(serializedObject, rightBranches, true, true, true, true)
             {
-                elementHeight = DahanRowHeight,
-                drawHeaderCallback = r => EditorGUI.LabelField(r, "Right (4,3,2,1)"),
-                drawElementCallback = (rect, index, active, focused) => DrawDahanRow(rect, data, rightDahans.GetArrayElementAtIndex(index), index, "R" + (index + 1), false)
+                elementHeight = BranchRowHeight,
+                drawHeaderCallback = r => EditorGUI.LabelField(r, "Right branches"),
+                drawElementCallback = (rect, index, active, focused) => DrawBranchRow(rect, data, rightBranches.GetArrayElementAtIndex(index), index, "R" + (index + 1), false)
             };
-            rightList.onAddCallback = l => { rightDahans.arraySize++; InitEntry(rightDahans.GetArrayElementAtIndex(rightDahans.arraySize - 1)); };
+            rightList.onAddCallback = l => { rightBranches.arraySize++; InitEntry(rightBranches.GetArrayElementAtIndex(rightBranches.arraySize - 1)); };
         }
 
         float halfW = (EditorGUIUtility.currentViewWidth - 80f - PaddingRight * 2f) * 0.5f;
@@ -107,10 +170,10 @@ public class SortLevelAssetEditor : Editor
         EditorGUILayout.EndVertical();
         EditorGUILayout.BeginVertical(GUILayout.Width(80f));
         GUILayout.Space(22f);
-        if (leftList.index >= 0 && leftList.index < leftDahans.arraySize && GUILayout.Button("→\nRight"))
-            MoveBetween(leftDahans, rightDahans, leftList.index);
-        if (rightList.index >= 0 && rightList.index < rightDahans.arraySize && GUILayout.Button("←\nLeft"))
-            MoveBetween(rightDahans, leftDahans, rightList.index);
+        if (leftList.index >= 0 && leftList.index < leftBranches.arraySize && GUILayout.Button("→\nRight"))
+            MoveBetween(leftBranches, rightBranches, leftList.index);
+        if (rightList.index >= 0 && rightList.index < rightBranches.arraySize && GUILayout.Button("←\nLeft"))
+            MoveBetween(rightBranches, leftBranches, rightList.index);
         EditorGUILayout.EndVertical();
         EditorGUILayout.BeginVertical(GUILayout.Width(halfW));
         rightList.DoList(EditorGUILayout.GetControlRect(false, rightList.GetHeight()));
@@ -120,10 +183,10 @@ public class SortLevelAssetEditor : Editor
 
         if (editingIndex >= 0)
         {
-            SerializedProperty editDahans = editingLeft ? leftDahans : rightDahans;
-            if (editingIndex < editDahans.arraySize)
+            SerializedProperty editBranches = editingLeft ? leftBranches : rightBranches;
+            if (editingIndex < editBranches.arraySize)
             {
-                SerializedProperty editEntry = editDahans.GetArrayElementAtIndex(editingIndex);
+                SerializedProperty editEntry = editBranches.GetArrayElementAtIndex(editingIndex);
                 SerializedProperty editSlots = editEntry.FindPropertyRelative("slots");
                 string editLabel = (editingLeft ? "L" : "R") + (editingIndex + 1);
                 EditorGUILayout.Space(6f);
@@ -142,45 +205,52 @@ public class SortLevelAssetEditor : Editor
                 editingIndex = -1;
         }
 
-        ValidateAndWarn(leftDahans, rightDahans, kindMask.intValue, slotPerDahan.intValue);
+        ValidateAndWarn(leftBranches, rightBranches, kindMask.intValue, slotsPerBranch.intValue);
         EditorGUILayout.Space(4f);
         if (GUILayout.Button("Randomize"))
             DoRandomizeOnly(data);
         if (GUILayout.Button("Compact (non-empty to left per branch)"))
         {
-            int sc = Mathf.Clamp(slotPerDahan.intValue, 1, MaxSlots);
-            CompactAllDahans(leftDahans, sc);
-            CompactAllDahans(rightDahans, sc);
+            int sc = Mathf.Clamp(slotsPerBranch.intValue, 1, MaxSlots);
+            CompactAllBranches(leftBranches, sc);
+            CompactAllBranches(rightBranches, sc);
         }
 
         serializedObject.ApplyModifiedProperties();
     }
 
-    private void DrawDahanRow(Rect rect, SerializedProperty data, SerializedProperty entry, int entryIndex, string label, bool isLeft)
+    private void DrawBranchRow(Rect rect, SerializedProperty data, SerializedProperty entry, int entryIndex, string label, bool isLeft)
     {
+        float rowPad = 6f;
+        rect.x += rowPad;
+        rect.width -= rowPad * 2f;
+        if (rect.width < LabelWidth + ButtonAreaWidth + 20f) return;
+
         SerializedProperty slots = entry.FindPropertyRelative("slots");
         int slotCount = currentSlotCount;
         bool isEditing = editingLeft == isLeft && editingIndex == entryIndex;
 
-        bool allKosong = true;
+        bool allEmpty = true;
         if (slots != null && slots.arraySize >= slotCount)
         {
-            for (int s = 0; s < slotCount && allKosong; s++)
-                if (slots.GetArrayElementAtIndex(s).enumValueIndex != (int)SortKind.Kosong) allKosong = false;
+            for (int s = 0; s < slotCount && allEmpty; s++)
+                if (slots.GetArrayElementAtIndex(s).enumValueIndex != (int)SortKind.Empty) allEmpty = false;
         }
         Color prev = GUI.backgroundColor;
-        GUI.backgroundColor = allKosong ? KindColors[(int)SortKind.Kosong] : FilledBg;
+        GUI.backgroundColor = allEmpty ? KindColors[(int)SortKind.Empty] : FilledBg;
         GUI.Box(rect, GUIContent.none);
         GUI.backgroundColor = prev;
 
-        rect.x += PaddingInner; rect.width -= PaddingInner * 2f;
         float lineH = EditorGUIUtility.singleLineHeight;
         float centerY = rect.y + (rect.height - lineH) * 0.5f;
+        float buttonW = 52f;
+        float chipAreaW = rect.width - LabelWidth - ButtonAreaWidth;
+        float buttonX = rect.x + rect.width - ButtonAreaWidth + (ButtonAreaWidth - buttonW) * 0.5f;
 
-        EditorGUI.LabelField(new Rect(rect.x, centerY - 1f, 30f, lineH), label, EditorStyles.miniBoldLabel);
-        float chipStartX = rect.x + 32f;
-        DrawSlotChips(new Rect(chipStartX, centerY - ChipHeight * 0.5f, rect.width - 32f - 58f, ChipHeight), slots, slotCount, isLeft);
-        if (GUI.Button(new Rect(rect.xMax - 56f, centerY - 2f, 56f, lineH + 4f), isEditing ? "Close" : "Edit"))
+        EditorGUI.LabelField(new Rect(rect.x, centerY - 1f, LabelWidth, lineH), label, EditorStyles.miniBoldLabel);
+        if (chipAreaW > 0f)
+            DrawSlotChips(new Rect(rect.x + LabelWidth, centerY - ChipHeight * 0.5f, chipAreaW, ChipHeight), slots, slotCount, isLeft);
+        if (GUI.Button(new Rect(buttonX, centerY - 2f, buttonW, lineH + 4f), isEditing ? "Close" : "Edit"))
         {
             if (isEditing) { editingIndex = -1; slotEditList = null; }
             else { editingLeft = isLeft; editingIndex = entryIndex; slotEditList = null; }
@@ -189,8 +259,16 @@ public class SortLevelAssetEditor : Editor
 
     private void DrawSlotChips(Rect area, SerializedProperty slots, int slotCount, bool isLeft)
     {
-        if (slots == null || slotCount <= 0) return;
-        float totalW = slotCount * ChipWidth + (slotCount - 1) * ChipGap;
+        if (slots == null || slotCount <= 0 || area.width <= 0) return;
+        float totalNeeded = slotCount * ChipWidth + (slotCount - 1) * ChipGap;
+        float chipW = ChipWidth;
+        float gap = ChipGap;
+        if (totalNeeded > area.width)
+        {
+            chipW = Mathf.Max(20f, (area.width - (slotCount - 1) * 2f) / slotCount);
+            gap = 2f;
+        }
+        float totalW = slotCount * chipW + (slotCount - 1) * gap;
         float x = area.x + Mathf.Max(0, (area.width - totalW) * 0.5f);
         float y = area.y + (area.height - ChipHeight) * 0.5f;
         for (int s = 0; s < slotCount; s++)
@@ -199,14 +277,14 @@ public class SortLevelAssetEditor : Editor
             if (dataIndex < 0 || dataIndex >= slots.arraySize) continue;
             int k = slots.GetArrayElementAtIndex(dataIndex).enumValueIndex;
             int kindIdx = Mathf.Clamp(k, 0, KindColors.Length - 1);
-            Rect box = new Rect(x + s * (ChipWidth + ChipGap), y, ChipWidth, ChipHeight);
+            Rect box = new Rect(x + s * (chipW + gap), y, chipW, ChipHeight);
             EditorGUI.DrawRect(box, KindColors[kindIdx]);
             EditorGUI.DrawRect(new Rect(box.x, box.y, box.width, 1f), ChipBorder);
             EditorGUI.DrawRect(new Rect(box.x, box.yMax - 1f, box.width, 1f), ChipBorder);
             EditorGUI.DrawRect(new Rect(box.x, box.y, 1f, box.height), ChipBorder);
             EditorGUI.DrawRect(new Rect(box.xMax - 1f, box.y, 1f, box.height), ChipBorder);
             Color textColor = Luminance(KindColors[kindIdx]) < 0.45f ? Color.white : new Color(0.15f, 0.15f, 0.18f, 1f);
-            var style = new GUIStyle(EditorStyles.miniLabel) { alignment = TextAnchor.MiddleCenter, normal = { textColor = textColor } };
+            var style = new GUIStyle(EditorStyles.miniLabel) { alignment = TextAnchor.MiddleCenter, normal = { textColor = textColor }, fontSize = chipW < 36 ? 8 : 10 };
             EditorGUI.LabelField(box, KindNames[kindIdx], style);
         }
     }
@@ -246,14 +324,18 @@ public class SortLevelAssetEditor : Editor
                     int cap = _kindCounts.Length;
                     for (int i = 0; i < cap; i++) _countWithoutSlot[i] = _kindCounts[i];
                     if (currentVal >= 0 && currentVal < cap) _countWithoutSlot[currentVal]--;
-                    var allowedKinds = _cachedAllowedKinds != null ? _cachedAllowedKinds : GetKindsFromMask(currentKindMask);
+                    var dataProp = serializedObject.FindProperty("data");
+                    int mask = dataProp != null ? dataProp.FindPropertyRelative("kindMask").intValue : 0;
+                    int maskBitsPopup = (1 << KindCountNoEmpty) - 1;
+                    mask &= maskBitsPopup;
+                    var allowedKinds = GetKindsFromMask(mask);
                     _optionKinds.Clear();
                     foreach (var k in allowedKinds)
                     {
                         int ki = (int)k;
                         if (ki < cap && (_countWithoutSlot[ki] < currentSlotCount || ki == currentVal)) _optionKinds.Add(k);
                     }
-                    _optionKinds.Add(SortKind.Kosong);
+                    _optionKinds.Add(SortKind.Empty);
                     if (_optionKinds.Count == 0) _optionKinds.Add((SortKind)currentVal);
                     int selected = 0;
                     for (int k = 0; k < _optionKinds.Count; k++)
@@ -267,10 +349,20 @@ public class SortLevelAssetEditor : Editor
         }
     }
 
+    private static string GetKindsMaskSummary(int mask, int maskBits)
+    {
+        if (mask == 0) return "Nothing";
+        if (mask == maskBits) return "Everything";
+        var parts = new List<string>();
+        for (int i = 0; i < KindCountNoEmpty; i++)
+            if ((mask & (1 << i)) != 0) parts.Add(KindNamesForMask[i]);
+        return parts.Count > 0 ? string.Join(", ", parts) : "Nothing";
+    }
+
     private int CountKinds(int mask)
     {
         int n = 0;
-        for (int i = 0; i < KindCountNoKosong; i++)
+        for (int i = 0; i < KindCountNoEmpty; i++)
             if ((mask & (1 << i)) != 0) n++;
         return n;
     }
@@ -278,33 +370,33 @@ public class SortLevelAssetEditor : Editor
     private SortKind[] GetKindsFromMask(int mask)
     {
         var list = new System.Collections.Generic.List<SortKind>();
-        for (int i = 0; i < KindCountNoKosong; i++)
+        for (int i = 0; i < KindCountNoEmpty; i++)
             if ((mask & (1 << i)) != 0) list.Add((SortKind)i);
         return list.ToArray();
     }
 
-    private void CountKindsInLevel(SerializedProperty data, int slotPerDahan, int[] counts)
+    private void CountKindsInLevel(SerializedProperty data, int slotsPerBranch, int[] counts)
     {
         for (int i = 0; i < counts.Length; i++) counts[i] = 0;
-        var leftDahans = data.FindPropertyRelative("leftDahans");
-        var rightDahans = data.FindPropertyRelative("rightDahans");
-        void CountList(SerializedProperty dahans)
+        var leftBranches = data.FindPropertyRelative("leftBranches");
+        var rightBranches = data.FindPropertyRelative("rightBranches");
+        void CountList(SerializedProperty branches)
         {
-            for (int i = 0; i < dahans.arraySize; i++)
+            for (int i = 0; i < branches.arraySize; i++)
             {
-                var slots = dahans.GetArrayElementAtIndex(i).FindPropertyRelative("slots");
-                for (int s = 0; s < slotPerDahan && s < slots.arraySize; s++)
+                var slots = branches.GetArrayElementAtIndex(i).FindPropertyRelative("slots");
+                for (int s = 0; s < slotsPerBranch && s < slots.arraySize; s++)
                 {
                     int k = slots.GetArrayElementAtIndex(s).enumValueIndex;
                     if (k >= 0 && k < counts.Length) counts[k]++;
                 }
             }
         }
-        CountList(leftDahans);
-        CountList(rightDahans);
+        CountList(leftBranches);
+        CountList(rightBranches);
     }
 
-    private void ValidateAndWarn(SerializedProperty leftDahans, SerializedProperty rightDahans, int kindMask, int slotPerDahan)
+    private void ValidateAndWarn(SerializedProperty leftBranches, SerializedProperty rightBranches, int kindMask, int slotsPerBranch)
     {
         int kindCount = CountKinds(kindMask);
         if (kindCount == 0) return;
@@ -312,19 +404,19 @@ public class SortLevelAssetEditor : Editor
         void CountEntry(SerializedProperty entry)
         {
             var slots = entry.FindPropertyRelative("slots");
-            for (int s = 0; s < slotPerDahan && s < slots.arraySize; s++)
+            for (int s = 0; s < slotsPerBranch && s < slots.arraySize; s++)
             {
                 int k = slots.GetArrayElementAtIndex(s).enumValueIndex;
                 if (k >= 0 && k < counts.Length) counts[k]++;
             }
         }
-        for (int i = 0; i < leftDahans.arraySize; i++) CountEntry(leftDahans.GetArrayElementAtIndex(i));
-        for (int i = 0; i < rightDahans.arraySize; i++) CountEntry(rightDahans.GetArrayElementAtIndex(i));
-        for (int i = 0; i < KindCountNoKosong; i++)
+        for (int i = 0; i < leftBranches.arraySize; i++) CountEntry(leftBranches.GetArrayElementAtIndex(i));
+        for (int i = 0; i < rightBranches.arraySize; i++) CountEntry(rightBranches.GetArrayElementAtIndex(i));
+        for (int i = 0; i < KindCountNoEmpty; i++)
         {
             if ((kindMask & (1 << i)) == 0) continue;
-            if (counts[i] != slotPerDahan)
-                EditorGUILayout.HelpBox("Kind \"" + KindNames[i] + "\" should be " + slotPerDahan + ", got " + counts[i], MessageType.Warning);
+            if (counts[i] != slotsPerBranch)
+                EditorGUILayout.HelpBox("Kind \"" + KindNames[i] + "\" should be " + slotsPerBranch + ", got " + counts[i], MessageType.Warning);
         }
     }
 
@@ -337,12 +429,12 @@ public class SortLevelAssetEditor : Editor
         SetEntry(toList.GetArrayElementAtIndex(toList.arraySize - 1), entry);
     }
 
-    private void EnsureSlotsSize(SerializedProperty dahans, int slotCount)
+    private void EnsureSlotsSize(SerializedProperty branches, int slotCount)
     {
         int n = Mathf.Clamp(slotCount, 1, MaxSlots);
-        for (int i = 0; i < dahans.arraySize; i++)
+        for (int i = 0; i < branches.arraySize; i++)
         {
-            var slots = dahans.GetArrayElementAtIndex(i).FindPropertyRelative("slots");
+            var slots = branches.GetArrayElementAtIndex(i).FindPropertyRelative("slots");
             if (slots.arraySize != n) slots.arraySize = n;
         }
     }
@@ -353,12 +445,12 @@ public class SortLevelAssetEditor : Editor
         var slots = entry.FindPropertyRelative("slots");
         slots.arraySize = n;
         for (int s = 0; s < slots.arraySize; s++)
-            slots.GetArrayElementAtIndex(s).enumValueIndex = (int)SortKind.Kosong;
+            slots.GetArrayElementAtIndex(s).enumValueIndex = (int)SortKind.Empty;
     }
 
-    private DahanEntry GetEntry(SerializedProperty entryProp)
+    private BranchEntry GetEntry(SerializedProperty entryProp)
     {
-        var e = new DahanEntry();
+        var e = new BranchEntry();
         var slots = entryProp.FindPropertyRelative("slots");
         e.slots = new SortKind[slots.arraySize];
         for (int i = 0; i < slots.arraySize; i++)
@@ -366,7 +458,7 @@ public class SortLevelAssetEditor : Editor
         return e;
     }
 
-    private void SetEntry(SerializedProperty entryProp, DahanEntry e)
+    private void SetEntry(SerializedProperty entryProp, BranchEntry e)
     {
         var slots = entryProp.FindPropertyRelative("slots");
         if (slots.arraySize < e.slots.Length) slots.arraySize = e.slots.Length;
@@ -386,60 +478,60 @@ public class SortLevelAssetEditor : Editor
 
     private void DoRandomizeOnly(SerializedProperty data)
     {
-        var slotPerDahan = data.FindPropertyRelative("slotPerDahan");
+        var slotsPerBranch = data.FindPropertyRelative("slotsPerBranch");
         var kindMask = data.FindPropertyRelative("kindMask");
-        var leftDahans = data.FindPropertyRelative("leftDahans");
-        var rightDahans = data.FindPropertyRelative("rightDahans");
-        int slotCount = Mathf.Clamp(slotPerDahan.intValue, 1, MaxSlots);
+        var leftBranches = data.FindPropertyRelative("leftBranches");
+        var rightBranches = data.FindPropertyRelative("rightBranches");
+        int slotCount = Mathf.Clamp(slotsPerBranch.intValue, 1, MaxSlots);
         var kinds = new List<SortKind>(GetKindsFromMask(kindMask.intValue));
         if (kinds.Count == 0) { EditorUtility.DisplayDialog("Randomize", "Select at least 1 kind.", "OK"); return; }
 
-        int totalDahans = leftDahans.arraySize + rightDahans.arraySize;
-        int totalSlots = totalDahans * slotCount;
+        int totalBranches = leftBranches.arraySize + rightBranches.arraySize;
+        int totalSlots = totalBranches * slotCount;
         int filledCount = kinds.Count * slotCount;
-        int kosongCount = totalSlots - filledCount;
-        if (kosongCount < 0) { EditorUtility.DisplayDialog("Randomize", "Not enough slots for " + kinds.Count + " kinds. Add branches or reduce kinds.", "OK"); return; }
+        int emptySlotCount = totalSlots - filledCount;
+        if (emptySlotCount < 0) { EditorUtility.DisplayDialog("Randomize", "Not enough slots for " + kinds.Count + " kinds. Add branches or reduce kinds.", "OK"); return; }
 
         var pile = new List<SortKind>();
         foreach (var k in kinds) for (int i = 0; i < slotCount; i++) pile.Add(k);
-        for (int i = 0; i < kosongCount; i++) pile.Add(SortKind.Kosong);
+        for (int i = 0; i < emptySlotCount; i++) pile.Add(SortKind.Empty);
         Shuffle(pile);
 
         int idx = 0;
-        void FillDahans(SerializedProperty dahans)
+        void FillBranches(SerializedProperty branches)
         {
-            for (int i = 0; i < dahans.arraySize; i++)
+            for (int i = 0; i < branches.arraySize; i++)
             {
-                var slots = dahans.GetArrayElementAtIndex(i).FindPropertyRelative("slots");
+                var slots = branches.GetArrayElementAtIndex(i).FindPropertyRelative("slots");
                 for (int s = 0; s < slotCount && s < slots.arraySize; s++)
-                    slots.GetArrayElementAtIndex(s).enumValueIndex = idx < pile.Count ? (int)pile[idx++] : (int)SortKind.Kosong;
+                    slots.GetArrayElementAtIndex(s).enumValueIndex = idx < pile.Count ? (int)pile[idx++] : (int)SortKind.Empty;
             }
         }
-        FillDahans(leftDahans);
-        FillDahans(rightDahans);
-        CompactAllDahans(leftDahans, slotCount);
-        CompactAllDahans(rightDahans, slotCount);
+        FillBranches(leftBranches);
+        FillBranches(rightBranches);
+        CompactAllBranches(leftBranches, slotCount);
+        CompactAllBranches(rightBranches, slotCount);
     }
 
-    private void CompactDahanSlots(SerializedProperty entry, int slotCount)
+    private void CompactBranchSlots(SerializedProperty entry, int slotCount)
     {
         var slots = entry.FindPropertyRelative("slots");
         if (slots.arraySize < slotCount) return;
-        var nonKosong = new System.Collections.Generic.List<int>();
-        int kosongCount = 0;
+        var nonEmpty = new System.Collections.Generic.List<int>();
+        int emptyCount = 0;
         for (int s = 0; s < slotCount; s++)
         {
             int k = slots.GetArrayElementAtIndex(s).enumValueIndex;
-            if (k == (int)SortKind.Kosong) kosongCount++; else nonKosong.Add(k);
+            if (k == (int)SortKind.Empty) emptyCount++; else nonEmpty.Add(k);
         }
         int i = 0;
-        foreach (int k in nonKosong) slots.GetArrayElementAtIndex(i++).enumValueIndex = k;
-        for (int j = 0; j < kosongCount; j++) slots.GetArrayElementAtIndex(i++).enumValueIndex = (int)SortKind.Kosong;
+        foreach (int k in nonEmpty) slots.GetArrayElementAtIndex(i++).enumValueIndex = k;
+        for (int j = 0; j < emptyCount; j++) slots.GetArrayElementAtIndex(i++).enumValueIndex = (int)SortKind.Empty;
     }
 
-    private void CompactAllDahans(SerializedProperty dahans, int slotCount)
+    private void CompactAllBranches(SerializedProperty branches, int slotCount)
     {
-        for (int i = 0; i < dahans.arraySize; i++)
-            CompactDahanSlots(dahans.GetArrayElementAtIndex(i), slotCount);
+        for (int i = 0; i < branches.arraySize; i++)
+            CompactBranchSlots(branches.GetArrayElementAtIndex(i), slotCount);
     }
 }

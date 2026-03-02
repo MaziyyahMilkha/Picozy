@@ -1,0 +1,277 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+
+public class SortGameplayController : MonoBehaviour
+{
+    public static SortGameplayController Instance { get; private set; }
+
+    [Header("Level")]
+    [SerializeField] private SortLevelLoader levelLoader;
+
+    [Header("Canvas (by id)")]
+    [SerializeField] private string gameplayCanvasId = "gameplay";
+    [SerializeField] private string winCanvasId = "win";
+    [SerializeField] private string loseCanvasId = "lose";
+    [SerializeField] private string pauseCanvasId = "pause";
+
+    [Header("Background")]
+    [SerializeField] private Image backgroundImage;
+
+    [Header("Timer UI")]
+    [SerializeField] private TMP_Text timerText;
+
+    private float levelDuration;
+    private float timeRemaining;
+    private bool running;
+    private bool ended;
+    private int _undoRemaining;
+    private bool _hasLastMove;
+    private SortDahan _lastSource, _lastDest;
+    private int _lastCount;
+    private SortKind _lastKind;
+    private static readonly List<int> _tempSlots = new List<int>(8);
+    private static readonly List<int> _tempDestSlots = new List<int>(8);
+
+    public float TimeRemaining => timeRemaining;
+    public bool IsRunning => running && !ended;
+    public int UndoRemaining => _undoRemaining;
+    public bool CanUndo => _undoRemaining > 0 && _hasLastMove && running && !ended;
+
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+    }
+
+    private void Start()
+    {
+        ApplyLevelTheme();
+        SortEventManager.Publish(gameplayCanvasId);
+        StartLevel();
+    }
+
+    private void Update()
+    {
+        if (!running || ended) return;
+        timeRemaining -= Time.deltaTime;
+        if (timeRemaining <= 0f)
+        {
+            timeRemaining = 0f;
+            EndLevel(false);
+        }
+        RefreshTimerUI();
+    }
+
+    private void RefreshTimerUI()
+    {
+        if (timerText == null) return;
+        int sec = Mathf.Max(0, Mathf.FloorToInt(timeRemaining));
+        timerText.text = (sec / 60) + ":" + (sec % 60).ToString("00");
+    }
+
+    public void StartLevel()
+    {
+        ended = false;
+        running = true;
+        levelDuration = GetLevelDuration();
+        timeRemaining = levelDuration;
+        _undoRemaining = GetLevelUndoCount();
+        ClearLastMove();
+        RefreshTimerUI();
+        if (SortGameManager.Instance != null)
+            SortGameManager.Instance.Resume();
+    }
+
+    private int GetLevelUndoCount()
+    {
+        if (levelLoader == null) return 3;
+        var asset = levelLoader.GetCurrentLevel();
+        if (asset == null) return 3;
+        var data = asset.GetData();
+        return data != null && data.undoCount >= 0 ? data.undoCount : 3;
+    }
+
+    private float GetLevelDuration()
+    {
+        if (levelLoader == null) return 60f;
+        var asset = levelLoader.GetCurrentLevel();
+        if (asset == null) return 60f;
+        var data = asset.GetData();
+        return data != null && data.levelDurationSeconds > 0f ? data.levelDurationSeconds : 60f;
+    }
+
+    private SortLevelData GetLevelData()
+    {
+        if (levelLoader == null) return null;
+        var asset = levelLoader.GetCurrentLevel();
+        return asset?.GetData();
+    }
+
+    public void OnDahanComplete(SortDahan dahan)
+    {
+        if (dahan == null) return;
+        if (_hasLastMove && (_lastSource == dahan || _lastDest == dahan))
+            ClearLastMove();
+        SortLevelRules.ProcessCompleteDahan(dahan, GetLevelData());
+        CheckLevelComplete();
+    }
+
+    public bool CanMove(SortDahan source, SortDahan dest, SortKind kind, int count)
+    {
+        if (source == null || dest == null || source == dest || count <= 0) return false;
+        if (dest.GetEmptySlotCount() < count) return false;
+        SortKind? topDest = dest.GetTopKind();
+        if (topDest.HasValue && topDest.Value != kind) return false;
+        return true;
+    }
+
+    public void DoMove(SortDahan source, SortDahan dest, int count, Action onComplete = null, bool recordAsLastMove = true)
+    {
+        if (source == null || dest == null || count <= 0) { onComplete?.Invoke(); return; }
+
+        source.GetTopGroup(out SortKind? topKind, out int actualCount, _tempSlots);
+        if (!topKind.HasValue || actualCount == 0 || _tempSlots.Count == 0) { onComplete?.Invoke(); return; }
+
+        SortKind moveKind = topKind.Value;
+        int moveCount = Mathf.Min(count, actualCount, _tempSlots.Count);
+        dest.GetNextEmptySlotIndicesForAdd(moveCount, _tempDestSlots);
+        if (_tempDestSlots.Count < moveCount) { onComplete?.Invoke(); return; }
+
+        var moving = new List<SortKarakter>(moveCount);
+        for (int i = 0; i < moveCount; i++)
+        {
+            var c = source.RemoveCharacterAtSlot(_tempSlots[i]);
+            if (c != null)
+            {
+                c.transform.SetParent(dest.transform, true);
+                moving.Add(c);
+            }
+        }
+
+        if (moving.Count == 0) { onComplete?.Invoke(); return; }
+
+        int moveCountFinal = moving.Count;
+        int arrived = 0;
+        for (int i = 0; i < moving.Count && i < _tempDestSlots.Count; i++)
+        {
+            int slotIndex = _tempDestSlots[i];
+            Vector3 targetPos = dest.GetSlotPosition(slotIndex);
+            SortKarakter c = moving[i];
+            c.MoveTo(targetPos, () =>
+            {
+                dest.AddCharacterAtSlot(c, slotIndex);
+                arrived++;
+                if (arrived >= moveCountFinal)
+                {
+                    dest.CompactSlots();
+                    if (recordAsLastMove)
+                        SetLastMove(source, dest, moveCountFinal, moveKind);
+                    onComplete?.Invoke();
+                    CheckLevelComplete();
+                }
+            });
+        }
+    }
+
+    private void SetLastMove(SortDahan source, SortDahan dest, int count, SortKind kind)
+    {
+        _lastSource = source;
+        _lastDest = dest;
+        _lastCount = count;
+        _lastKind = kind;
+        _hasLastMove = true;
+    }
+
+    private void ClearLastMove()
+    {
+        _hasLastMove = false;
+        _lastSource = null;
+        _lastDest = null;
+    }
+
+    public void Undo()
+    {
+        if (!CanUndo) return;
+        _undoRemaining--;
+        SortDahan from = _lastDest, to = _lastSource;
+        int count = _lastCount;
+        ClearLastMove();
+        DoMove(from, to, count, onComplete: null, recordAsLastMove: false);
+    }
+
+    public void AddUndo(int amount)
+    {
+        if (amount > 0)
+            _undoRemaining += amount;
+    }
+
+    public void CheckLevelComplete()
+    {
+        if (FindObjectsOfType<SortKarakter>().Length == 0)
+            EndLevel(true);
+    }
+
+    private void ApplyLevelTheme()
+    {
+        if (backgroundImage == null) return;
+        Sprite bg = GetLevelBackground();
+        if (bg != null)
+            backgroundImage.sprite = bg;
+    }
+
+    private Sprite GetLevelBackground()
+    {
+        if (levelLoader == null) return null;
+        var asset = levelLoader.GetCurrentLevel();
+        if (asset == null) return null;
+        var data = asset.GetData();
+        return data?.backgroundTheme;
+    }
+
+    private void EndLevel(bool won)
+    {
+        if (ended) return;
+        ended = true;
+        running = false;
+        if (SortGameManager.Instance != null)
+            SortGameManager.Instance.Pause();
+        SortEventManager.Publish(won ? winCanvasId : loseCanvasId);
+        if (won) SortEventManager.Publish(new WinEvent()); else SortEventManager.Publish(new LoseEvent());
+    }
+
+    public void Pause()
+    {
+        if (SortGameManager.Instance != null)
+            SortGameManager.Instance.Pause();
+        SortEventManager.Publish(pauseCanvasId);
+    }
+
+    public void Resume()
+    {
+        if (SortGameManager.Instance != null)
+            SortGameManager.Instance.Resume();
+        SortEventManager.Publish(gameplayCanvasId);
+    }
+
+    public void RestartLevel()
+    {
+        if (levelLoader == null) return;
+        levelLoader.LoadLevel();
+        ApplyLevelTheme();
+        SortEventManager.Publish(gameplayCanvasId);
+        StartLevel();
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
+    }
+}

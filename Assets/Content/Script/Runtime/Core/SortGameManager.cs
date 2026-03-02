@@ -26,6 +26,16 @@ public class SortGameManager : MonoBehaviour
         Time.timeScale = Mathf.Clamp01(scale);
     }
 
+    public void Pause()
+    {
+        Time.timeScale = 0f;
+    }
+
+    public void Resume()
+    {
+        Time.timeScale = 1f;
+    }
+
     public void QuitGame()
     {
 #if UNITY_EDITOR

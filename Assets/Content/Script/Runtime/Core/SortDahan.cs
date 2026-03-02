@@ -116,6 +116,14 @@ public class SortDahan : MonoBehaviour
         SortKind kind = slots[0].Kind;
         for (int i = 1; i < slots.Length; i++)
             if (slots[i].Kind != kind) return;
+        if (SortGameplayController.Instance != null)
+            SortGameplayController.Instance.OnDahanComplete(this);
+        else
+            StartCoroutine(CollectedRoutine());
+    }
+
+    public void CollectAndClear()
+    {
         StartCoroutine(CollectedRoutine());
     }
 
@@ -132,8 +140,8 @@ public class SortDahan : MonoBehaviour
             }
         }
         isBroken = false;
-        if (SortGameplayManager.Instance != null)
-            SortGameplayManager.Instance.CheckLevelComplete();
+        if (SortGameplayController.Instance != null)
+            SortGameplayController.Instance.CheckLevelComplete();
     }
 
     public int GetSlotIndex(SortKarakter karakter)
