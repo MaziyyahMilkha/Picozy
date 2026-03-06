@@ -1,9 +1,14 @@
 fileFormatVersion: 2
-guid: de2ecee82a98d6c4c832b965bbb31096
+guid: b966306b14165c3499ac91a3a1787774
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: M_Bawang_Merah
+    second: {fileID: 2100000, guid: 342b00d0dd3dbd84e9fb7958f032a4d4, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
