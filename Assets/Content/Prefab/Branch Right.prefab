@@ -44,7 +44,7 @@ GameObject:
   - component: {fileID: 5716110885329168632}
   - component: {fileID: 2314962841868214282}
   m_Layer: 0
-  m_Name: Dahan Right
+  m_Name: Branch Right
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
