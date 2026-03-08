@@ -85,6 +85,12 @@ public class SortGameplayController : MonoBehaviour
         _undoRemaining = GetLevelUndoCount();
         ClearLastMove();
         RefreshTimerUI();
+        var levelData = GetLevelData();
+        if (levelData != null && !string.IsNullOrEmpty(levelData.audioId) && SortAudioManager.Instance != null)
+        {
+            SortAudioManager.Instance.StopGroup(levelData.audioId);
+            SortAudioManager.Instance.Play(levelData.audioId);
+        }
         if (SortGameManager.Instance != null)
             SortGameManager.Instance.Resume();
     }

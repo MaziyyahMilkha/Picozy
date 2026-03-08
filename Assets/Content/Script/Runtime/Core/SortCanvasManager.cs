@@ -13,7 +13,9 @@ public class SortCanvasManager : MonoBehaviour
         public GameObject canvas;
     }
 
-    [SerializeField] private List<CanvasEntry> canvases = new List<CanvasEntry>();
+    [SerializeField] private List<CanvasEntry> entries = new List<CanvasEntry>();
+
+    private Dictionary<string, GameObject> _map;
 
     private void Awake()
     {
@@ -23,6 +25,19 @@ public class SortCanvasManager : MonoBehaviour
             return;
         }
         Instance = this;
+        BuildMap();
+    }
+
+    private void BuildMap()
+    {
+        _map = new Dictionary<string, GameObject>(StringComparer.OrdinalIgnoreCase);
+        if (entries == null) return;
+        for (int i = 0; i < entries.Count; i++)
+        {
+            var e = entries[i];
+            if (string.IsNullOrEmpty(e.id) || e.canvas == null) continue;
+            _map[e.id] = e.canvas;
+        }
     }
 
     private void OnEnable()
@@ -43,12 +58,36 @@ public class SortCanvasManager : MonoBehaviour
     public void Open(string id)
     {
         if (string.IsNullOrEmpty(id)) return;
-        for (int i = 0; i < canvases.Count; i++)
-        {
-            var e = canvases[i];
-            if (e.canvas != null)
-                e.canvas.SetActive(e.id == id);
-        }
+        if (_map == null) BuildMap();
+        foreach (var kv in _map)
+            kv.Value.SetActive(kv.Key.Equals(id, StringComparison.OrdinalIgnoreCase));
+    }
+
+    public void CloseAll()
+    {
+        if (_map == null) BuildMap();
+        foreach (var kv in _map)
+            if (kv.Value != null) kv.Value.SetActive(false);
+    }
+
+    public void Show(string id)
+    {
+        if (string.IsNullOrEmpty(id) || _map == null) return;
+        if (_map.TryGetValue(id, out var go) && go != null)
+            go.SetActive(true);
+    }
+
+    public void Hide(string id)
+    {
+        if (string.IsNullOrEmpty(id) || _map == null) return;
+        if (_map.TryGetValue(id, out var go) && go != null)
+            go.SetActive(false);
+    }
+
+    public GameObject GetCanvas(string id)
+    {
+        if (_map == null) BuildMap();
+        return _map != null && _map.TryGetValue(id, out var go) ? go : null;
     }
 
     private void OnDestroy()

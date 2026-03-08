@@ -13,6 +13,7 @@ public class SortGameManager : MonoBehaviour
             return;
         }
         Instance = this;
+        DontDestroyOnLoad(gameObject);
         Time.timeScale = 1f;
     }
 

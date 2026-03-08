@@ -40,3 +40,9 @@ public static class SortEventManager
 
 public struct WinEvent { }
 public struct LoseEvent { }
+
+public struct PlayAudioEvent
+{
+    public string id;
+    public SortAudioPlayMode mode;
+}

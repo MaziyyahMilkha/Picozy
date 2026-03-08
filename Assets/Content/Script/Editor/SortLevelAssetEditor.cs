@@ -76,6 +76,7 @@ public class SortLevelAssetEditor : Editor
         SerializedProperty undoCount = data.FindPropertyRelative("undoCount");
         SerializedProperty destroyBranchWhenComplete = data.FindPropertyRelative("destroyBranchWhenComplete");
         SerializedProperty backgroundTheme = data.FindPropertyRelative("backgroundTheme");
+        SerializedProperty audioId = data.FindPropertyRelative("audioId");
         SerializedProperty leftBranches = data.FindPropertyRelative("leftBranches");
         SerializedProperty rightBranches = data.FindPropertyRelative("rightBranches");
 
@@ -129,6 +130,8 @@ public class SortLevelAssetEditor : Editor
             destroyBranchWhenComplete.boolValue = EditorGUILayout.Toggle("Destroy branch when complete", destroyBranchWhenComplete.boolValue);
         if (backgroundTheme != null)
             EditorGUILayout.PropertyField(backgroundTheme, new GUIContent("Background theme"));
+        if (audioId != null)
+            EditorGUILayout.PropertyField(audioId, new GUIContent("Audio ID", "Group ID in SortAudioData (e.g. level BGM). Leave empty if not used."));
 
         int kindCount = CountKinds(kindMask.intValue);
         int slotsPer = Mathf.Clamp(slotsPerBranch.intValue, 1, MaxSlots);
