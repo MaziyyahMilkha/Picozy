@@ -8,21 +8,29 @@ public class SortLevelAssetEditor : Editor
 {
     private const float SlotColorStripWidth = 8f;
     private const int MaxSlots = 8;
-    private static string[] KindNames => System.Enum.GetNames(typeof(SortKind));
-    private static int KindCountNoEmpty => System.Enum.GetValues(typeof(SortKind)).Length - 1;
-    private static string[] _cachedKindNamesForMask;
+    private static int KindCountNoEmpty
+    {
+        get
+        {
+            var so = SortKindSettings.Instance;
+            return so != null && so.entries != null && so.entries.Length > 0 ? so.entries.Length - 1 : 5;
+        }
+    }
+    private static string GetKindName(int index)
+    {
+        return SortKindColors.GetDisplayNameByIndex(index);
+    }
     private static string[] KindNamesForMask
     {
         get
         {
-            if (_cachedKindNamesForMask != null) return _cachedKindNamesForMask;
-            var all = System.Enum.GetNames(typeof(SortKind));
-            int n = all.Length > 0 ? all.Length - 1 : 0;
-            _cachedKindNamesForMask = new string[n];
-            for (int i = 0; i < n; i++) _cachedKindNamesForMask[i] = all[i];
-            return _cachedKindNamesForMask;
+            int n = KindCountNoEmpty;
+            var arr = new string[n];
+            for (int i = 0; i < n; i++) arr[i] = GetKindName(i);
+            return arr;
         }
     }
+    private static int EmptyIndexInEditor => SortKindSettings.Instance != null ? SortKindSettings.Instance.EmptyIndex : 5;
     private static readonly Color FilledBg = new Color(0.95f, 0.98f, 1f, 0.6f);
     private const float BranchRowHeight = 36f;
     private const float SlotRowHeight = 38f;
@@ -51,9 +59,9 @@ public class SortLevelAssetEditor : Editor
     private int currentKindMask;
     private readonly int[] _kindCounts = new int[16];
     private readonly int[] _countWithoutSlot = new int[16];
-    private readonly System.Collections.Generic.List<SortKind> _optionKinds = new System.Collections.Generic.List<SortKind>(16);
+    private readonly List<int> _optionKinds = new List<int>(16);
     private int _cachedKindMask = -1;
-    private SortKind[] _cachedAllowedKinds;
+    private int[] _cachedAllowedKinds;
     private int currentSlotCount => currentSlotsPerBranch != null ? Mathf.Clamp(currentSlotsPerBranch.intValue, 1, MaxSlots) : 4;
 
     public override void OnInspectorGUI()
@@ -234,10 +242,10 @@ public class SortLevelAssetEditor : Editor
         if (slots != null && slots.arraySize >= slotCount)
         {
             for (int s = 0; s < slotCount && allEmpty; s++)
-                if (slots.GetArrayElementAtIndex(s).enumValueIndex != (int)SortKind.Empty) allEmpty = false;
+                if (slots.GetArrayElementAtIndex(s).intValue != EmptyIndexInEditor) allEmpty = false;
         }
         Color prev = GUI.backgroundColor;
-        GUI.backgroundColor = allEmpty ? KindColors[(int)SortKind.Empty] : FilledBg;
+        GUI.backgroundColor = allEmpty ? KindColors[EmptyIndexInEditor] : FilledBg;
         GUI.Box(rect, GUIContent.none);
         GUI.backgroundColor = prev;
 
@@ -275,7 +283,7 @@ public class SortLevelAssetEditor : Editor
         {
             int dataIndex = isLeft ? s : (slotCount - 1 - s);
             if (dataIndex < 0 || dataIndex >= slots.arraySize) continue;
-            int k = slots.GetArrayElementAtIndex(dataIndex).enumValueIndex;
+            int k = slots.GetArrayElementAtIndex(dataIndex).intValue;
             int kindIdx = Mathf.Clamp(k, 0, KindColors.Length - 1);
             Rect box = new Rect(x + s * (chipW + gap), y, chipW, ChipHeight);
             EditorGUI.DrawRect(box, KindColors[kindIdx]);
@@ -285,7 +293,7 @@ public class SortLevelAssetEditor : Editor
             EditorGUI.DrawRect(new Rect(box.xMax - 1f, box.y, 1f, box.height), ChipBorder);
             Color textColor = Luminance(KindColors[kindIdx]) < 0.45f ? Color.white : new Color(0.15f, 0.15f, 0.18f, 1f);
             var style = new GUIStyle(EditorStyles.miniLabel) { alignment = TextAnchor.MiddleCenter, normal = { textColor = textColor }, fontSize = chipW < 36 ? 8 : 10 };
-            EditorGUI.LabelField(box, KindNames[kindIdx], style);
+            EditorGUI.LabelField(box, GetKindName(kindIdx), style);
         }
     }
 
@@ -315,7 +323,7 @@ public class SortLevelAssetEditor : Editor
                     EditorGUI.DrawRect(new Rect(cardRect.x, cardRect.yMax - 1f, cardRect.width, 1f), ChipBorder);
                     EditorGUI.DrawRect(new Rect(cardRect.x, cardRect.y, 1f, cardRect.height), ChipBorder);
                     EditorGUI.DrawRect(new Rect(cardRect.xMax - 1f, cardRect.y, 1f, cardRect.height), ChipBorder);
-                    string cardLabel = KindNames[kindIdx];
+                    string cardLabel = GetKindName(kindIdx);
                     Color textColor = Luminance(KindColors[kindIdx]) < 0.45f ? Color.white : new Color(0.15f, 0.15f, 0.18f, 1f);
                     var cardStyle = new GUIStyle(EditorStyles.miniLabel) { alignment = TextAnchor.MiddleCenter, normal = { textColor = textColor } };
                     EditorGUI.LabelField(cardRect, cardLabel, cardStyle);
@@ -330,20 +338,19 @@ public class SortLevelAssetEditor : Editor
                     mask &= maskBitsPopup;
                     var allowedKinds = GetKindsFromMask(mask);
                     _optionKinds.Clear();
-                    foreach (var k in allowedKinds)
+                    foreach (int ki in allowedKinds)
                     {
-                        int ki = (int)k;
-                        if (ki < cap && (_countWithoutSlot[ki] < currentSlotCount || ki == currentVal)) _optionKinds.Add(k);
+                        if (ki < cap && (_countWithoutSlot[ki] < currentSlotCount || ki == currentVal)) _optionKinds.Add(ki);
                     }
-                    _optionKinds.Add(SortKind.Empty);
-                    if (_optionKinds.Count == 0) _optionKinds.Add((SortKind)currentVal);
+                    _optionKinds.Add(EmptyIndexInEditor);
+                    if (_optionKinds.Count == 0) _optionKinds.Add(currentVal);
                     int selected = 0;
                     for (int k = 0; k < _optionKinds.Count; k++)
-                        if ((int)_optionKinds[k] == currentVal) { selected = k; break; }
+                        if (_optionKinds[k] == currentVal) { selected = k; break; }
                     var popupOpts = new string[_optionKinds.Count];
-                    for (int k = 0; k < _optionKinds.Count; k++) popupOpts[k] = KindNames[(int)_optionKinds[k]];
+                    for (int k = 0; k < _optionKinds.Count; k++) popupOpts[k] = GetKindName(_optionKinds[k]);
                     int newSel = EditorGUI.Popup(popupRect, selected, popupOpts);
-                    if (newSel >= 0 && newSel < _optionKinds.Count) slot.enumValueIndex = (int)_optionKinds[newSel];
+                    if (newSel >= 0 && newSel < _optionKinds.Count) slot.intValue = _optionKinds[newSel];
                 }
             };
         }
@@ -367,11 +374,11 @@ public class SortLevelAssetEditor : Editor
         return n;
     }
 
-    private SortKind[] GetKindsFromMask(int mask)
+    private int[] GetKindsFromMask(int mask)
     {
-        var list = new System.Collections.Generic.List<SortKind>();
+        var list = new List<int>();
         for (int i = 0; i < KindCountNoEmpty; i++)
-            if ((mask & (1 << i)) != 0) list.Add((SortKind)i);
+            if ((mask & (1 << i)) != 0) list.Add(i);
         return list.ToArray();
     }
 
@@ -387,7 +394,7 @@ public class SortLevelAssetEditor : Editor
                 var slots = branches.GetArrayElementAtIndex(i).FindPropertyRelative("slots");
                 for (int s = 0; s < slotsPerBranch && s < slots.arraySize; s++)
                 {
-                    int k = slots.GetArrayElementAtIndex(s).enumValueIndex;
+                    int k = slots.GetArrayElementAtIndex(s).intValue;
                     if (k >= 0 && k < counts.Length) counts[k]++;
                 }
             }
@@ -400,13 +407,14 @@ public class SortLevelAssetEditor : Editor
     {
         int kindCount = CountKinds(kindMask);
         if (kindCount == 0) return;
-        var counts = new int[KindNames.Length];
+        int cap = Mathf.Max(KindCountNoEmpty + 1, 16);
+        var counts = new int[cap];
         void CountEntry(SerializedProperty entry)
         {
             var slots = entry.FindPropertyRelative("slots");
             for (int s = 0; s < slotsPerBranch && s < slots.arraySize; s++)
             {
-                int k = slots.GetArrayElementAtIndex(s).enumValueIndex;
+                int k = slots.GetArrayElementAtIndex(s).intValue;
                 if (k >= 0 && k < counts.Length) counts[k]++;
             }
         }
@@ -416,7 +424,7 @@ public class SortLevelAssetEditor : Editor
         {
             if ((kindMask & (1 << i)) == 0) continue;
             if (counts[i] != slotsPerBranch)
-                EditorGUILayout.HelpBox("Kind \"" + KindNames[i] + "\" should be " + slotsPerBranch + ", got " + counts[i], MessageType.Warning);
+                EditorGUILayout.HelpBox("Kind \"" + GetKindName(i) + "\" should be " + slotsPerBranch + ", got " + counts[i], MessageType.Warning);
         }
     }
 
@@ -444,17 +452,18 @@ public class SortLevelAssetEditor : Editor
         int n = Mathf.Clamp(currentSlotCount, 1, MaxSlots);
         var slots = entry.FindPropertyRelative("slots");
         slots.arraySize = n;
+        int emptyIdx = EmptyIndexInEditor;
         for (int s = 0; s < slots.arraySize; s++)
-            slots.GetArrayElementAtIndex(s).enumValueIndex = (int)SortKind.Empty;
+            slots.GetArrayElementAtIndex(s).intValue = emptyIdx;
     }
 
     private BranchEntry GetEntry(SerializedProperty entryProp)
     {
         var e = new BranchEntry();
         var slots = entryProp.FindPropertyRelative("slots");
-        e.slots = new SortKind[slots.arraySize];
+        e.slots = new int[slots.arraySize];
         for (int i = 0; i < slots.arraySize; i++)
-            e.slots[i] = (SortKind)slots.GetArrayElementAtIndex(i).enumValueIndex;
+            e.slots[i] = slots.GetArrayElementAtIndex(i).intValue;
         return e;
     }
 
@@ -463,7 +472,7 @@ public class SortLevelAssetEditor : Editor
         var slots = entryProp.FindPropertyRelative("slots");
         if (slots.arraySize < e.slots.Length) slots.arraySize = e.slots.Length;
         for (int i = 0; i < e.slots.Length; i++)
-            slots.GetArrayElementAtIndex(i).enumValueIndex = (int)e.slots[i];
+            slots.GetArrayElementAtIndex(i).intValue = e.slots[i];
     }
 
     private static void Shuffle<T>(IList<T> list)
@@ -483,18 +492,19 @@ public class SortLevelAssetEditor : Editor
         var leftBranches = data.FindPropertyRelative("leftBranches");
         var rightBranches = data.FindPropertyRelative("rightBranches");
         int slotCount = Mathf.Clamp(slotsPerBranch.intValue, 1, MaxSlots);
-        var kinds = new List<SortKind>(GetKindsFromMask(kindMask.intValue));
+        var kinds = new List<int>(GetKindsFromMask(kindMask.intValue));
         if (kinds.Count == 0) { EditorUtility.DisplayDialog("Randomize", "Select at least 1 kind.", "OK"); return; }
 
+        int emptyIdx = EmptyIndexInEditor;
         int totalBranches = leftBranches.arraySize + rightBranches.arraySize;
         int totalSlots = totalBranches * slotCount;
         int filledCount = kinds.Count * slotCount;
         int emptySlotCount = totalSlots - filledCount;
         if (emptySlotCount < 0) { EditorUtility.DisplayDialog("Randomize", "Not enough slots for " + kinds.Count + " kinds. Add branches or reduce kinds.", "OK"); return; }
 
-        var pile = new List<SortKind>();
-        foreach (var k in kinds) for (int i = 0; i < slotCount; i++) pile.Add(k);
-        for (int i = 0; i < emptySlotCount; i++) pile.Add(SortKind.Empty);
+        var pile = new List<int>();
+        foreach (int k in kinds) for (int i = 0; i < slotCount; i++) pile.Add(k);
+        for (int i = 0; i < emptySlotCount; i++) pile.Add(emptyIdx);
         Shuffle(pile);
 
         int idx = 0;
@@ -504,7 +514,7 @@ public class SortLevelAssetEditor : Editor
             {
                 var slots = branches.GetArrayElementAtIndex(i).FindPropertyRelative("slots");
                 for (int s = 0; s < slotCount && s < slots.arraySize; s++)
-                    slots.GetArrayElementAtIndex(s).enumValueIndex = idx < pile.Count ? (int)pile[idx++] : (int)SortKind.Empty;
+                    slots.GetArrayElementAtIndex(s).intValue = idx < pile.Count ? pile[idx++] : emptyIdx;
             }
         }
         FillBranches(leftBranches);
@@ -517,16 +527,17 @@ public class SortLevelAssetEditor : Editor
     {
         var slots = entry.FindPropertyRelative("slots");
         if (slots.arraySize < slotCount) return;
-        var nonEmpty = new System.Collections.Generic.List<int>();
+        int emptyIdx = EmptyIndexInEditor;
+        var nonEmpty = new List<int>();
         int emptyCount = 0;
         for (int s = 0; s < slotCount; s++)
         {
-            int k = slots.GetArrayElementAtIndex(s).enumValueIndex;
-            if (k == (int)SortKind.Empty) emptyCount++; else nonEmpty.Add(k);
+            int k = slots.GetArrayElementAtIndex(s).intValue;
+            if (k == emptyIdx) emptyCount++; else nonEmpty.Add(k);
         }
         int i = 0;
-        foreach (int k in nonEmpty) slots.GetArrayElementAtIndex(i++).enumValueIndex = k;
-        for (int j = 0; j < emptyCount; j++) slots.GetArrayElementAtIndex(i++).enumValueIndex = (int)SortKind.Empty;
+        foreach (int k in nonEmpty) slots.GetArrayElementAtIndex(i++).intValue = k;
+        for (int j = 0; j < emptyCount; j++) slots.GetArrayElementAtIndex(i++).intValue = emptyIdx;
     }
 
     private void CompactAllBranches(SerializedProperty branches, int slotCount)

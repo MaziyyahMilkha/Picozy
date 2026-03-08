@@ -9,9 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: f1c70e4c1a7d08b45bf8f74f6202c154, type: 3}
   m_Name: SortKindSettings
-  m_EditorClassIdentifier: Assembly-CSharp::SortKindSettings
+  m_EditorClassIdentifier: 
   entries:
   - displayName: Tomato
     color: {r: 0.95, g: 0.2, b: 0.15, a: 1}

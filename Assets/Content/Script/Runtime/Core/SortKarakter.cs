@@ -5,7 +5,7 @@ using UnityEngine;
 public class SortKarakter : MonoBehaviour
 {
     [Header("Identity")]
-    [SerializeField] private SortKind kind;
+    [SerializeField] private int kind;
 
     [Header("Visual per kind")]
     [SerializeField] private GameObject[] kindVisuals;
@@ -13,7 +13,7 @@ public class SortKarakter : MonoBehaviour
     private SortDahan currentDahan;
     private CharacterMovement movement;
 
-    public SortKind Kind => kind;
+    public int Kind => kind;
 
     private void Awake()
     {
@@ -21,7 +21,7 @@ public class SortKarakter : MonoBehaviour
         ApplyKindVisual();
     }
 
-    public void SetKind(SortKind newKind)
+    public void SetKind(int newKind)
     {
         kind = newKind;
         ApplyKindVisual();
@@ -37,9 +37,8 @@ public class SortKarakter : MonoBehaviour
                 kindVisuals[i].SetActive(false);
         }
 
-        int idx = (int)kind;
-        if (idx >= 0 && idx < kindVisuals.Length && kindVisuals[idx] != null)
-            kindVisuals[idx].SetActive(true);
+        if (kind >= 0 && kind < kindVisuals.Length && kindVisuals[kind] != null)
+            kindVisuals[kind].SetActive(true);
     }
 
     public void SetDahan(SortDahan dahan)

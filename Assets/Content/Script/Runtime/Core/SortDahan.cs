@@ -22,7 +22,7 @@ public class SortDahan : MonoBehaviour
     public bool CanAccept(SortKarakter character)
     {
         if (character == null || isBroken) return false;
-        SortKind? existingKind = null;
+        int? existingKind = null;
         for (int i = 0; i < slots.Length; i++)
         {
             if (slots[i] == null) continue;
@@ -113,7 +113,7 @@ public class SortDahan : MonoBehaviour
         if (isBroken) return;
         for (int i = 0; i < slots.Length; i++)
             if (slots[i] == null) return;
-        SortKind kind = slots[0].Kind;
+        int kind = slots[0].Kind;
         for (int i = 1; i < slots.Length; i++)
             if (slots[i].Kind != kind) return;
         if (SortGameplayController.Instance != null)
@@ -159,7 +159,7 @@ public class SortDahan : MonoBehaviour
 
     public void SetTopIsHighIndex(bool high) { topIsHighIndex = high; }
 
-    public void GetTopGroup(out SortKind? kind, out int count, List<int> outSlotIndices)
+    public void GetTopGroup(out int? kind, out int count, List<int> outSlotIndices)
     {
         kind = null;
         count = 0;
@@ -169,7 +169,7 @@ public class SortDahan : MonoBehaviour
         int step = topIsHighIndex ? -1 : 1;
         int start = topIsHighIndex ? slots.Length - 1 : 0;
         int i = start;
-        SortKind? firstKind = null;
+        int? firstKind = null;
         while (i >= 0 && i < slots.Length)
         {
             if (slots[i] == null) { i += step; continue; }
@@ -191,7 +191,7 @@ public class SortDahan : MonoBehaviour
         return n;
     }
 
-    public SortKind? GetTopKind()
+    public int? GetTopKind()
     {
         if (slots == null) return null;
         int start = topIsHighIndex ? slots.Length - 1 : 0;

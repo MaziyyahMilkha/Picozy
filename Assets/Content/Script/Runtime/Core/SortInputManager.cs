@@ -16,7 +16,7 @@ public class SortInputManager : MonoBehaviour
     [SerializeField] private float shakeStrength = 0.08f;
 
     private SortDahan selectedDahan;
-    private SortKind? selectedKind;
+    private int? selectedKind;
     private int selectedCount;
     private Vector3 selectedDahanBaseScale;
     private static readonly List<int> _groupSlots = new List<int>(8);
@@ -63,7 +63,7 @@ public class SortInputManager : MonoBehaviour
         if (dahan == null) return;
 
         _groupSlots.Clear();
-        dahan.GetTopGroup(out SortKind? kind, out int count, _groupSlots);
+        dahan.GetTopGroup(out int? kind, out int count, _groupSlots);
         if (!kind.HasValue || count <= 0) return;
 
         selectedDahan = dahan;

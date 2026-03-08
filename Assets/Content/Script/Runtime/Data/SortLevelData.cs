@@ -4,14 +4,15 @@ using UnityEngine;
 [Serializable]
 public class BranchEntry
 {
-    public SortKind[] slots = new SortKind[8];
+    public int[] slots = new int[8];
 
     public bool IsEmpty(int slotsPerBranch)
     {
         if (slots == null) return true;
+        int emptyIdx = SortKindSettings.Instance != null ? SortKindSettings.Instance.EmptyIndex : 5;
         int n = Mathf.Min(slotsPerBranch, slots.Length);
         for (int i = 0; i < n; i++)
-            if (slots[i] != SortKind.Empty) return false;
+            if (slots[i] != emptyIdx) return false;
         return true;
     }
 }

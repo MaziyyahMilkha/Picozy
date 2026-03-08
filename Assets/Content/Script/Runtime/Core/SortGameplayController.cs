@@ -31,7 +31,7 @@ public class SortGameplayController : MonoBehaviour
     private bool _hasLastMove;
     private SortDahan _lastSource, _lastDest;
     private int _lastCount;
-    private SortKind _lastKind;
+    private int _lastKind;
     private static readonly List<int> _tempSlots = new List<int>(8);
     private static readonly List<int> _tempDestSlots = new List<int>(8);
 
@@ -123,11 +123,11 @@ public class SortGameplayController : MonoBehaviour
         CheckLevelComplete();
     }
 
-    public bool CanMove(SortDahan source, SortDahan dest, SortKind kind, int count)
+    public bool CanMove(SortDahan source, SortDahan dest, int kind, int count)
     {
         if (source == null || dest == null || source == dest || count <= 0) return false;
         if (dest.GetEmptySlotCount() < count) return false;
-        SortKind? topDest = dest.GetTopKind();
+        int? topDest = dest.GetTopKind();
         if (topDest.HasValue && topDest.Value != kind) return false;
         return true;
     }
@@ -136,10 +136,10 @@ public class SortGameplayController : MonoBehaviour
     {
         if (source == null || dest == null || count <= 0) { onComplete?.Invoke(); return; }
 
-        source.GetTopGroup(out SortKind? topKind, out int actualCount, _tempSlots);
+        source.GetTopGroup(out int? topKind, out int actualCount, _tempSlots);
         if (!topKind.HasValue || actualCount == 0 || _tempSlots.Count == 0) { onComplete?.Invoke(); return; }
 
-        SortKind moveKind = topKind.Value;
+        int moveKind = topKind.Value;
         int moveCount = Mathf.Min(count, actualCount, _tempSlots.Count);
         dest.GetNextEmptySlotIndicesForAdd(moveCount, _tempDestSlots);
         if (_tempDestSlots.Count < moveCount) { onComplete?.Invoke(); return; }
@@ -180,7 +180,7 @@ public class SortGameplayController : MonoBehaviour
         }
     }
 
-    private void SetLastMove(SortDahan source, SortDahan dest, int count, SortKind kind)
+    private void SetLastMove(SortDahan source, SortDahan dest, int count, int kind)
     {
         _lastSource = source;
         _lastDest = dest;

@@ -48,7 +48,15 @@ public class SunnyMovement : MonoBehaviour
                 targetPosition,
                 moveSpeed * Time.deltaTime
             );
-
+            if (rotateTowardsTarget)
+            {
+                Vector3 dir = (targetPosition - transform.position).normalized;
+                if (dir.sqrMagnitude > 0.001f)
+                {
+                    Quaternion targetRot = Quaternion.LookRotation(dir);
+                    transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, rotateSpeed * Time.deltaTime);
+                }
+            }
             yield return null;
         }
 
