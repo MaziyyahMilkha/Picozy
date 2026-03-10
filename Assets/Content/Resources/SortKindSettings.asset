@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: SortKindSettings
   m_EditorClassIdentifier: 
   entries:
+  - displayName: Empty
+    color: {r: 0.78, g: 0.8, b: 0.85, a: 1}
   - displayName: Tomato
     color: {r: 0.95, g: 0.2, b: 0.15, a: 1}
   - displayName: Mushroom
@@ -23,5 +25,3 @@ MonoBehaviour:
     color: {r: 1, g: 0.92, b: 0.4, a: 1}
   - displayName: Coconut
     color: {r: 0.45, g: 0.3, b: 0.15, a: 1}
-  - displayName: Empty
-    color: {r: 0.78, g: 0.8, b: 0.85, a: 1}

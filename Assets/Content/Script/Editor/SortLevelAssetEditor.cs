@@ -13,7 +13,16 @@ public class SortLevelAssetEditor : Editor
         get
         {
             var so = SortKindSettings.Instance;
-            return so != null && so.entries != null && so.entries.Length > 0 ? so.entries.Length - 1 : 5;
+            if (so == null || so.entries == null || so.entries.Length <= 1) return 0;
+            return so.GetNonEmptyKindIndices().Length;
+        }
+    }
+    private static int[] NonEmptyKindIndices
+    {
+        get
+        {
+            var so = SortKindSettings.Instance;
+            return so != null ? so.GetNonEmptyKindIndices() : new int[0];
         }
     }
     private static string GetKindName(int index)
@@ -24,13 +33,13 @@ public class SortLevelAssetEditor : Editor
     {
         get
         {
-            int n = KindCountNoEmpty;
-            var arr = new string[n];
-            for (int i = 0; i < n; i++) arr[i] = GetKindName(i);
+            var indices = NonEmptyKindIndices;
+            var arr = new string[indices.Length];
+            for (int i = 0; i < arr.Length; i++) arr[i] = GetKindName(indices[i]);
             return arr;
         }
     }
-    private static int EmptyIndexInEditor => SortKindSettings.Instance != null ? SortKindSettings.Instance.EmptyIndex : 5;
+    private static int EmptyIndexInEditor => SortKindSettings.Instance != null ? SortKindSettings.Instance.EmptyIndex : 0;
     private static readonly Color FilledBg = new Color(0.95f, 0.98f, 1f, 0.6f);
     private const float BranchRowHeight = 36f;
     private const float SlotRowHeight = 38f;
@@ -64,8 +73,38 @@ public class SortLevelAssetEditor : Editor
     private int[] _cachedAllowedKinds;
     private int currentSlotCount => currentSlotsPerBranch != null ? Mathf.Clamp(currentSlotsPerBranch.intValue, 1, MaxSlots) : 4;
 
+    private int _lastKindCountForRepaint = -1;
+    private string _lastKindNamesForRepaint = "";
+
+    private void OnEnable()
+    {
+        EditorApplication.update += CheckKindSettingsAndRepaint;
+        SortKindSettingsEditor.OnKindSettingsChanged += Repaint;
+    }
+
+    private void OnDisable()
+    {
+        EditorApplication.update -= CheckKindSettingsAndRepaint;
+        SortKindSettingsEditor.OnKindSettingsChanged -= Repaint;
+    }
+
+    private void CheckKindSettingsAndRepaint()
+    {
+        var so = SortKindSettings.Instance;
+        int count = so != null && so.entries != null && so.entries.Length > 0 ? so.entries.Length - 1 : 5;
+        string names = (GetKindName(0) ?? "") + "|" + (GetKindName(1) ?? "") + "|" + (GetKindName(2) ?? "");
+        if (count != _lastKindCountForRepaint || names != _lastKindNamesForRepaint)
+        {
+            _lastKindCountForRepaint = count;
+            _lastKindNamesForRepaint = names;
+            Repaint();
+        }
+    }
+
     public override void OnInspectorGUI()
     {
+        SortKindSettings.ClearCacheForEditor();
+
         serializedObject.Update();
         SerializedProperty data = serializedObject.FindProperty("data");
         if (data == null) { serializedObject.ApplyModifiedProperties(); return; }
@@ -379,9 +418,10 @@ public class SortLevelAssetEditor : Editor
 
     private int[] GetKindsFromMask(int mask)
     {
+        var indices = NonEmptyKindIndices;
         var list = new List<int>();
-        for (int i = 0; i < KindCountNoEmpty; i++)
-            if ((mask & (1 << i)) != 0) list.Add(i);
+        for (int i = 0; i < indices.Length; i++)
+            if ((mask & (1 << i)) != 0) list.Add(indices[i]);
         return list.ToArray();
     }
 
@@ -423,11 +463,13 @@ public class SortLevelAssetEditor : Editor
         }
         for (int i = 0; i < leftBranches.arraySize; i++) CountEntry(leftBranches.GetArrayElementAtIndex(i));
         for (int i = 0; i < rightBranches.arraySize; i++) CountEntry(rightBranches.GetArrayElementAtIndex(i));
-        for (int i = 0; i < KindCountNoEmpty; i++)
+        var indices = NonEmptyKindIndices;
+        for (int i = 0; i < indices.Length; i++)
         {
             if ((kindMask & (1 << i)) == 0) continue;
-            if (counts[i] != slotsPerBranch)
-                EditorGUILayout.HelpBox("Kind \"" + GetKindName(i) + "\" should be " + slotsPerBranch + ", got " + counts[i], MessageType.Warning);
+            int kindIdx = indices[i];
+            if (kindIdx < counts.Length && counts[kindIdx] != slotsPerBranch)
+                EditorGUILayout.HelpBox("Kind \"" + GetKindName(kindIdx) + "\" should be " + slotsPerBranch + ", got " + counts[kindIdx], MessageType.Warning);
         }
     }
 
