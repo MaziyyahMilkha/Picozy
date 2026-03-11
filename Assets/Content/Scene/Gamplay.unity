@@ -1096,15 +1096,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c618d108b05916a4d933d9fa72332d8c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  canvases:
-  - id: gameplay
-    canvas: {fileID: 745825859}
-  - id: win
-    canvas: {fileID: 0}
-  - id: lose
-    canvas: {fileID: 0}
-  - id: pause
-    canvas: {fileID: 0}
+  entries: []
 --- !u!114 &794093512
 MonoBehaviour:
   m_ObjectHideFlags: 0
