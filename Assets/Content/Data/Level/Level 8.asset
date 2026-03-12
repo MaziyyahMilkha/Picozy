@@ -13,11 +13,20 @@ MonoBehaviour:
   m_Name: Level 8
   m_EditorClassIdentifier: 
   data:
-    slotsPerBranch: 4
-    kindMask: 7
+    slotsPerBranch: 3
+    kindMask: 103
     levelDurationSeconds: 60
     undoCount: 3
     destroyBranchWhenComplete: 1
-    backgroundTheme: {fileID: 21300000, guid: c5a34a109c5bd9b4d9ff7bf3ce75b3f6, type: 3}
-    leftBranches: []
-    rightBranches: []
+    backgroundTheme: {fileID: 21300000, guid: fc27238330e8dce419e8c51e34334d66, type: 3}
+    audioId: 
+    leftBranches:
+    - slots: 070000000000000000000000
+    - slots: 020000000100000007000000
+    - slots: 060000000600000000000000
+    - slots: 010000000100000000000000
+    rightBranches:
+    - slots: 030000000300000000000000
+    - slots: 000000000000000000000000
+    - slots: 020000000600000000000000
+    - slots: 070000000300000002000000
