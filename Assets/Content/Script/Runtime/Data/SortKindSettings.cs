@@ -26,6 +26,13 @@ public class SortKindSettings : ScriptableObject
     {
         get
         {
+#if UNITY_EDITOR
+            if (!UnityEngine.Application.isPlaying)
+            {
+                _instance = Resources.Load<SortKindSettings>("SortKindSettings");
+                return _instance;
+            }
+#endif
             if (_instance == null)
                 _instance = Resources.Load<SortKindSettings>("SortKindSettings");
             return _instance;
@@ -54,7 +61,27 @@ public class SortKindSettings : ScriptableObject
         return entries[index].color;
     }
 
-    public int EmptyIndex => entries != null && entries.Length > 0 ? entries.Length - 1 : 5;
+    public int EmptyIndex => 0;
 
     public bool IsEmptyIndex(int index) => index == EmptyIndex;
+
+    public int[] GetNonEmptyKindIndices()
+    {
+        if (entries == null || entries.Length <= 1) return new int[0];
+        var list = new int[entries.Length - 1];
+        int write = 0;
+        for (int i = 0; i < entries.Length; i++)
+        {
+            if (i == EmptyIndex) continue;
+            list[write++] = i;
+        }
+        return list;
+    }
+
+#if UNITY_EDITOR
+    public static void ClearCacheForEditor()
+    {
+        _instance = null;
+    }
+#endif
 }

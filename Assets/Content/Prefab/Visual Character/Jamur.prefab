@@ -116,6 +116,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   kind: 1
+  kindVisuals:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
 --- !u!1 &4466502944180728902
 GameObject:
   m_ObjectHideFlags: 0

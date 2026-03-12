@@ -14,15 +14,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   data:
     slotsPerBranch: 3
-    kindMask: 7
+    kindMask: 62
     levelDurationSeconds: 60
     undoCount: 3
     destroyBranchWhenComplete: 1
-    backgroundTheme: {fileID: 21300000, guid: c5a34a109c5bd9b4d9ff7bf3ce75b3f6, type: 3}
+    backgroundTheme: {fileID: 0}
     audioId: 
     leftBranches:
-    - slots: 010000000200000005000000
-    - slots: 000000000000000002000000
+    - slots: 040000000200000000000000
+    - slots: 020000000500000000000000
+    - slots: 000000000600000000000000
+    - slots: 050000000400000000000000
     rightBranches:
-    - slots: 000000000200000005000000
-    - slots: 010000000100000005000000
+    - slots: 060000000500000000000000
+    - slots: 060000000300000004000000
+    - slots: 030000000300000000000000

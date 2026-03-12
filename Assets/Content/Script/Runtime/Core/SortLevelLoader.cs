@@ -123,7 +123,7 @@ public class SortLevelLoader : MonoBehaviour
     private void FillBranch(SortDahan dahan, BranchEntry entry, int slotsPerBranch, bool isRight)
     {
         if (dahan == null || entry == null || entry.slots == null) return;
-        int emptyIdx = SortKindSettings.Instance != null ? SortKindSettings.Instance.EmptyIndex : 5;
+        int emptyIdx = SortKindSettings.Instance != null ? SortKindSettings.Instance.EmptyIndex : 0;
         for (int s = 0; s < slotsPerBranch && s < entry.slots.Length; s++)
         {
             int kind = entry.slots[s];

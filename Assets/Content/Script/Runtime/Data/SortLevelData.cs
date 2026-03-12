@@ -9,7 +9,7 @@ public class BranchEntry
     public bool IsEmpty(int slotsPerBranch)
     {
         if (slots == null) return true;
-        int emptyIdx = SortKindSettings.Instance != null ? SortKindSettings.Instance.EmptyIndex : 5;
+        int emptyIdx = SortKindSettings.Instance != null ? SortKindSettings.Instance.EmptyIndex : 0;
         int n = Mathf.Min(slotsPerBranch, slots.Length);
         for (int i = 0; i < n; i++)
             if (slots[i] != emptyIdx) return false;
