@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   data:
     slotsPerBranch: 3
+    kindMultipliers: 00000000010000000100000001000000010000000100000001000000000000000000000000000000000000000000000000000000000000000000000000000000
     kindMask: 63
     levelDurationSeconds: 60
     undoCount: 3
@@ -22,7 +23,7 @@ MonoBehaviour:
     audioId: 
     leftBranches:
     - slots: 040000000100000000000000
-    - slots: 020000000400000003000000
+    - slots: 040000000300000001000000
     - slots: 050000000600000000000000
     - slots: 030000000600000000000000
     rightBranches:

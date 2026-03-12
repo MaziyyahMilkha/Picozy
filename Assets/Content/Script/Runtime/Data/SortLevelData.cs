@@ -21,6 +21,7 @@ public class BranchEntry
 public class SortLevelData
 {
     public int slotsPerBranch = 4;
+    public int[] kindMultipliers = new int[16];
     public int kindMask = 15;
     public float levelDurationSeconds = 60f;
     public int undoCount = 3;

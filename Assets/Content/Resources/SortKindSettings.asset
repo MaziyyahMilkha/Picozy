@@ -29,3 +29,5 @@ MonoBehaviour:
     color: {r: 0.43529415, g: 0.6392157, b: 0.21176472, a: 1}
   - displayName: Matahari
     color: {r: 0.882353, g: 0.7725491, b: 0.3647059, a: 1}
+  - displayName: Blue Mushroom
+    color: {r: 0.009938229, g: 0.035726275, b: 0.6320754, a: 1}

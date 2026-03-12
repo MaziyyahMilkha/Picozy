@@ -53,7 +53,7 @@ public class SortGameplayController : MonoBehaviour
     private void Start()
     {
         ApplyLevelTheme();
-        SortEventManager.Publish(gameplayCanvasId);
+        SortEventManager.Publish(new UIActionEvent("OpenCanvas", gameplayCanvasId));
         StartLevel();
     }
 
@@ -86,10 +86,10 @@ public class SortGameplayController : MonoBehaviour
         ClearLastMove();
         RefreshTimerUI();
         var levelData = GetLevelData();
-        if (levelData != null && !string.IsNullOrEmpty(levelData.audioId) && SortAudioManager.Instance != null)
+        if (levelData != null && !string.IsNullOrEmpty(levelData.audioId) && SortEffectPoolManager.Instance != null)
         {
-            SortAudioManager.Instance.StopGroup(levelData.audioId);
-            SortAudioManager.Instance.Play(levelData.audioId);
+            SortEffectPoolManager.Instance.StopAudioGroup(levelData.audioId);
+            SortEffectPoolManager.Instance.PlayAudio(levelData.audioId);
         }
         if (SortGameManager.Instance != null)
             SortGameManager.Instance.Resume();
@@ -248,22 +248,22 @@ public class SortGameplayController : MonoBehaviour
         running = false;
         if (SortGameManager.Instance != null)
             SortGameManager.Instance.Pause();
-        SortEventManager.Publish(won ? winCanvasId : loseCanvasId);
-        if (won) SortEventManager.Publish(new WinEvent()); else SortEventManager.Publish(new LoseEvent());
+        SortEventManager.Publish(new UIActionEvent("OpenCanvas", won ? winCanvasId : loseCanvasId));
+        SortEventManager.Publish(new UIActionEvent(won ? "Win" : "Lose"));
     }
 
     public void Pause()
     {
         if (SortGameManager.Instance != null)
             SortGameManager.Instance.Pause();
-        SortEventManager.Publish(pauseCanvasId);
+        SortEventManager.Publish(new UIActionEvent("OpenCanvas", pauseCanvasId));
     }
 
     public void Resume()
     {
         if (SortGameManager.Instance != null)
             SortGameManager.Instance.Resume();
-        SortEventManager.Publish(gameplayCanvasId);
+        SortEventManager.Publish(new UIActionEvent("OpenCanvas", gameplayCanvasId));
     }
 
     public void RestartLevel()
@@ -271,7 +271,7 @@ public class SortGameplayController : MonoBehaviour
         if (levelLoader == null) return;
         levelLoader.LoadLevel();
         ApplyLevelTheme();
-        SortEventManager.Publish(gameplayCanvasId);
+        SortEventManager.Publish(new UIActionEvent("OpenCanvas", gameplayCanvasId));
         StartLevel();
     }
 

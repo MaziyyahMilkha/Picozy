@@ -40,6 +40,29 @@ public class SortLevelAssetEditor : Editor
         }
     }
     private static int EmptyIndexInEditor => SortKindSettings.Instance != null ? SortKindSettings.Instance.EmptyIndex : 0;
+    private const int KindMultipliersCap = 16;
+
+    private static void EnsureKindMultipliersSize(SerializedProperty data, int minSize)
+    {
+        var arr = data.FindPropertyRelative("kindMultipliers");
+        if (arr == null) return;
+        int need = Mathf.Clamp(minSize, 1, KindMultipliersCap);
+        if (arr.arraySize < need)
+        {
+            int old = arr.arraySize;
+            arr.arraySize = need;
+            for (int i = old; i < need; i++)
+                arr.GetArrayElementAtIndex(i).intValue = 1;
+        }
+    }
+
+    private static int GetKindMultiplier(SerializedProperty data, int kindIndex)
+    {
+        var arr = data.FindPropertyRelative("kindMultipliers");
+        if (arr == null || kindIndex < 0 || kindIndex >= arr.arraySize) return 1;
+        return Mathf.Max(1, arr.GetArrayElementAtIndex(kindIndex).intValue);
+    }
+
     private static readonly Color FilledBg = new Color(0.95f, 0.98f, 1f, 0.6f);
     private const float BranchRowHeight = 36f;
     private const float SlotRowHeight = 38f;
@@ -110,6 +133,7 @@ public class SortLevelAssetEditor : Editor
         if (data == null) { serializedObject.ApplyModifiedProperties(); return; }
 
         SerializedProperty slotsPerBranch = data.FindPropertyRelative("slotsPerBranch");
+        SerializedProperty kindMultipliers = data.FindPropertyRelative("kindMultipliers");
         SerializedProperty kindMask = data.FindPropertyRelative("kindMask");
         SerializedProperty levelDurationSeconds = data.FindPropertyRelative("levelDurationSeconds");
         SerializedProperty undoCount = data.FindPropertyRelative("undoCount");
@@ -121,6 +145,8 @@ public class SortLevelAssetEditor : Editor
 
         EditorGUILayout.Space(4f);
         slotsPerBranch.intValue = Mathf.Clamp(EditorGUILayout.IntField("Slots per branch", slotsPerBranch.intValue), 1, MaxSlots);
+        int kindCountFromSettings = SortKindSettings.Instance != null && SortKindSettings.Instance.entries != null ? SortKindSettings.Instance.entries.Length : KindMultipliersCap;
+        EnsureKindMultipliersSize(data, kindCountFromSettings);
         int maskBits = (1 << KindCountNoEmpty) - 1;
         int currentMask = kindMask.intValue & maskBits;
         string kindsLabel = GetKindsMaskSummary(currentMask, maskBits);
@@ -163,6 +189,23 @@ public class SortLevelAssetEditor : Editor
             });
             menu.DropDown(kindsRect);
         }
+        var indices = NonEmptyKindIndices;
+        int currentMaskForMult = kindMask.intValue & maskBits;
+        if (indices.Length > 0 && kindMultipliers != null)
+        {
+            EditorGUILayout.Space(2f);
+            EditorGUILayout.LabelField("Branches per kind", EditorStyles.miniBoldLabel);
+            EditorGUI.indentLevel++;
+            for (int i = 0; i < indices.Length; i++)
+            {
+                if ((currentMaskForMult & (1 << i)) == 0) continue;
+                int kindIdx = indices[i];
+                if (kindIdx >= kindMultipliers.arraySize) continue;
+                var elem = kindMultipliers.GetArrayElementAtIndex(kindIdx);
+                elem.intValue = Mathf.Max(1, EditorGUILayout.IntField(GetKindName(kindIdx), elem.intValue));
+            }
+            EditorGUI.indentLevel--;
+        }
         levelDurationSeconds.floatValue = Mathf.Max(0f, EditorGUILayout.FloatField("Level duration (sec)", levelDurationSeconds.floatValue));
         undoCount.intValue = Mathf.Max(0, EditorGUILayout.IntField("Undo count", undoCount.intValue));
         if (destroyBranchWhenComplete != null)
@@ -174,12 +217,18 @@ public class SortLevelAssetEditor : Editor
 
         int kindCount = CountKinds(kindMask.intValue);
         int slotsPer = Mathf.Clamp(slotsPerBranch.intValue, 1, MaxSlots);
+        int filledSlots = 0;
+        var selectedIndices = NonEmptyKindIndices;
+        for (int i = 0; i < selectedIndices.Length; i++)
+        {
+            if ((kindMask.intValue & (1 << i)) == 0) continue;
+            filledSlots += slotsPer * GetKindMultiplier(data, selectedIndices[i]);
+        }
         int totalBranches = leftBranches.arraySize + rightBranches.arraySize;
         int totalSlots = totalBranches * slotsPer;
-        int filledSlots = kindCount * slotsPer;
         int emptySlotCount = totalSlots - filledSlots;
         if (kindCount > 0)
-            EditorGUILayout.HelpBox("Filled: " + filledSlots + " (" + kindCount + " kinds × " + slotsPer + "). Empty: " + emptySlotCount + ". Total: " + totalSlots, MessageType.Info);
+            EditorGUILayout.HelpBox("Filled: " + filledSlots + ". Empty: " + emptySlotCount + ". Total: " + totalSlots, MessageType.Info);
 
         EditorGUILayout.Space(4f);
 
@@ -255,7 +304,7 @@ public class SortLevelAssetEditor : Editor
                 editingIndex = -1;
         }
 
-        ValidateAndWarn(leftBranches, rightBranches, kindMask.intValue, slotsPerBranch.intValue);
+        ValidateAndWarn(data, leftBranches, rightBranches, kindMask.intValue, slotsPerBranch.intValue);
         EditorGUILayout.Space(4f);
         if (GUILayout.Button("Randomize"))
             DoRandomizeOnly(data);
@@ -356,7 +405,7 @@ public class SortLevelAssetEditor : Editor
                 {
                     if (index >= slots.arraySize) return;
                     var slot = slots.GetArrayElementAtIndex(index);
-                    int currentVal = slot.enumValueIndex;
+                    int currentVal = slot.intValue;
                     int kindIdx = Mathf.Clamp(currentVal, 0, KindColors.Length - 1);
                     float cardW = 96f;
                     Rect cardRect = new Rect(rect.x + 2f, rect.y + 2f, cardW, rect.height - 4f);
@@ -378,11 +427,13 @@ public class SortLevelAssetEditor : Editor
                     int mask = dataProp != null ? dataProp.FindPropertyRelative("kindMask").intValue : 0;
                     int maskBitsPopup = (1 << KindCountNoEmpty) - 1;
                     mask &= maskBitsPopup;
+                    int maxPerKind = dataProp != null ? currentSlotCount * GetKindMultiplier(dataProp, currentVal) : currentSlotCount;
                     var allowedKinds = GetKindsFromMask(mask);
                     _optionKinds.Clear();
                     foreach (int ki in allowedKinds)
                     {
-                        if (ki < cap && (_countWithoutSlot[ki] < currentSlotCount || ki == currentVal)) _optionKinds.Add(ki);
+                        int maxKi = dataProp != null ? currentSlotCount * GetKindMultiplier(dataProp, ki) : currentSlotCount;
+                        if (ki < cap && (_countWithoutSlot[ki] < maxKi || ki == currentVal)) _optionKinds.Add(ki);
                     }
                     _optionKinds.Add(EmptyIndexInEditor);
                     if (_optionKinds.Count == 0) _optionKinds.Add(currentVal);
@@ -446,7 +497,7 @@ public class SortLevelAssetEditor : Editor
         CountList(rightBranches);
     }
 
-    private void ValidateAndWarn(SerializedProperty leftBranches, SerializedProperty rightBranches, int kindMask, int slotsPerBranch)
+    private void ValidateAndWarn(SerializedProperty data, SerializedProperty leftBranches, SerializedProperty rightBranches, int kindMask, int slotsPerBranch)
     {
         int kindCount = CountKinds(kindMask);
         if (kindCount == 0) return;
@@ -468,8 +519,9 @@ public class SortLevelAssetEditor : Editor
         {
             if ((kindMask & (1 << i)) == 0) continue;
             int kindIdx = indices[i];
-            if (kindIdx < counts.Length && counts[kindIdx] != slotsPerBranch)
-                EditorGUILayout.HelpBox("Kind \"" + GetKindName(kindIdx) + "\" should be " + slotsPerBranch + ", got " + counts[kindIdx], MessageType.Warning);
+            int expected = slotsPerBranch * GetKindMultiplier(data, kindIdx);
+            if (kindIdx < counts.Length && counts[kindIdx] != expected)
+                EditorGUILayout.HelpBox("Kind \"" + GetKindName(kindIdx) + "\" should be " + expected + ", got " + counts[kindIdx], MessageType.Warning);
         }
     }
 
@@ -540,15 +592,17 @@ public class SortLevelAssetEditor : Editor
         var kinds = new List<int>(GetKindsFromMask(kindMask.intValue));
         if (kinds.Count == 0) { EditorUtility.DisplayDialog("Randomize", "Select at least 1 kind.", "OK"); return; }
 
+        int filledCount = 0;
+        foreach (int k in kinds) filledCount += slotCount * GetKindMultiplier(data, k);
+
         int emptyIdx = EmptyIndexInEditor;
         int totalBranches = leftBranches.arraySize + rightBranches.arraySize;
         int totalSlots = totalBranches * slotCount;
-        int filledCount = kinds.Count * slotCount;
         int emptySlotCount = totalSlots - filledCount;
-        if (emptySlotCount < 0) { EditorUtility.DisplayDialog("Randomize", "Not enough slots for " + kinds.Count + " kinds. Add branches or reduce kinds.", "OK"); return; }
+        if (emptySlotCount < 0) { EditorUtility.DisplayDialog("Randomize", "Not enough slots for selected kinds. Add branches or reduce branches per kind.", "OK"); return; }
 
         var pile = new List<int>();
-        foreach (int k in kinds) for (int i = 0; i < slotCount; i++) pile.Add(k);
+        foreach (int k in kinds) for (int i = 0; i < slotCount * GetKindMultiplier(data, k); i++) pile.Add(k);
         for (int i = 0; i < emptySlotCount; i++) pile.Add(emptyIdx);
         Shuffle(pile);
 

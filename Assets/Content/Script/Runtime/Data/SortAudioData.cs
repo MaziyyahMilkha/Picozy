@@ -15,6 +15,7 @@ public class SortAudioGroupEntry
     public string id;
     public List<AudioClip> clips = new List<AudioClip>();
     public bool looping;
+    public SortAudioPlayMode playMode;
 }
 
 [CreateAssetMenu(fileName = "SortAudioData", menuName = "Sort/Audio Data", order = 1)]

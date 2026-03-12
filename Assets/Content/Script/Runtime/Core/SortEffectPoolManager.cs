@@ -2,16 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SortAudioManager : MonoBehaviour
+public class SortEffectPoolManager : MonoBehaviour
 {
-    public static SortAudioManager Instance { get; private set; }
+    public static SortEffectPoolManager Instance { get; private set; }
 
-    [SerializeField] private SortAudioData data;
-    [SerializeField] private SortAudioPlayMode defaultMode = SortAudioPlayMode.Random;
-    [SerializeField] private int poolSize = 8;
-    [SerializeField] private int poolMax = 16;
-
-    private List<AudioSource> _pool = new List<AudioSource>();
+    [SerializeField] private SortAudioData audioData;
+    private readonly List<AudioSource> _audioPool = new List<AudioSource>();
     private readonly Dictionary<string, List<AudioSource>> _loopedByGroup = new Dictionary<string, List<AudioSource>>();
 
     private void Awake()
@@ -22,30 +18,18 @@ public class SortAudioManager : MonoBehaviour
             return;
         }
         Instance = this;
-        GrowPool(poolSize);
     }
 
-    private void GrowPool(int count)
-    {
-        for (int i = 0; i < count && _pool.Count < poolMax; i++)
-        {
-            var src = gameObject.AddComponent<AudioSource>();
-            src.playOnAwake = false;
-            _pool.Add(src);
-        }
-    }
+    #region Audio pool
 
-    private AudioSource GetPooledSource()
+    private AudioSource GetOrCreateAudio()
     {
-        foreach (var s in _pool)
+        foreach (var s in _audioPool)
             if (s != null && !s.isPlaying) return s;
-        if (_pool.Count < poolMax)
-        {
-            GrowPool(1);
-            foreach (var s in _pool)
-                if (s != null && !s.isPlaying) return s;
-        }
-        return null;
+        var src = gameObject.AddComponent<AudioSource>();
+        src.playOnAwake = false;
+        _audioPool.Add(src);
+        return src;
     }
 
     private void TrackLooped(string groupId, AudioSource src)
@@ -70,36 +54,33 @@ public class SortAudioManager : MonoBehaviour
 
     private void OnEnable()
     {
-        SortEventManager.Subscribe<PlayAudioEvent>(HandlePlayAudio);
+        SortEventManager.SubscribeAction("PlayAudio", HandlePlayAudio);
     }
 
     private void OnDisable()
     {
-        SortEventManager.Unsubscribe<PlayAudioEvent>(HandlePlayAudio);
+        SortEventManager.UnsubscribeAction("PlayAudio", HandlePlayAudio);
     }
 
-    private void HandlePlayAudio(PlayAudioEvent e)
+    private void HandlePlayAudio(string id)
     {
-        Play(e.id, e.mode);
+        if (string.IsNullOrEmpty(id)) return;
+        PlayAudio(id);
     }
 
-    public void Play(string id)
+    public void PlayAudio(string id)
     {
-        Play(id, defaultMode);
-    }
-
-    public void Play(string id, SortAudioPlayMode mode)
-    {
-        if (data == null || string.IsNullOrEmpty(id)) return;
-        var group = data.GetGroup(id);
+        if (audioData == null || string.IsNullOrEmpty(id)) return;
+        var group = audioData.GetGroup(id);
         if (group == null || group.clips == null || group.clips.Count == 0) return;
 
+        var mode = group.playMode;
         bool loop = group.looping;
         var clips = group.clips;
 
         if (loop)
         {
-            PlayLooped(id, group, mode);
+            PlayAudioLooped(id, group, mode);
             return;
         }
 
@@ -122,7 +103,7 @@ public class SortAudioManager : MonoBehaviour
         }
     }
 
-    private void PlayLooped(string groupId, SortAudioGroupEntry group, SortAudioPlayMode mode)
+    private void PlayAudioLooped(string groupId, SortAudioGroupEntry group, SortAudioPlayMode mode)
     {
         var clips = group.clips;
         switch (mode)
@@ -132,22 +113,18 @@ public class SortAudioManager : MonoBehaviour
                 var clip = mode == SortAudioPlayMode.Single ? clips[0] : clips[Random.Range(0, clips.Count)];
                 if (clip != null)
                 {
-                    var src = GetPooledSource();
-                    if (src != null)
-                    {
-                        src.clip = clip;
-                        src.loop = true;
-                        src.Play();
-                        TrackLooped(groupId, src);
-                    }
+                    var src = GetOrCreateAudio();
+                    src.clip = clip;
+                    src.loop = true;
+                    src.Play();
+                    TrackLooped(groupId, src);
                 }
                 break;
             case SortAudioPlayMode.AllSimultaneous:
                 foreach (var c in clips)
                 {
                     if (c == null) continue;
-                    var s = GetPooledSource();
-                    if (s == null) break;
+                    var s = GetOrCreateAudio();
                     s.clip = c;
                     s.loop = true;
                     s.Play();
@@ -162,7 +139,7 @@ public class SortAudioManager : MonoBehaviour
 
     private IEnumerator PlaySequentialLoopedRoutine(string groupId, List<AudioClip> clips)
     {
-        var src = GetPooledSource();
+        var src = GetOrCreateAudio();
         if (src == null) yield break;
         TrackLooped(groupId, src);
         int index = 0;
@@ -186,21 +163,15 @@ public class SortAudioManager : MonoBehaviour
 
     private void PlayOneShotPooled(AudioClip clip)
     {
-        var src = GetPooledSource();
+        var src = GetOrCreateAudio();
         if (src == null) return;
         src.loop = false;
         src.PlayOneShot(clip);
-        StartCoroutine(ReturnSourceWhenDone(src, clip.length));
-    }
-
-    private IEnumerator ReturnSourceWhenDone(AudioSource src, float duration)
-    {
-        yield return new WaitForSecondsRealtime(duration);
     }
 
     private IEnumerator PlaySequentialRoutine(List<AudioClip> clips)
     {
-        var src = GetPooledSource();
+        var src = GetOrCreateAudio();
         if (src == null) yield break;
         src.loop = false;
         for (int i = 0; i < clips.Count; i++)
@@ -214,7 +185,7 @@ public class SortAudioManager : MonoBehaviour
         }
     }
 
-    public void StopGroup(string groupId)
+    public void StopAudioGroup(string groupId)
     {
         if (!_loopedByGroup.TryGetValue(groupId, out var list)) return;
         for (int i = list.Count - 1; i >= 0; i--)
@@ -225,13 +196,21 @@ public class SortAudioManager : MonoBehaviour
         _loopedByGroup.Remove(groupId);
     }
 
-    public void Stop()
+    public void StopAllAudio()
     {
-        foreach (var s in _pool)
+        foreach (var s in _audioPool)
             if (s != null) s.Stop();
         StopAllCoroutines();
         _loopedByGroup.Clear();
     }
+
+    #endregion
+
+    #region SFX (update kedepannya)
+    #endregion
+
+    #region Particle (update kedepannya)
+    #endregion
 
     private void OnDestroy()
     {

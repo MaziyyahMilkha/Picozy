@@ -1,48 +1,109 @@
 using System;
 using System.Collections.Generic;
 
-public static class SortEventManager
+public struct UIActionEvent
 {
-    private static readonly Dictionary<Type, List<Delegate>> _subscribers = new Dictionary<Type, List<Delegate>>();
-
-    public static void Subscribe<T>(Action<T> handler)
+    public string ActionId;
+    public string Data;
+    public UIActionEvent(string actionId, string data = null)
     {
-        if (handler == null) return;
-        var t = typeof(T);
-        if (!_subscribers.TryGetValue(t, out var list))
-        {
-            list = new List<Delegate>();
-            _subscribers[t] = list;
-        }
-        if (!list.Contains(handler))
-            list.Add(handler);
-    }
-
-    public static void Unsubscribe<T>(Action<T> handler)
-    {
-        if (handler == null) return;
-        var t = typeof(T);
-        if (_subscribers.TryGetValue(t, out var list))
-            list.Remove(handler);
-    }
-
-    public static void Publish<T>(T data)
-    {
-        var t = typeof(T);
-        if (!_subscribers.TryGetValue(t, out var list)) return;
-        var handlers = (List<Delegate>)list;
-        for (int i = handlers.Count - 1; i >= 0; i--)
-        {
-            try { ((Action<T>)handlers[i]).Invoke(data); } catch (Exception ex) { UnityEngine.Debug.LogException(ex); }
-        }
+        ActionId = actionId;
+        Data = data;
     }
 }
 
-public struct WinEvent { }
-public struct LoseEvent { }
-
-public struct PlayAudioEvent
+public static class SortEventManager
 {
-    public string id;
-    public SortAudioPlayMode mode;
+    private static readonly Dictionary<string, List<Action>> _handlers = new Dictionary<string, List<Action>>(StringComparer.OrdinalIgnoreCase);
+    private static readonly Dictionary<string, List<Action<string>>> _handlersWithData = new Dictionary<string, List<Action<string>>>(StringComparer.OrdinalIgnoreCase);
+    private static readonly object _lock = new object();
+
+    public static void SubscribeAction(string actionId, Action handler)
+    {
+        if (string.IsNullOrEmpty(actionId) || handler == null) return;
+        lock (_lock)
+        {
+            if (!_handlers.TryGetValue(actionId, out var list))
+            {
+                list = new List<Action>();
+                _handlers[actionId] = list;
+            }
+            if (!list.Contains(handler))
+                list.Add(handler);
+        }
+    }
+
+    public static void UnsubscribeAction(string actionId, Action handler)
+    {
+        if (string.IsNullOrEmpty(actionId) || handler == null) return;
+        lock (_lock)
+        {
+            if (_handlers.TryGetValue(actionId, out var list))
+                list.Remove(handler);
+        }
+    }
+
+    public static void SubscribeAction(string actionId, Action<string> handler)
+    {
+        if (string.IsNullOrEmpty(actionId) || handler == null) return;
+        lock (_lock)
+        {
+            if (!_handlersWithData.TryGetValue(actionId, out var list))
+            {
+                list = new List<Action<string>>();
+                _handlersWithData[actionId] = list;
+            }
+            if (!list.Contains(handler))
+                list.Add(handler);
+        }
+    }
+
+    public static void UnsubscribeAction(string actionId, Action<string> handler)
+    {
+        if (string.IsNullOrEmpty(actionId) || handler == null) return;
+        lock (_lock)
+        {
+            if (_handlersWithData.TryGetValue(actionId, out var list))
+                list.Remove(handler);
+        }
+    }
+
+    public static void Publish(UIActionEvent e)
+    {
+        if (string.IsNullOrEmpty(e.ActionId)) return;
+        List<Action> copy;
+        List<Action<string>> copyWithData;
+        lock (_lock)
+        {
+            _handlers.TryGetValue(e.ActionId, out var list);
+            copy = list != null && list.Count > 0 ? new List<Action>(list) : null;
+            _handlersWithData.TryGetValue(e.ActionId, out var listData);
+            copyWithData = listData != null && listData.Count > 0 ? new List<Action<string>>(listData) : null;
+        }
+        if (copy != null)
+        {
+            foreach (var a in copy)
+            {
+                try { a?.Invoke(); }
+                catch (Exception ex) { UnityEngine.Debug.LogException(ex); }
+            }
+        }
+        if (copyWithData != null && !string.IsNullOrEmpty(e.Data))
+        {
+            foreach (var a in copyWithData)
+            {
+                try { a?.Invoke(e.Data); }
+                catch (Exception ex) { UnityEngine.Debug.LogException(ex); }
+            }
+        }
+    }
+
+    public static void ClearAll()
+    {
+        lock (_lock)
+        {
+            _handlers.Clear();
+            _handlersWithData.Clear();
+        }
+    }
 }
