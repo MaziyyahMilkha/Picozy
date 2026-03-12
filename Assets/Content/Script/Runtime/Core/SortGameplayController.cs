@@ -52,18 +52,19 @@ public class SortGameplayController : MonoBehaviour
 
     private void OnEnable()
     {
-        SortEventManager.SubscribeAction("Level", OnLevelEvent);
+        SortEventManager.SubscribeAction("LevelLoaded", OnLevelLoaded);
     }
 
     private void OnDisable()
     {
-        SortEventManager.UnsubscribeAction("Level", OnLevelEvent);
+        SortEventManager.UnsubscribeAction("LevelLoaded", OnLevelLoaded);
     }
 
-    private void OnLevelEvent(string _)
+    private void OnLevelLoaded(string _)
     {
         if (levelLoader == null || levelLoader.GetCurrentLevel() == null) return;
-        levelLoader.LoadLevel();
+        if (!string.IsNullOrEmpty(gameplayCanvasId))
+            SortEventManager.Publish(new UIActionEvent("SwitchCanvas", gameplayCanvasId));
         ApplyLevelTheme();
         StartLevel();
     }

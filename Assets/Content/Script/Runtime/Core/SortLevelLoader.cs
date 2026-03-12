@@ -36,6 +36,7 @@ public class SortLevelLoader : MonoBehaviour
         if (asset == null) return;
         SetLevel(asset);
         LoadLevel();
+        SortEventManager.Publish(new UIActionEvent("LevelLoaded", levelIndexStr));
     }
 
     public void LoadLevel()

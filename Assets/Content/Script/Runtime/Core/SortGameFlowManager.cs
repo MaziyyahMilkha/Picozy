@@ -12,10 +12,8 @@ public class SortGameFlowManager : MonoBehaviour
     [SerializeField] private string mapCanvasId;
     [SerializeField] private string levelCanvasId;
 
-    [Header("Debug)")]
-    [SerializeField] private SortLevelLoader levelLoader;
-    [SerializeField] private SortLevelDatabase debugDatabase;
-    [SerializeField] private int debugLevelIndex;
+    [Header("Debug")]
+    [SerializeField] private int debugLevel;
 
     private void Awake()
     {
@@ -46,19 +44,11 @@ public class SortGameFlowManager : MonoBehaviour
         if (startWithSplash)
         {
             SortEventManager.Publish(new UIActionEvent("Start"));
+            return;
         }
-        else
-        {
-            if (levelLoader != null && debugDatabase != null && debugDatabase.levels != null
-                && debugLevelIndex >= 0 && debugLevelIndex < debugDatabase.levels.Length)
-            {
-                SortEventManager.Publish(new UIActionEvent("Level", debugLevelIndex.ToString()));
-            }
-            else
-            {
-                SortEventManager.Publish(new UIActionEvent("Map"));
-            }
-        }
+        if (debugLevel <= 0)
+            return;
+        SortEventManager.Publish(new UIActionEvent("Level", (debugLevel - 1).ToString()));
     }
 
     private void OnStart()
