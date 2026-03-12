@@ -4,7 +4,7 @@ using UnityEngine;
 public class SortLevelLoader : MonoBehaviour
 {
     [Header("Level")]
-    [SerializeField] private SortLevelAsset currentLevel;
+    private SortLevelAsset currentLevel;
     [SerializeField] private SortLevelDatabase database;
 
     [Header("Spawn")]
@@ -18,8 +18,23 @@ public class SortLevelLoader : MonoBehaviour
 
     private List<SortDahan> spawnedDahans = new List<SortDahan>();
 
-    private void Start()
+    private void OnEnable()
     {
+        SortEventManager.SubscribeAction("Level", OnLevelEvent);
+    }
+
+    private void OnDisable()
+    {
+        SortEventManager.UnsubscribeAction("Level", OnLevelEvent);
+    }
+
+    private void OnLevelEvent(string levelIndexStr)
+    {
+        if (database == null || database.levels == null || database.levels.Length == 0) return;
+        if (!int.TryParse(levelIndexStr, out int index) || index < 0 || index >= database.levels.Length) return;
+        SortLevelAsset asset = database.levels[index];
+        if (asset == null) return;
+        SetLevel(asset);
         LoadLevel();
     }
 

@@ -33,8 +33,9 @@ public class SortEventCaller : MonoBehaviour
         SortEventManager.Publish(new UIActionEvent("Map", null));
     }
 
-    public void GoToLevel()
+    public void GoToLevel(int levelIndex)
     {
-        SortEventManager.Publish(new UIActionEvent("Level", null));
+        SortEventManager.Publish(new UIActionEvent("Level", levelIndex.ToString()));
     }
+
 }

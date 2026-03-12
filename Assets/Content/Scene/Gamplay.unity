@@ -440,7 +440,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 282c562307e017746a1771a3efbb5fb1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  currentLevel: {fileID: 11400000, guid: 1cae8469700ca0e4992a7513beeab986, type: 2}
   database: {fileID: 11400000, guid: 68db4e00f2931494d9ecf7eddf3414c8, type: 2}
   leftSpawnPoints:
   - {fileID: 2052996949}
@@ -609,10 +608,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8993dd251e90be4ab9acbd969c21ea1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  splashCanvasId: 
-  mapCanvasId: 
+  startWithSplash: 1
+  splashCanvasId: SplashScreen
+  mapCanvasId: MapSelector
   levelCanvasId: 
-  splashDuration: 2
+  levelLoader: {fileID: 0}
+  debugDatabase: {fileID: 0}
+  debugLevelIndex: 0
 --- !u!114 &929160509 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 362765571577232162, guid: bd41e9436f7021546b10332dbdb36759, type: 3}

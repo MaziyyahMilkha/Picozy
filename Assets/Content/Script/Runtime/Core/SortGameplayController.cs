@@ -50,10 +50,21 @@ public class SortGameplayController : MonoBehaviour
         Instance = this;
     }
 
-    private void Start()
+    private void OnEnable()
     {
+        SortEventManager.SubscribeAction("Level", OnLevelEvent);
+    }
+
+    private void OnDisable()
+    {
+        SortEventManager.UnsubscribeAction("Level", OnLevelEvent);
+    }
+
+    private void OnLevelEvent(string _)
+    {
+        if (levelLoader == null || levelLoader.GetCurrentLevel() == null) return;
+        levelLoader.LoadLevel();
         ApplyLevelTheme();
-        SortEventManager.Publish(new UIActionEvent("OpenCanvas", gameplayCanvasId));
         StartLevel();
     }
 

@@ -4,10 +4,18 @@ public class SortGameFlowManager : MonoBehaviour
 {
     public static SortGameFlowManager Instance { get; private set; }
 
+    [Header("Start")]
+    [SerializeField] private bool startWithSplash = true;
+
+    [Header("Canvas IDs")]
     [SerializeField] private string splashCanvasId;
     [SerializeField] private string mapCanvasId;
     [SerializeField] private string levelCanvasId;
-    [SerializeField] private float splashDuration = 2f;
+
+    [Header("Debug)")]
+    [SerializeField] private SortLevelLoader levelLoader;
+    [SerializeField] private SortLevelDatabase debugDatabase;
+    [SerializeField] private int debugLevelIndex;
 
     private void Awake()
     {
@@ -35,27 +43,37 @@ public class SortGameFlowManager : MonoBehaviour
 
     private void Start()
     {
-        SortEventManager.Publish(new UIActionEvent("Start"));
+        if (startWithSplash)
+        {
+            SortEventManager.Publish(new UIActionEvent("Start"));
+        }
+        else
+        {
+            if (levelLoader != null && debugDatabase != null && debugDatabase.levels != null
+                && debugLevelIndex >= 0 && debugLevelIndex < debugDatabase.levels.Length)
+            {
+                SortEventManager.Publish(new UIActionEvent("Level", debugLevelIndex.ToString()));
+            }
+            else
+            {
+                SortEventManager.Publish(new UIActionEvent("Map"));
+            }
+        }
     }
-
-    public float GetSplashDuration() => Mathf.Max(0.1f, splashDuration);
 
     private void OnStart()
     {
-        if (SortCanvasManager.Instance != null)
-            SortCanvasManager.Instance.Open(splashCanvasId);
+        SortEventManager.Publish(new UIActionEvent("SwitchCanvas", splashCanvasId));
     }
 
     private void OnMap()
     {
-        if (SortCanvasManager.Instance != null)
-            SortCanvasManager.Instance.Open(mapCanvasId);
+        SortEventManager.Publish(new UIActionEvent("SwitchCanvas", mapCanvasId));
     }
 
-    private void OnLevel()
+    private void OnLevel(string _)
     {
-        if (SortCanvasManager.Instance != null)
-            SortCanvasManager.Instance.Open(levelCanvasId);
+        SortEventManager.Publish(new UIActionEvent("SwitchCanvas", levelCanvasId));
     }
 
     private void OnDestroy()
