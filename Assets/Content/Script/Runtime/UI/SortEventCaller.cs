@@ -2,6 +2,19 @@ using UnityEngine;
 
 public class SortEventCaller : MonoBehaviour
 {
+    [Header("Raise event")]
+    [SerializeField] private string eventId;
+    [SerializeField] private string eventData;
+
+    public void RaiseEvent(string actionId, string data = null)
+    {
+        SortEventManager.Publish(new UIActionEvent(actionId, data));
+    }
+
+    public void RaiseEvent()
+    {
+        SortEventManager.Publish(new UIActionEvent(eventId, string.IsNullOrEmpty(eventData) ? null : eventData));
+    }
 
     public void PlayAudio(string id)
     {

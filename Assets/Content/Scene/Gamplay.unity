@@ -610,11 +610,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8993dd251e90be4ab9acbd969c21ea1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startWithSplash: 1
+  startWithSplash: 0
   splashCanvasId: SplashScreen
   mapCanvasId: MapSelector
-  levelCanvasId: 
-  debugLevel: 1
+  levelCanvasId: Level
+  debugLevel: 0
 --- !u!114 &929160509 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 362765571577232162, guid: bd41e9436f7021546b10332dbdb36759, type: 3}
@@ -1492,7 +1492,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2003383608235744589, guid: 88941a2b0324ac24f8e740c97467d55d, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2871788017288008575, guid: 88941a2b0324ac24f8e740c97467d55d, type: 3}
       propertyPath: m_Camera
@@ -1537,10 +1537,6 @@ PrefabInstance:
     - target: {fileID: 1544165742422725065, guid: ff4fe7fdd70f26647a5fa6f0024241de, type: 3}
       propertyPath: m_Name
       value: Canvas Map Selector
-      objectReference: {fileID: 0}
-    - target: {fileID: 1544165742422725065, guid: ff4fe7fdd70f26647a5fa6f0024241de, type: 3}
-      propertyPath: m_IsActive
-      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4577255000524919371, guid: ff4fe7fdd70f26647a5fa6f0024241de, type: 3}
       propertyPath: m_Camera
@@ -1627,8 +1623,7 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects:
-    - {fileID: 5971008357497317367, guid: ff4fe7fdd70f26647a5fa6f0024241de, type: 3}
+    m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ff4fe7fdd70f26647a5fa6f0024241de, type: 3}
