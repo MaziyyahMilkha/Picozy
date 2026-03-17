@@ -2,10 +2,10 @@ using UnityEngine;
 
 public static class SortLevelRules
 {
-    public static void ProcessCompleteDahan(SortDahan dahan, SortLevelData data)
+    public static void ProcessCompleteDahan(SortDahan dahan, bool destroyBranchWhenComplete)
     {
         if (dahan == null) return;
-        if (data != null && data.destroyBranchWhenComplete)
+        if (destroyBranchWhenComplete)
             Object.Destroy(dahan.gameObject);
         else
             dahan.CollectAndClear();

@@ -23,6 +23,10 @@ public class SortLevelData
     public int slotsPerBranch = 4;
     public int[] kindMultipliers = new int[16];
     public int kindMask = 15;
+
+    [Tooltip("True = pakai global settings dari map. False = pakai setting di bawah ini.")]
+    public bool useGlobalSettings = true;
+
     public float levelDurationSeconds = 60f;
     public int undoCount = 3;
     public bool destroyBranchWhenComplete = true;

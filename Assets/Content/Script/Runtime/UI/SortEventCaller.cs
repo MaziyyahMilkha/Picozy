@@ -51,4 +51,8 @@ public class SortEventCaller : MonoBehaviour
         SortEventManager.Publish(new UIActionEvent("Level", levelIndex.ToString()));
     }
 
+    public void OpenLevelSelector(string id)
+    {
+        SortEventManager.Publish(new UIActionEvent("OpenLevelSelector", id));
+    }
 }

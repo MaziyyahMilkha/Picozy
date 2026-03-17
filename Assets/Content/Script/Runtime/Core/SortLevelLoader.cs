@@ -30,9 +30,9 @@ public class SortLevelLoader : MonoBehaviour
 
     private void OnLevelEvent(string levelIndexStr)
     {
-        if (database == null || database.levels == null || database.levels.Length == 0) return;
-        if (!int.TryParse(levelIndexStr, out int index) || index < 0 || index >= database.levels.Length) return;
-        SortLevelAsset asset = database.levels[index];
+        if (database == null) return;
+        if (!int.TryParse(levelIndexStr, out int globalIndex) || globalIndex < 0 || globalIndex >= database.GetTotalLevelCount()) return;
+        SortLevelAsset asset = database.GetLevelAssetByGlobalIndex(globalIndex);
         if (asset == null) return;
         SetLevel(asset);
         LoadLevel();
@@ -71,10 +71,14 @@ public class SortLevelLoader : MonoBehaviour
 
     public int GetLevelIndexInDatabase()
     {
-        if (database == null || currentLevel == null || database.levels == null) return -1;
-        for (int i = 0; i < database.levels.Length; i++)
-            if (database.levels[i] == currentLevel) return i;
-        return -1;
+        return database != null && currentLevel != null ? database.GetGlobalIndexForAsset(currentLevel) : -1;
+    }
+
+    public ResolvedLevelSettings GetResolvedLevelSettings()
+    {
+        int idx = GetLevelIndexInDatabase();
+        if (database == null || idx < 0) return default;
+        return database.GetResolvedSettings(idx);
     }
 
     private void Clear()

@@ -97,11 +97,11 @@ public class SortGameplayController : MonoBehaviour
         _undoRemaining = GetLevelUndoCount();
         ClearLastMove();
         RefreshTimerUI();
-        var levelData = GetLevelData();
-        if (levelData != null && !string.IsNullOrEmpty(levelData.audioId) && SortEffectPoolManager.Instance != null)
+        var resolved = levelLoader != null ? levelLoader.GetResolvedLevelSettings() : default;
+        if (!string.IsNullOrEmpty(resolved.audioId) && SortEffectPoolManager.Instance != null)
         {
-            SortEffectPoolManager.Instance.StopAudioGroup(levelData.audioId);
-            SortEffectPoolManager.Instance.PlayAudio(levelData.audioId);
+            SortEffectPoolManager.Instance.StopAudioGroup(resolved.audioId);
+            SortEffectPoolManager.Instance.PlayAudio(resolved.audioId);
         }
         if (SortGameManager.Instance != null)
             SortGameManager.Instance.Resume();
@@ -110,19 +110,15 @@ public class SortGameplayController : MonoBehaviour
     private int GetLevelUndoCount()
     {
         if (levelLoader == null) return 3;
-        var asset = levelLoader.GetCurrentLevel();
-        if (asset == null) return 3;
-        var data = asset.GetData();
-        return data != null && data.undoCount >= 0 ? data.undoCount : 3;
+        var resolved = levelLoader.GetResolvedLevelSettings();
+        return resolved.undoCount >= 0 ? resolved.undoCount : 3;
     }
 
     private float GetLevelDuration()
     {
         if (levelLoader == null) return 60f;
-        var asset = levelLoader.GetCurrentLevel();
-        if (asset == null) return 60f;
-        var data = asset.GetData();
-        return data != null && data.levelDurationSeconds > 0f ? data.levelDurationSeconds : 60f;
+        var resolved = levelLoader.GetResolvedLevelSettings();
+        return resolved.levelDurationSeconds > 0f ? resolved.levelDurationSeconds : 60f;
     }
 
     private SortLevelData GetLevelData()
@@ -137,7 +133,8 @@ public class SortGameplayController : MonoBehaviour
         if (dahan == null) return;
         if (_hasLastMove && (_lastSource == dahan || _lastDest == dahan))
             ClearLastMove();
-        SortLevelRules.ProcessCompleteDahan(dahan, GetLevelData());
+        var resolved = levelLoader != null ? levelLoader.GetResolvedLevelSettings() : default;
+        SortLevelRules.ProcessCompleteDahan(dahan, resolved.destroyBranchWhenComplete);
         CheckLevelComplete();
     }
 
@@ -247,10 +244,8 @@ public class SortGameplayController : MonoBehaviour
     private Sprite GetLevelBackground()
     {
         if (levelLoader == null) return null;
-        var asset = levelLoader.GetCurrentLevel();
-        if (asset == null) return null;
-        var data = asset.GetData();
-        return data?.backgroundTheme;
+        var resolved = levelLoader.GetResolvedLevelSettings();
+        return resolved.backgroundTheme;
     }
 
     private void EndLevel(bool won)
@@ -258,6 +253,8 @@ public class SortGameplayController : MonoBehaviour
         if (ended) return;
         ended = true;
         running = false;
+        if (won && levelLoader != null && SortLevelSelectManager.Instance != null)
+            SortLevelSelectManager.Instance.ReportLevelCompleted(levelLoader.GetLevelIndexInDatabase());
         if (SortGameManager.Instance != null)
             SortGameManager.Instance.Pause();
         SortEventManager.Publish(new UIActionEvent("OpenCanvas", won ? winCanvasId : loseCanvasId));

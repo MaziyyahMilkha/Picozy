@@ -12,14 +12,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 37814ad8a787a294e910c81545e3ff0f, type: 3}
   m_Name: SortLevelDatabase
   m_EditorClassIdentifier: 
-  levels:
-  - {fileID: 11400000, guid: 1cae8469700ca0e4992a7513beeab986, type: 2}
-  - {fileID: 11400000, guid: 1c0c73ba58548ff41b1cf06fa908ba23, type: 2}
-  - {fileID: 11400000, guid: b916ad89461c6394a82250ceffd0e7cd, type: 2}
-  - {fileID: 11400000, guid: 02292d6ebb94b9345b37268bc9bb6718, type: 2}
-  - {fileID: 11400000, guid: 53e853daeddadd14e8fda72e1d81ee81, type: 2}
-  - {fileID: 11400000, guid: 5f179798e67c44b49b4bd62e670560a9, type: 2}
-  - {fileID: 11400000, guid: e23e8d37f662ed14eb9a4b746fed33cc, type: 2}
-  - {fileID: 11400000, guid: eb956ddd440b2304bb4e76ea8a3199c9, type: 2}
-  - {fileID: 11400000, guid: bdfebabad668c8a43ad50163cfca10b2, type: 2}
-  - {fileID: 11400000, guid: 4454c7c9963f2f647b4b3cca5993b93e, type: 2}
+  maps:
+  - id: Map1
+    levelSelectorBackground: {fileID: 21300000, guid: b2a74576c2493024e94d155df0ef7403, type: 3}
+    slotLockBackground: {fileID: 21300000, guid: bf7154e826d422e4c885e79b837d4c57, type: 3}
+    globalLevelDurationSeconds: 60
+    globalUndoCount: 3
+    globalDestroyBranchWhenComplete: 1
+    globalBackgroundTheme: {fileID: 21300000, guid: c6b3d7867e9c286459630e2c49da4fc4, type: 3}
+    globalAudioId: 
+    levels:
+    - {fileID: 11400000, guid: 1cae8469700ca0e4992a7513beeab986, type: 2}
+    - {fileID: 11400000, guid: 1c0c73ba58548ff41b1cf06fa908ba23, type: 2}
+    - {fileID: 11400000, guid: b916ad89461c6394a82250ceffd0e7cd, type: 2}
+    - {fileID: 11400000, guid: 02292d6ebb94b9345b37268bc9bb6718, type: 2}
+    - {fileID: 11400000, guid: 53e853daeddadd14e8fda72e1d81ee81, type: 2}
+    - {fileID: 11400000, guid: 5f179798e67c44b49b4bd62e670560a9, type: 2}
+    - {fileID: 11400000, guid: e23e8d37f662ed14eb9a4b746fed33cc, type: 2}
+    - {fileID: 11400000, guid: eb956ddd440b2304bb4e76ea8a3199c9, type: 2}
+    - {fileID: 11400000, guid: bdfebabad668c8a43ad50163cfca10b2, type: 2}
+    - {fileID: 11400000, guid: 4454c7c9963f2f647b4b3cca5993b93e, type: 2}
+  - id: Map2
+    levelSelectorBackground: {fileID: 21300000, guid: ffc2033667d12ca46b23b9bad04bc361, type: 3}
+    slotLockBackground: {fileID: 21300000, guid: efc98ea083924c540b7b1c74071dc327, type: 3}
+    globalLevelDurationSeconds: 60
+    globalUndoCount: 3
+    globalDestroyBranchWhenComplete: 1
+    globalBackgroundTheme: {fileID: 21300000, guid: fc27238330e8dce419e8c51e34334d66, type: 3}
+    globalAudioId: 
+    levels: []

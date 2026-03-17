@@ -135,6 +135,7 @@ public class SortLevelAssetEditor : Editor
         SerializedProperty slotsPerBranch = data.FindPropertyRelative("slotsPerBranch");
         SerializedProperty kindMultipliers = data.FindPropertyRelative("kindMultipliers");
         SerializedProperty kindMask = data.FindPropertyRelative("kindMask");
+        SerializedProperty useGlobalSettings = data.FindPropertyRelative("useGlobalSettings");
         SerializedProperty levelDurationSeconds = data.FindPropertyRelative("levelDurationSeconds");
         SerializedProperty undoCount = data.FindPropertyRelative("undoCount");
         SerializedProperty destroyBranchWhenComplete = data.FindPropertyRelative("destroyBranchWhenComplete");
@@ -206,14 +207,21 @@ public class SortLevelAssetEditor : Editor
             }
             EditorGUI.indentLevel--;
         }
-        levelDurationSeconds.floatValue = Mathf.Max(0f, EditorGUILayout.FloatField("Level duration (sec)", levelDurationSeconds.floatValue));
-        undoCount.intValue = Mathf.Max(0, EditorGUILayout.IntField("Undo count", undoCount.intValue));
-        if (destroyBranchWhenComplete != null)
-            destroyBranchWhenComplete.boolValue = EditorGUILayout.Toggle("Destroy branch when complete", destroyBranchWhenComplete.boolValue);
-        if (backgroundTheme != null)
-            EditorGUILayout.PropertyField(backgroundTheme, new GUIContent("Background theme"));
-        if (audioId != null)
-            EditorGUILayout.PropertyField(audioId, new GUIContent("Audio ID", "Group ID in SortAudioData (e.g. level BGM). Leave empty if not used."));
+        if (useGlobalSettings != null)
+            useGlobalSettings.boolValue = EditorGUILayout.Toggle("Use global settings", useGlobalSettings.boolValue);
+        if (useGlobalSettings == null || !useGlobalSettings.boolValue)
+        {
+            EditorGUI.indentLevel++;
+            levelDurationSeconds.floatValue = Mathf.Max(0f, EditorGUILayout.FloatField("Level duration (sec)", levelDurationSeconds.floatValue));
+            undoCount.intValue = Mathf.Max(0, EditorGUILayout.IntField("Undo count", undoCount.intValue));
+            if (destroyBranchWhenComplete != null)
+                destroyBranchWhenComplete.boolValue = EditorGUILayout.Toggle("Destroy branch when complete", destroyBranchWhenComplete.boolValue);
+            if (backgroundTheme != null)
+                EditorGUILayout.PropertyField(backgroundTheme, new GUIContent("Background theme"));
+            if (audioId != null)
+                EditorGUILayout.PropertyField(audioId, new GUIContent("Audio ID", "Group ID in SortAudioData (e.g. level BGM). Leave empty if not used."));
+            EditorGUI.indentLevel--;
+        }
 
         int kindCount = CountKinds(kindMask.intValue);
         int slotsPer = Mathf.Clamp(slotsPerBranch.intValue, 1, MaxSlots);

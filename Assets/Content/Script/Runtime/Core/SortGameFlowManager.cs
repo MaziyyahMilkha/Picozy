@@ -10,7 +10,6 @@ public class SortGameFlowManager : MonoBehaviour
     [Header("Canvas IDs")]
     [SerializeField] private string splashCanvasId;
     [SerializeField] private string mapCanvasId;
-    [SerializeField] private string levelCanvasId;
 
     [Header("Debug")]
     [SerializeField] private int debugLevel;
@@ -29,14 +28,12 @@ public class SortGameFlowManager : MonoBehaviour
     {
         SortEventManager.SubscribeAction("Start", OnStart);
         SortEventManager.SubscribeAction("Map", OnMap);
-        SortEventManager.SubscribeAction("Level", OnLevel);
     }
 
     private void OnDisable()
     {
         SortEventManager.UnsubscribeAction("Start", OnStart);
         SortEventManager.UnsubscribeAction("Map", OnMap);
-        SortEventManager.UnsubscribeAction("Level", OnLevel);
     }
 
     private void Start()
@@ -59,11 +56,6 @@ public class SortGameFlowManager : MonoBehaviour
     private void OnMap()
     {
         SortEventManager.Publish(new UIActionEvent("SwitchCanvas", mapCanvasId));
-    }
-
-    private void OnLevel(string _)
-    {
-        SortEventManager.Publish(new UIActionEvent("SwitchCanvas", levelCanvasId));
     }
 
     private void OnDestroy()
