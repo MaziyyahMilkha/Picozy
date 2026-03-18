@@ -8,6 +8,7 @@ public class SortLevelSaveDataEditorWindow : EditorWindow
     private const float StatusWidth = 88f;
     private const float BtnResetWidth = 56f;
     private const float BtnSetTamatWidth = 72f;
+    private const float BtnStarWidth = 22f;
 
     [SerializeField] private SortLevelDatabase database;
 
@@ -135,25 +136,44 @@ public class SortLevelSaveDataEditorWindow : EditorWindow
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space(2);
 
+            bool numberContinues = database.levelNumberContinuesAcrossMaps;
             for (int i = 0; i < levelCount; i++, globalIndex++)
             {
-                int levelNum = globalIndex + 1;
+                int displayLevelNum = numberContinues ? (globalIndex + 1) : (i + 1);
                 bool tamat = IsLevelCompleted(globalIndex);
+                int stars = GetStarsForLevel(globalIndex);
 
                 EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.Space(6);
-                EditorGUILayout.LabelField($"Level {levelNum}", GUILayout.Width(LevelNumWidth));
+                EditorGUILayout.LabelField($"Level {displayLevelNum}", GUILayout.Width(LevelNumWidth));
                 EditorGUILayout.LabelField(tamat ? "Tamat" : "Belum", GUILayout.Width(StatusWidth));
+                if (tamat)
+                    EditorGUILayout.LabelField(stars + "★", GUILayout.Width(24));
                 GUILayout.Space(4);
                 if (GUILayout.Button("Reset", GUILayout.Width(BtnResetWidth)))
                 {
                     SetHighestCompleted(globalIndex - 1);
-                    Debug.Log($"[Sort Save Data Editor] {mapLabel} Level {levelNum} di-reset.");
+                    Debug.Log($"[Sort Save Data Editor] {mapLabel} Level {displayLevelNum} di-reset.");
                 }
-                if (GUILayout.Button("Set Tamat", GUILayout.Width(BtnSetTamatWidth)))
+                if (GUILayout.Button("Tamat", GUILayout.Width(48)))
                 {
                     SetHighestCompleted(globalIndex);
-                    Debug.Log($"[Sort Save Data Editor] {mapLabel} Level {levelNum} set tamat.");
+                    Debug.Log($"[Sort Save Data Editor] {mapLabel} Level {displayLevelNum} set tamat (1★).");
+                }
+                if (GUILayout.Button("1", GUILayout.Width(BtnStarWidth)))
+                {
+                    SetStarsForLevel(globalIndex, 1);
+                    Debug.Log($"[Sort Save Data Editor] {mapLabel} Level {displayLevelNum} → 1★.");
+                }
+                if (GUILayout.Button("2", GUILayout.Width(BtnStarWidth)))
+                {
+                    SetStarsForLevel(globalIndex, 2);
+                    Debug.Log($"[Sort Save Data Editor] {mapLabel} Level {displayLevelNum} → 2★.");
+                }
+                if (GUILayout.Button("3", GUILayout.Width(BtnStarWidth)))
+                {
+                    SetStarsForLevel(globalIndex, 3);
+                    Debug.Log($"[Sort Save Data Editor] {mapLabel} Level {displayLevelNum} → 3★.");
                 }
                 EditorGUILayout.EndHorizontal();
             }
@@ -188,10 +208,37 @@ public class SortLevelSaveDataEditorWindow : EditorWindow
         return globalIndex <= _cachedData.highestCompletedGlobalIndex;
     }
 
+    private int GetStarsForLevel(int globalIndex)
+    {
+        if (_cachedData == null || _cachedData.starsPerLevel == null || globalIndex > _cachedData.highestCompletedGlobalIndex) return 0;
+        if (globalIndex >= _cachedData.starsPerLevel.Count) return 1;
+        return Mathf.Clamp(_cachedData.starsPerLevel[globalIndex], 1, 3);
+    }
+
     private void SetHighestCompleted(int newHighest)
     {
         var data = LoadOrCreateSaveData();
         data.highestCompletedGlobalIndex = Mathf.Max(-1, newHighest);
+        data.lastSavedTimestampUtc = System.DateTime.UtcNow.Ticks;
+        if (data.starsPerLevel == null) data.starsPerLevel = new System.Collections.Generic.List<int>();
+        while (data.starsPerLevel.Count <= newHighest)
+            data.starsPerLevel.Add(1);
+        if (newHighest >= 0)
+            data.starsPerLevel[newHighest] = 1;
+        ES3.Save(SortLevelSelectManager.SaveKey, data);
+        _cachedData = data;
+        RefreshStatus();
+    }
+
+    private void SetStarsForLevel(int globalIndex, int starCount)
+    {
+        var data = LoadOrCreateSaveData();
+        if (data.starsPerLevel == null) data.starsPerLevel = new System.Collections.Generic.List<int>();
+        while (data.starsPerLevel.Count <= globalIndex)
+            data.starsPerLevel.Add(1);
+        data.starsPerLevel[globalIndex] = Mathf.Clamp(starCount, 1, 3);
+        if (data.highestCompletedGlobalIndex < globalIndex)
+            data.highestCompletedGlobalIndex = globalIndex;
         data.lastSavedTimestampUtc = System.DateTime.UtcNow.Ticks;
         ES3.Save(SortLevelSelectManager.SaveKey, data);
         _cachedData = data;
@@ -205,7 +252,7 @@ public class SortLevelSaveDataEditorWindow : EditorWindow
             try { return ES3.Load<SortLevelSaveData>(SortLevelSelectManager.SaveKey); }
             catch { }
         }
-        return new SortLevelSaveData { highestCompletedGlobalIndex = -1, lastSavedTimestampUtc = System.DateTime.UtcNow.Ticks };
+        return new SortLevelSaveData { highestCompletedGlobalIndex = -1, lastSavedTimestampUtc = System.DateTime.UtcNow.Ticks, starsPerLevel = new System.Collections.Generic.List<int>() };
     }
 
     private void RefreshStatus()

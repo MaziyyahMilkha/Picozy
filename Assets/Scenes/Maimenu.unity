@@ -3218,7 +3218,7 @@ GameObject:
   - component: {fileID: 816818327}
   - component: {fileID: 816818326}
   m_Layer: 5
-  m_Name: 'Canvas Mainmenu '
+  m_Name: Canvas Settings Gameplay
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4162,12 +4162,12 @@ GameObject:
   - component: {fileID: 992712814}
   - component: {fileID: 992712813}
   m_Layer: 5
-  m_Name: 'Canvas Mainmenu '
+  m_Name: Canvas Settings
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &992712813
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4576,7 +4576,7 @@ GameObject:
   - component: {fileID: 1056742422}
   - component: {fileID: 1056742421}
   m_Layer: 5
-  m_Name: 'Canvas Mainmenu '
+  m_Name: Canvas  Tutor 1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4912,7 +4912,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1098909235
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5881,7 +5881,7 @@ GameObject:
   - component: {fileID: 1241940253}
   - component: {fileID: 1241940252}
   m_Layer: 5
-  m_Name: 'Canvas Mainmenu '
+  m_Name: Canvas Tutor 2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6477,7 +6477,7 @@ GameObject:
   - component: {fileID: 1373514110}
   - component: {fileID: 1373514109}
   m_Layer: 5
-  m_Name: 'Canvas Mainmenu '
+  m_Name: Canvas Lose
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -8147,7 +8147,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1775022624
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9501,7 +9501,7 @@ GameObject:
   - component: {fileID: 2046369887}
   - component: {fileID: 2046369886}
   m_Layer: 5
-  m_Name: 'Canvas Mainmenu '
+  m_Name: Canvas Win
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

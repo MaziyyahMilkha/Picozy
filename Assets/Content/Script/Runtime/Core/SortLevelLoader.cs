@@ -74,6 +74,12 @@ public class SortLevelLoader : MonoBehaviour
         return database != null && currentLevel != null ? database.GetGlobalIndexForAsset(currentLevel) : -1;
     }
 
+    public int GetDisplayLevelNumber()
+    {
+        int idx = GetLevelIndexInDatabase();
+        return database != null && idx >= 0 ? database.GetDisplayLevelNumber(idx) : 1;
+    }
+
     public ResolvedLevelSettings GetResolvedLevelSettings()
     {
         int idx = GetLevelIndexInDatabase();

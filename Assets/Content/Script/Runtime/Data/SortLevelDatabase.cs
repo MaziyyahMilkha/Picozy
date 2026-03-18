@@ -32,9 +32,25 @@ public struct ResolvedLevelSettings
 [CreateAssetMenu(fileName = "SortLevelDatabase", menuName = "Sort/Level Database")]
 public class SortLevelDatabase : ScriptableObject
 {
+    [Header("Map settings")]
+    public bool levelNumberContinuesAcrossMaps = true;
+    public bool unlockFirstLevelPerMap = false;
+
     public List<SortLevelMapEntry> maps = new List<SortLevelMapEntry>();
 
     public int MapCount => maps != null ? maps.Count : 0;
+
+    public bool IsFirstLevelOfAnyMap(int globalIndex)
+    {
+        if (maps == null || globalIndex < 0) return false;
+        int sum = 0;
+        for (int m = 0; m < maps.Count; m++)
+        {
+            if (globalIndex == sum) return true;
+            sum += GetLevelCountInMap(m);
+        }
+        return false;
+    }
 
     public int GetMapIndexById(string mapId)
     {
@@ -114,6 +130,19 @@ public class SortLevelDatabase : ScriptableObject
             remaining -= count;
         }
         return -1;
+    }
+
+    public int GetDisplayLevelNumber(int globalIndex)
+    {
+        if (maps == null || globalIndex < 0) return 1;
+        if (levelNumberContinuesAcrossMaps)
+            return globalIndex + 1;
+        int mapIndex = GetMapIndexForGlobalIndex(globalIndex);
+        if (mapIndex < 0) return 1;
+        int sum = 0;
+        for (int m = 0; m < mapIndex; m++)
+            sum += GetLevelCountInMap(m);
+        return (globalIndex - sum) + 1;
     }
 
     public ResolvedLevelSettings GetResolvedSettings(int globalIndex)

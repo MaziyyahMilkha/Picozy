@@ -12,11 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 37814ad8a787a294e910c81545e3ff0f, type: 3}
   m_Name: SortLevelDatabase
   m_EditorClassIdentifier: 
+  levelNumberContinuesAcrossMaps: 0
+  unlockFirstLevelPerMap: 1
   maps:
   - id: Map1
     levelSelectorBackground: {fileID: 21300000, guid: b2a74576c2493024e94d155df0ef7403, type: 3}
     slotLockBackground: {fileID: 21300000, guid: bf7154e826d422e4c885e79b837d4c57, type: 3}
-    globalLevelDurationSeconds: 60
+    globalLevelDurationSeconds: 30
     globalUndoCount: 3
     globalDestroyBranchWhenComplete: 1
     globalBackgroundTheme: {fileID: 21300000, guid: c6b3d7867e9c286459630e2c49da4fc4, type: 3}

@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using System.Collections.Generic;
 
 public class SortLevelSelectManager : MonoBehaviour
 {
@@ -14,6 +15,7 @@ public class SortLevelSelectManager : MonoBehaviour
     private int _currentMapIndex;
     private int _currentPageIndex;
     private int _highestCompletedGlobalIndex = -1;
+    private List<int> _starsPerLevel = new List<int>();
 
     public event Action OnPageOrMapChanged;
 
@@ -144,6 +146,11 @@ public class SortLevelSelectManager : MonoBehaviour
     {
         int global = GetGlobalLevelIndexForSlot(slotIndex);
         if (global < 0) return 0;
+        if (database != null && !database.levelNumberContinuesAcrossMaps)
+        {
+            int levelInMap = _currentPageIndex * LevelsPerPage + slotIndex;
+            return levelInMap + 1;
+        }
         return global + 1;
     }
 
@@ -154,15 +161,23 @@ public class SortLevelSelectManager : MonoBehaviour
         return database.maps[mapIndex].id ?? "";
     }
 
-    /// <summary>Panggil saat level selesai (menang). Dipakai untuk tampilan completed/available/locked di selector.</summary>
-    public void ReportLevelCompleted(int globalLevelIndex)
+    public void ReportLevelCompleted(int globalLevelIndex, int starCount = 1)
     {
         if (globalLevelIndex < 0) return;
+        starCount = Mathf.Clamp(starCount, 1, 3);
+        while (_starsPerLevel.Count <= globalLevelIndex)
+            _starsPerLevel.Add(1);
+        _starsPerLevel[globalLevelIndex] = starCount;
         if (globalLevelIndex > _highestCompletedGlobalIndex)
-        {
             _highestCompletedGlobalIndex = globalLevelIndex;
-            SaveProgress();
-        }
+        SaveProgress();
+    }
+
+    public int GetStarsForLevel(int globalLevelIndex)
+    {
+        if (globalLevelIndex < 0 || globalLevelIndex > _highestCompletedGlobalIndex) return 0;
+        if (globalLevelIndex >= _starsPerLevel.Count) return 1;
+        return Mathf.Clamp(_starsPerLevel[globalLevelIndex], 1, 3);
     }
 
     private void LoadProgress()
@@ -173,6 +188,7 @@ public class SortLevelSelectManager : MonoBehaviour
             {
                 var data = ES3.Load<SortLevelSaveData>(SaveKey);
                 _highestCompletedGlobalIndex = data.highestCompletedGlobalIndex;
+                _starsPerLevel = data.starsPerLevel != null ? new List<int>(data.starsPerLevel) : new List<int>();
             }
         }
         catch (Exception e) { Debug.LogWarning("[SortLevelSelectManager] LoadProgress: " + e.Message); }
@@ -185,7 +201,8 @@ public class SortLevelSelectManager : MonoBehaviour
             var data = new SortLevelSaveData
             {
                 highestCompletedGlobalIndex = _highestCompletedGlobalIndex,
-                lastSavedTimestampUtc = DateTime.UtcNow.Ticks
+                lastSavedTimestampUtc = DateTime.UtcNow.Ticks,
+                starsPerLevel = new List<int>(_starsPerLevel)
             };
             ES3.Save(SaveKey, data);
         }
@@ -196,6 +213,8 @@ public class SortLevelSelectManager : MonoBehaviour
     {
         if (globalLevelIndex <= _highestCompletedGlobalIndex) return LevelSlotState.Completed;
         if (globalLevelIndex == _highestCompletedGlobalIndex + 1) return LevelSlotState.Available;
+        if (database != null && database.unlockFirstLevelPerMap && database.IsFirstLevelOfAnyMap(globalLevelIndex))
+            return LevelSlotState.Available;
         return LevelSlotState.Locked;
     }
 

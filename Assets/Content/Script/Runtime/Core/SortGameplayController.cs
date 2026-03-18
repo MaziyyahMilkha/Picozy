@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 
 public class SortGameplayController : MonoBehaviour
 {
@@ -20,8 +19,8 @@ public class SortGameplayController : MonoBehaviour
     [Header("Background")]
     [SerializeField] private Image backgroundImage;
 
-    [Header("Timer UI")]
-    [SerializeField] private TMP_Text timerText;
+    [Header("Timer & stars")]
+    [SerializeField] private SortStarDisplay starDisplay;
 
     private float levelDuration;
     private float timeRemaining;
@@ -78,14 +77,14 @@ public class SortGameplayController : MonoBehaviour
             timeRemaining = 0f;
             EndLevel(false);
         }
-        RefreshTimerUI();
+        RefreshTimerAndStars();
     }
 
-    private void RefreshTimerUI()
+    private void RefreshTimerAndStars()
     {
-        if (timerText == null) return;
-        int sec = Mathf.Max(0, Mathf.FloorToInt(timeRemaining));
-        timerText.text = (sec / 60) + ":" + (sec % 60).ToString("00");
+        float normalized = levelDuration > 0f ? Mathf.Clamp01(timeRemaining / levelDuration) : 0f;
+        if (starDisplay != null)
+            starDisplay.SetNormalizedTime(normalized);
     }
 
     public void StartLevel()
@@ -96,7 +95,12 @@ public class SortGameplayController : MonoBehaviour
         timeRemaining = levelDuration;
         _undoRemaining = GetLevelUndoCount();
         ClearLastMove();
-        RefreshTimerUI();
+        if (starDisplay != null)
+        {
+            starDisplay.ResetToFull();
+            starDisplay.SetLevelNumber(levelLoader != null ? levelLoader.GetDisplayLevelNumber() : 1);
+        }
+        RefreshTimerAndStars();
         var resolved = levelLoader != null ? levelLoader.GetResolvedLevelSettings() : default;
         if (!string.IsNullOrEmpty(resolved.audioId) && SortEffectPoolManager.Instance != null)
         {
@@ -254,7 +258,12 @@ public class SortGameplayController : MonoBehaviour
         ended = true;
         running = false;
         if (won && levelLoader != null && SortLevelSelectManager.Instance != null)
-            SortLevelSelectManager.Instance.ReportLevelCompleted(levelLoader.GetLevelIndexInDatabase());
+        {
+            int globalIndex = levelLoader.GetLevelIndexInDatabase();
+            float norm = levelDuration > 0f ? Mathf.Clamp01(timeRemaining / levelDuration) : 0f;
+            int stars = norm > 0.6f ? 3 : (norm > 0.3f ? 2 : 1);
+            SortLevelSelectManager.Instance.ReportLevelCompleted(globalIndex, stars);
+        }
         if (SortGameManager.Instance != null)
             SortGameManager.Instance.Pause();
         SortEventManager.Publish(new UIActionEvent("OpenCanvas", won ? winCanvasId : loseCanvasId));

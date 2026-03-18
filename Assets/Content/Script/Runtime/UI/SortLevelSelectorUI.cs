@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,14 +19,21 @@ public class SortLevelSelectorUI : MonoBehaviour
         var manager = SortLevelSelectManager.Instance;
         if (manager != null)
             manager.OnPageOrMapChanged += RefreshDisplay;
-        RefreshDisplay();
+        StartCoroutine(RefreshNextFrame());
     }
 
     private void OnDisable()
     {
+        StopAllCoroutines();
         var manager = SortLevelSelectManager.Instance;
         if (manager != null)
             manager.OnPageOrMapChanged -= RefreshDisplay;
+    }
+
+    private IEnumerator RefreshNextFrame()
+    {
+        yield return null;
+        RefreshDisplay();
     }
 
     private void Start()
@@ -73,7 +81,8 @@ public class SortLevelSelectorUI : MonoBehaviour
                 int globalIndex = manager.GetGlobalLevelIndexForSlot(i);
                 int levelNum = manager.GetLevelNumberForSlot(i);
                 LevelSlotState state = manager.GetSlotState(globalIndex);
-                slotView.SetState(state, levelNum);
+                int stars = manager.GetStarsForLevel(globalIndex);
+                slotView.SetState(state, levelNum, stars);
                 if (slotLockBg != null)
                     slotView.SetLockBackground(slotLockBg);
                 Button btn = slotView.Button;
