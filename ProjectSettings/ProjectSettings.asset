@@ -247,8 +247,8 @@ PlayerSettings:
   templateDefaultScene: Assets/Scenes/SampleScene.unity
   useCustomMainManifest: 0
   useCustomLauncherManifest: 0
-  useCustomMainGradleTemplate: 1
-  useCustomLauncherGradleManifest: 1
+  useCustomMainGradleTemplate: 0
+  useCustomLauncherGradleManifest: 0
   useCustomBaseGradleTemplate: 0
   useCustomGradlePropertiesTemplate: 0
   useCustomGradleSettingsTemplate: 0
@@ -786,7 +786,7 @@ PlayerSettings:
   webGLMemoryGeometricGrowthCap: 96
   webGLPowerPreference: 2
   scriptingDefineSymbols:
-    Android: ES3_TMPRO;ES3_UGUI;UNITY_POST_PROCESSING_STACK_V2;DOTWEEN
+    Android: ES3_TMPRO;ES3_UGUI;UNITY_POST_PROCESSING_STACK_V2;DOTWEEN;MOREMOUNTAINS_NICEVIBRATIONS_INSTALLED
     EmbeddedLinux: ES3_TMPRO;ES3_UGUI;UNITY_POST_PROCESSING_STACK_V2;DOTWEEN
     GameCoreScarlett: DOTWEEN
     GameCoreXboxOne: UNITY_POST_PROCESSING_STACK_V2;DOTWEEN

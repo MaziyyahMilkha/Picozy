@@ -5,7 +5,6 @@ using UnityEngine;
 public class CharacterMovement : MonoBehaviour
 {
     [SerializeField] private float moveSpeed = 8f;
-    [SerializeField] private float arriveDistance = 0.02f;
 
     [Header("Move animation (dahan ke dahan)")]
     [SerializeField] private float arcHeight = 0.2f;

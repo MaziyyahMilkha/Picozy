@@ -51,7 +51,6 @@ public class SortDahan : MonoBehaviour
     private Vector3 _restLocalEuler;
     private Vector3 _restLocalScale;
     private float _targetScaleMultiplier = 1f;
-    private bool _selected;
 
     private void Awake()
     {
@@ -112,14 +111,12 @@ public class SortDahan : MonoBehaviour
     public void OnSelected()
     {
         if (!enableSelectFeedback) return;
-        _selected = true;
         _targetScaleMultiplier = selectScaleMultiplier;
     }
 
     public void OnDeselected()
     {
         if (!enableSelectFeedback) return;
-        _selected = false;
         _targetScaleMultiplier = 1f;
     }
 
