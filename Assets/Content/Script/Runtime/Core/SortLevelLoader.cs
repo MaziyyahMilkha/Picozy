@@ -69,6 +69,12 @@ public class SortLevelLoader : MonoBehaviour
 
     public SortLevelAsset GetCurrentLevel() => currentLevel;
 
+    public void UnloadLevel()
+    {
+        Clear();
+        currentLevel = null;
+    }
+
     public int GetLevelIndexInDatabase()
     {
         return database != null && currentLevel != null ? database.GetGlobalIndexForAsset(currentLevel) : -1;

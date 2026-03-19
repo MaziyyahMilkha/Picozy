@@ -21,11 +21,13 @@ public class SortGameplayController : MonoBehaviour
 
     [Header("Timer & stars")]
     [SerializeField] private SortStarDisplay starDisplay;
+    [SerializeField] private bool pauseStopsTimer = true;
 
     private float levelDuration;
     private float timeRemaining;
     private bool running;
     private bool ended;
+    private bool paused;
     private int _undoRemaining;
     private bool _hasLastMove;
     private SortDahan _lastSource, _lastDest;
@@ -36,6 +38,8 @@ public class SortGameplayController : MonoBehaviour
 
     public float TimeRemaining => timeRemaining;
     public bool IsRunning => running && !ended;
+    public bool IsPaused => paused;
+    public bool IsInteractionBlocked => paused || ended;
     public int UndoRemaining => _undoRemaining;
     public bool CanUndo => _undoRemaining > 0 && _hasLastMove && running && !ended;
 
@@ -52,11 +56,32 @@ public class SortGameplayController : MonoBehaviour
     private void OnEnable()
     {
         SortEventManager.SubscribeAction("LevelLoaded", OnLevelLoaded);
+        SortEventManager.SubscribeAction("PauseGameplay", OnPauseRequested);
+        SortEventManager.SubscribeAction("ResumeGameplay", OnResumeRequested);
+        SortEventManager.SubscribeAction("BackToMainMenu", OnBackToMainMenuRequested);
     }
 
     private void OnDisable()
     {
         SortEventManager.UnsubscribeAction("LevelLoaded", OnLevelLoaded);
+        SortEventManager.UnsubscribeAction("PauseGameplay", OnPauseRequested);
+        SortEventManager.UnsubscribeAction("ResumeGameplay", OnResumeRequested);
+        SortEventManager.UnsubscribeAction("BackToMainMenu", OnBackToMainMenuRequested);
+    }
+
+    private void OnPauseRequested()
+    {
+        Pause();
+    }
+
+    private void OnResumeRequested()
+    {
+        Resume();
+    }
+
+    private void OnBackToMainMenuRequested()
+    {
+        BackToMainMenu();
     }
 
     private void OnLevelLoaded(string _)
@@ -64,6 +89,12 @@ public class SortGameplayController : MonoBehaviour
         if (levelLoader == null || levelLoader.GetCurrentLevel() == null) return;
         if (!string.IsNullOrEmpty(gameplayCanvasId))
             SortEventManager.Publish(new UIActionEvent("SwitchCanvas", gameplayCanvasId));
+        if (!string.IsNullOrEmpty(winCanvasId))
+            SortEventManager.Publish(new UIActionEvent("HidePopupCanvas", winCanvasId));
+        if (!string.IsNullOrEmpty(loseCanvasId))
+            SortEventManager.Publish(new UIActionEvent("HidePopupCanvas", loseCanvasId));
+        if (!string.IsNullOrEmpty(pauseCanvasId))
+            SortEventManager.Publish(new UIActionEvent("HidePopupCanvas", pauseCanvasId));
         ApplyLevelTheme();
         StartLevel();
     }
@@ -71,7 +102,14 @@ public class SortGameplayController : MonoBehaviour
     private void Update()
     {
         if (!running || ended) return;
-        timeRemaining -= Time.deltaTime;
+        if (paused && pauseStopsTimer)
+        {
+            RefreshTimerAndStars();
+            return;
+        }
+
+        float dt = paused && !pauseStopsTimer ? Time.unscaledDeltaTime : Time.deltaTime;
+        timeRemaining -= dt;
         if (timeRemaining <= 0f)
         {
             timeRemaining = 0f;
@@ -91,6 +129,7 @@ public class SortGameplayController : MonoBehaviour
     {
         ended = false;
         running = true;
+        paused = false;
         levelDuration = GetLevelDuration();
         timeRemaining = levelDuration;
         _undoRemaining = GetLevelUndoCount();
@@ -257,31 +296,34 @@ public class SortGameplayController : MonoBehaviour
         if (ended) return;
         ended = true;
         running = false;
+        int stars = 0;
         if (won && levelLoader != null && SortLevelSelectManager.Instance != null)
         {
             int globalIndex = levelLoader.GetLevelIndexInDatabase();
             float norm = levelDuration > 0f ? Mathf.Clamp01(timeRemaining / levelDuration) : 0f;
-            int stars = norm > 0.6f ? 3 : (norm > 0.3f ? 2 : 1);
+            stars = norm > 0.6f ? 3 : (norm > 0.3f ? 2 : 1);
             SortLevelSelectManager.Instance.ReportLevelCompleted(globalIndex, stars);
         }
         if (SortGameManager.Instance != null)
             SortGameManager.Instance.Pause();
-        SortEventManager.Publish(new UIActionEvent("OpenCanvas", won ? winCanvasId : loseCanvasId));
-        SortEventManager.Publish(new UIActionEvent(won ? "Win" : "Lose"));
+        SortEventManager.Publish(new UIActionEvent("ShowPopupCanvas", won ? winCanvasId : loseCanvasId));
+        SortEventManager.Publish(new UIActionEvent(won ? "Win" : "Lose", won ? stars.ToString() : null));
     }
 
     public void Pause()
     {
+        paused = true;
         if (SortGameManager.Instance != null)
             SortGameManager.Instance.Pause();
-        SortEventManager.Publish(new UIActionEvent("OpenCanvas", pauseCanvasId));
+        SortEventManager.Publish(new UIActionEvent("ShowPopupCanvas", pauseCanvasId));
     }
 
     public void Resume()
     {
+        paused = false;
         if (SortGameManager.Instance != null)
             SortGameManager.Instance.Resume();
-        SortEventManager.Publish(new UIActionEvent("OpenCanvas", gameplayCanvasId));
+        SortEventManager.Publish(new UIActionEvent("HidePopupCanvas", pauseCanvasId));
     }
 
     public void RestartLevel()
@@ -291,6 +333,33 @@ public class SortGameplayController : MonoBehaviour
         ApplyLevelTheme();
         SortEventManager.Publish(new UIActionEvent("OpenCanvas", gameplayCanvasId));
         StartLevel();
+    }
+
+    public void BackToMainMenu()
+    {
+        ended = true;
+        running = false;
+        paused = false;
+        ClearLastMove();
+
+        // Close gameplay popups
+        if (!string.IsNullOrEmpty(winCanvasId))
+            SortEventManager.Publish(new UIActionEvent("HidePopupCanvas", winCanvasId));
+        if (!string.IsNullOrEmpty(loseCanvasId))
+            SortEventManager.Publish(new UIActionEvent("HidePopupCanvas", loseCanvasId));
+        if (!string.IsNullOrEmpty(pauseCanvasId))
+            SortEventManager.Publish(new UIActionEvent("HidePopupCanvas", pauseCanvasId));
+
+        // Unload current level objects
+        if (levelLoader != null)
+            levelLoader.UnloadLevel();
+
+        // Ensure timescale restored
+        if (SortGameManager.Instance != null)
+            SortGameManager.Instance.Resume();
+
+        // Go to main menu (map selector canvas)
+        SortEventManager.Publish(new UIActionEvent("Map", null));
     }
 
     private void OnDestroy()

@@ -36,6 +36,13 @@ public class SortInputManager : MonoBehaviour
     {
         if (!Input.GetMouseButtonDown(0)) return;
 
+        var gameplay = SortGameplayController.Instance;
+        if (gameplay != null && gameplay.IsInteractionBlocked)
+        {
+            Deselect();
+            return;
+        }
+
         Ray ray = mainCamera != null ? mainCamera.ScreenPointToRay(Input.mousePosition) : Camera.main.ScreenPointToRay(Input.mousePosition);
         if (!Physics.Raycast(ray, out RaycastHit hit, 200f)) { Deselect(); return; }
 

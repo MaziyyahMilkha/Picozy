@@ -45,6 +45,8 @@ public class SortCanvasManager : MonoBehaviour
         SortEventManager.SubscribeAction("OpenCanvas", HandleOpenCanvas);
         SortEventManager.SubscribeAction("CloseAllCanvases", CloseAll);
         SortEventManager.SubscribeAction("SwitchCanvas", HandleSwitchCanvas);
+        SortEventManager.SubscribeAction("ShowPopupCanvas", Show);
+        SortEventManager.SubscribeAction("HidePopupCanvas", Hide);
     }
 
     private void OnDisable()
@@ -52,6 +54,8 @@ public class SortCanvasManager : MonoBehaviour
         SortEventManager.UnsubscribeAction("OpenCanvas", HandleOpenCanvas);
         SortEventManager.UnsubscribeAction("CloseAllCanvases", CloseAll);
         SortEventManager.UnsubscribeAction("SwitchCanvas", HandleSwitchCanvas);
+        SortEventManager.UnsubscribeAction("ShowPopupCanvas", Show);
+        SortEventManager.UnsubscribeAction("HidePopupCanvas", Hide);
     }
 
     private void HandleSwitchCanvas(string canvasId)

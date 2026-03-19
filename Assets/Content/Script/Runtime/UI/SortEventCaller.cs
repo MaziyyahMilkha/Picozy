@@ -55,4 +55,29 @@ public class SortEventCaller : MonoBehaviour
     {
         SortEventManager.Publish(new UIActionEvent("OpenLevelSelector", id));
     }
+
+    public void OpenSettings(string returnToCanvasId = null)
+    {
+        SortEventManager.Publish(new UIActionEvent("OpenSettings", string.IsNullOrEmpty(returnToCanvasId) ? null : returnToCanvasId));
+    }
+
+    public void CloseSettings()
+    {
+        SortEventManager.Publish(new UIActionEvent("CloseSettings", null));
+    }
+
+    public void OpenPause()
+    {
+        SortEventManager.Publish(new UIActionEvent("PauseGameplay", null));
+    }
+
+    public void ClosePause()
+    {
+        SortEventManager.Publish(new UIActionEvent("ResumeGameplay", null));
+    }
+
+    public void BackToMainMenu()
+    {
+        SortEventManager.Publish(new UIActionEvent("BackToMainMenu", null));
+    }
 }
