@@ -11,14 +11,12 @@ public class SortInputManager : MonoBehaviour
     [SerializeField] private Camera mainCamera;
 
     [Header("Feedback")]
-    [SerializeField] private float selectScale = 1.08f;
     [SerializeField] private float shakeDuration = 0.15f;
     [SerializeField] private float shakeStrength = 0.08f;
 
     private SortDahan selectedDahan;
     private int? selectedKind;
     private int selectedCount;
-    private Vector3 selectedDahanBaseScale;
     private static readonly List<int> _groupSlots = new List<int>(8);
 
     private void Awake()
@@ -76,15 +74,14 @@ public class SortInputManager : MonoBehaviour
         selectedDahan = dahan;
         selectedKind = kind.Value;
         selectedCount = count;
-        selectedDahanBaseScale = dahan.transform.localScale;
-        dahan.transform.localScale = selectedDahanBaseScale * selectScale;
+        dahan.OnSelected();
     }
 
     private void Deselect()
     {
         if (selectedDahan != null)
         {
-            selectedDahan.transform.localScale = selectedDahanBaseScale;
+            selectedDahan.OnDeselected();
             selectedDahan = null;
         }
         selectedKind = null;

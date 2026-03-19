@@ -105,6 +105,65 @@ MonoBehaviour:
   - {fileID: 4860274589356345590}
   - {fileID: 99403053029928783}
   - {fileID: 1521995643301996502}
+  enableSway: 1
+  swayAngleMax: 0.5
+  swaySpeedMin: 0.35
+  swaySpeedMax: 0.7
+  rotationSpring:
+    Damping: 0.4
+    Frequency: 6
+    ClampSettings:
+      ClampMin: 0
+      ClampMinValue: 0
+      ClampMinInitial: 0
+      ClampMinBounce: 0
+      ClampMax: 0
+      ClampMaxValue: 10
+      ClampMaxInitial: 0
+      ClampMaxBounce: 0
+    SpringDebug:
+      CurrentValue: 0
+      TargetValue: 0
+    UnifiedSpring: 0
+    CurrentValueDisplay: 0
+    TargetValueDisplay: 0
+    VelocityDisplay: 0
+  enableSelectFeedback: 1
+  selectScaleMultiplier: 1.08
+  scaleSpring:
+    Damping: 0.4
+    Frequency: 6
+    ClampSettings:
+      ClampMin: 0
+      ClampMinValue: 0
+      ClampMinInitial: 0
+      ClampMinBounce: 0
+      ClampMax: 0
+      ClampMaxValue: 10
+      ClampMaxInitial: 0
+      ClampMaxBounce: 0
+    SpringDebug:
+      CurrentValue: 0
+      TargetValue: 0
+    UnifiedSpring: 0
+    CurrentValueDisplay: 0
+    TargetValueDisplay: 0
+    VelocityDisplay: 0
+  enableTransferFeedback: 1
+  transferOutRotationBump: 0.35
+  transferOutScaleBump: 0.02
+  transferInRotationBump: 0.6
+  transferInScaleBump: 0.05
+  enableCompleteFeedback: 1
+  popUpHeight: 20
+  popDuration: 7
+  popHorizontalDrift: 0.6
+  popTopHoldDuration: 0.8
+  popDelayBetween: 0.15
+  branchFallAngle: 18
+  branchFallDownDistance: 10
+  branchFallDuration: 1.2
+  destroyAfterCompleteBuffer: 4
 --- !u!1 &7574931354657159609
 GameObject:
   m_ObjectHideFlags: 0

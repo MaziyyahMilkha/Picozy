@@ -202,6 +202,8 @@ public class SortGameplayController : MonoBehaviour
         dest.GetNextEmptySlotIndicesForAdd(moveCount, _tempDestSlots);
         if (_tempDestSlots.Count < moveCount) { onComplete?.Invoke(); return; }
 
+        source.OnTransferOut();
+
         var moving = new List<SortKarakter>(moveCount);
         for (int i = 0; i < moveCount; i++)
         {
@@ -225,6 +227,7 @@ public class SortGameplayController : MonoBehaviour
             c.MoveTo(targetPos, () =>
             {
                 dest.AddCharacterAtSlot(c, slotIndex);
+                dest.OnTransferIn();
                 arrived++;
                 if (arrived >= moveCountFinal)
                 {

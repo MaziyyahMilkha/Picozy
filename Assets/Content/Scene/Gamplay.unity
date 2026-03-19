@@ -1727,7 +1727,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mainCamera: {fileID: 1106833746}
-  selectScale: 1.08
   shakeDuration: 0.15
   shakeStrength: 0.08
 --- !u!114 &794093510

@@ -37,6 +37,9 @@ MonoBehaviour:
     assemblyNames:
     - Assembly-CSharp
     - Assembly-CSharp-firstpass
+    - Lofelt.NiceVibrations
+    - Lofelt.NiceVibrations.Demo
+    - MoreMountains.Tools
     - SimpleInspectorAttributes
     - SimpleScrollSnap
     - Utilities

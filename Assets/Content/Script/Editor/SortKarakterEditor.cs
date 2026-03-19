@@ -61,6 +61,9 @@ public class SortKarakterEditor : Editor
             EditorGUILayout.PropertyField(kindVisuals.GetArrayElementAtIndex(i), new GUIContent(label));
         }
 
+        EditorGUILayout.Space(6f);
+        DrawPropertiesExcluding(serializedObject, "m_Script", "kind", "kindVisuals");
+
         serializedObject.ApplyModifiedProperties();
     }
 }

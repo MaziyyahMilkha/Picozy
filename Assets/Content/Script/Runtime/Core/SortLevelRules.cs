@@ -6,7 +6,7 @@ public static class SortLevelRules
     {
         if (dahan == null) return;
         if (destroyBranchWhenComplete)
-            Object.Destroy(dahan.gameObject);
+            dahan.CollectAndDestroyAfterFeedback();
         else
             dahan.CollectAndClear();
     }
