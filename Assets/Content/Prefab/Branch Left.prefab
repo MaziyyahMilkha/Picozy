@@ -251,9 +251,9 @@ MonoBehaviour:
   - {fileID: 8572816967557173051}
   - {fileID: 8362428954362341124}
   enableSway: 1
-  swayAngleMax: 0.5
-  swaySpeedMin: 0.35
-  swaySpeedMax: 0.7
+  swayAngleMax: 0.72
+  swaySpeedMin: 0.44
+  swaySpeedMax: 0.86
   rotationSpring:
     Damping: 0.4
     Frequency: 6
@@ -300,12 +300,37 @@ MonoBehaviour:
   transferInRotationBump: 0.6
   transferInScaleBump: 0.05
   enableCompleteFeedback: 1
-  popUpHeight: 20
-  popDuration: 7
-  popHorizontalDrift: 0.6
-  popTopHoldDuration: 0.8
-  popDelayBetween: 0.15
+  popUpHeight: 5.2
+  popDuration: 1.24
+  popHorizontalDrift: 0.55
+  popTopHoldDuration: 0.22
+  popDelayBetween: 0.12
   branchFallAngle: 18
   branchFallDownDistance: 10
   branchFallDuration: 1.2
-  destroyAfterCompleteBuffer: 4
+  destroyDelaySecondsPerKind: 2
+  popArcHorizontalRatio: 1.18
+  popArcProgressCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 2.05
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0.42
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4

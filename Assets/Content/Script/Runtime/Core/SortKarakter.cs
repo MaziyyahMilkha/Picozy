@@ -22,9 +22,9 @@ public class SortKarakter : MonoBehaviour
 
     [Header("Idle breathing")]
     [SerializeField] private bool enableBreathing = true;
-    [SerializeField] private float breathScaleAmountMax = 0.025f;
-    [SerializeField] private float breathSpeedMin = 0.9f;
-    [SerializeField] private float breathSpeedMax = 1.4f;
+    [SerializeField] private float breathScaleAmountMax = 0.038f;
+    [SerializeField] private float breathSpeedMin = 1f;
+    [SerializeField] private float breathSpeedMax = 1.55f;
     [SerializeField] private MMSpringFloat scaleSpring = new MMSpringFloat();
 
     private SortDahan currentDahan;

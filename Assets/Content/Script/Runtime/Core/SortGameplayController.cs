@@ -171,6 +171,24 @@ public class SortGameplayController : MonoBehaviour
         return asset?.GetData();
     }
 
+    public int GetCurrentLevelKindCount()
+    {
+        var data = GetLevelData();
+        if (data == null) return 1;
+        return Mathf.Max(1, CountBitsInMask(data.kindMask));
+    }
+
+    private static int CountBitsInMask(int mask)
+    {
+        int n = 0;
+        for (int i = 0; i < 32; i++)
+        {
+            if ((mask & (1 << i)) != 0)
+                n++;
+        }
+        return n;
+    }
+
     public void OnDahanComplete(SortDahan dahan)
     {
         if (dahan == null) return;

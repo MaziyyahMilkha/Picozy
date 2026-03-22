@@ -11,9 +11,9 @@ public class SortDahan : MonoBehaviour
 
     [Header("Idle sway")]
     [SerializeField] private bool enableSway = true;
-    [SerializeField] private float swayAngleMax = 0.5f;
-    [SerializeField] private float swaySpeedMin = 0.35f;
-    [SerializeField] private float swaySpeedMax = 0.7f;
+    [SerializeField] private float swayAngleMax = 0.72f;
+    [SerializeField] private float swaySpeedMin = 0.44f;
+    [SerializeField] private float swaySpeedMax = 0.86f;
     [SerializeField] private MMSpringFloat rotationSpring = new MMSpringFloat();
 
     [Header("Click feedback")]
@@ -30,15 +30,17 @@ public class SortDahan : MonoBehaviour
 
     [Header("Complete feedback")]
     [SerializeField] private bool enableCompleteFeedback = true;
-    [SerializeField] private float popUpHeight = 20f;
-    [SerializeField] private float popDuration = 7f;
-    [SerializeField] private float popHorizontalDrift = 0.6f;
+    [SerializeField] private float popUpHeight = 5.2f;
+    [SerializeField] private float popDuration = 1.24f;
+    [SerializeField] private float popHorizontalDrift = 0.55f;
     [SerializeField] private float popTopHoldDuration = 0.2f;
     [SerializeField] private float popDelayBetween = 0.08f;
     [SerializeField] private float branchFallAngle = 18f;
     [SerializeField] private float branchFallDownDistance = 10f;
     [SerializeField] private float branchFallDuration = 0.45f;
-    [SerializeField] private float destroyAfterCompleteBuffer = 2.5f;
+    [SerializeField] private float destroyDelaySecondsPerKind = 2f;
+    [SerializeField] [Range(0.45f, 1.55f)] private float popArcHorizontalRatio = 1.18f;
+    [SerializeField] private AnimationCurve popArcProgressCurve;
 
 
     private SortKarakter[] slots;
@@ -57,6 +59,31 @@ public class SortDahan : MonoBehaviour
         if (standPoints == null || standPoints.Length == 0)
             standPoints = new Transform[3];
         slots = new SortKarakter[standPoints.Length];
+        EnsurePopArcProgressCurve();
+    }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        EnsurePopArcProgressCurve();
+    }
+#endif
+
+    private void EnsurePopArcProgressCurve()
+    {
+        if (popArcProgressCurve != null && popArcProgressCurve.length >= 2)
+            return;
+        popArcProgressCurve = CreateDefaultPopArcProgressCurve();
+    }
+
+    private static AnimationCurve CreateDefaultPopArcProgressCurve()
+    {
+        var c = new AnimationCurve(
+            new Keyframe(0f, 0f, 0f, 2.05f),
+            new Keyframe(1f, 1f, 0.42f, 0f));
+        c.preWrapMode = WrapMode.ClampForever;
+        c.postWrapMode = WrapMode.ClampForever;
+        return c;
     }
 
     private void OnEnable()
@@ -291,10 +318,27 @@ public class SortDahan : MonoBehaviour
 
         if (destroyBranchAtEnd)
         {
-            if (destroyAfterCompleteBuffer > 0f)
-                yield return new WaitForSeconds(destroyAfterCompleteBuffer);
+            float delay = ComputeDestroyDelayAfterComplete();
+            if (delay > 0f)
+                yield return new WaitForSeconds(delay);
             Destroy(gameObject);
         }
+    }
+
+    private float ComputeDestroyDelayAfterComplete()
+    {
+        int kindCount = 1;
+        if (SortGameplayController.Instance != null)
+            kindCount = SortGameplayController.Instance.GetCurrentLevelKindCount();
+        return Mathf.Max(0f, destroyDelaySecondsPerKind * kindCount);
+    }
+
+    private static void EvalParabolicHop(float tau, float heightH, float widthD, float sideSign, out float dx, out float dy)
+    {
+        tau = Mathf.Clamp01(tau);
+        dx = widthD * sideSign * tau;
+        float arc = 2f * tau - tau * tau;
+        dy = heightH * arc;
     }
 
     private IEnumerator PopAndDestroyCharacter(SortKarakter k)
@@ -302,26 +346,27 @@ public class SortDahan : MonoBehaviour
         if (k == null) yield break;
 
         Transform t = k.transform;
-        // Detach from branch so branch fall won't drag character down.
         t.SetParent(null, true);
         Vector3 startPos = t.position;
-        Vector3 upPos = startPos + Vector3.up * popUpHeight;
-        float sideDir = transform.position.x <= 0f ? 1f : -1f;
-        float drift = Random.Range(popHorizontalDrift * 0.55f, popHorizontalDrift) * sideDir;
+        float sideSign = transform.position.x > 0f ? -1f : 1f;
+
+        float H = Mathf.Max(0.01f, popUpHeight);
+        float D = Mathf.Max(popHorizontalDrift, H * popArcHorizontalRatio);
+
         float elapsed = 0f;
 
         while (elapsed < popDuration)
         {
             elapsed += Time.deltaTime;
             float t01 = Mathf.Clamp01(elapsed / popDuration);
-            float p = 1f - Mathf.Pow(1f - t01, 3f); 
-
-            Vector3 pos = Vector3.Lerp(startPos, upPos, p);
-            float sideLerp = Mathf.SmoothStep(0f, 1f, t01);
-            pos.x += drift * sideLerp;
-            t.position = pos;
+            float tau = Mathf.Clamp01(popArcProgressCurve.Evaluate(t01));
+            EvalParabolicHop(tau, H, D, sideSign, out float dx, out float dy);
+            t.position = new Vector3(startPos.x + dx, startPos.y + dy, startPos.z);
             yield return null;
         }
+
+        EvalParabolicHop(1f, H, D, sideSign, out float endDx, out float endDy);
+        t.position = new Vector3(startPos.x + endDx, startPos.y + endDy, startPos.z);
 
         if (popTopHoldDuration > 0f)
             yield return new WaitForSeconds(popTopHoldDuration);
