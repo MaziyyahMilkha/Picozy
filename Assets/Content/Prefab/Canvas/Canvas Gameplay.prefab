@@ -760,6 +760,7 @@ GameObject:
   - component: {fileID: 7998552500878000840}
   - component: {fileID: 8235859374297447841}
   - component: {fileID: 4823946693021999201}
+  - component: {fileID: 8885661291026860136}
   m_Layer: 0
   m_Name: undo
   m_TagString: Untagged
@@ -880,6 +881,26 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &8885661291026860136
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4844160446130501815}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a51deaf88432a54b8e15ec4309a15d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animateTarget: {fileID: 1458681211624295627}
+  pressedScale: 0.88
+  pressDuration: 0.07
+  releaseDuration: 0.48
+  elasticAmplitude: 1.15
+  elasticPeriod: 0.38
+  useUnscaledTime: 1
+  disableAnimation: 0
 --- !u!1 &5084206547467125761
 GameObject:
   m_ObjectHideFlags: 0
@@ -1317,6 +1338,7 @@ GameObject:
   - component: {fileID: 3715761942897443570}
   - component: {fileID: 2109724823656998906}
   - component: {fileID: 2594779976106115587}
+  - component: {fileID: 1413265422405787343}
   m_Layer: 0
   m_Name: refresh
   m_TagString: Untagged
@@ -1437,6 +1459,26 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &1413265422405787343
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6028149018250594998}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a51deaf88432a54b8e15ec4309a15d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animateTarget: {fileID: 2818646765457377510}
+  pressedScale: 0.88
+  pressDuration: 0.07
+  releaseDuration: 0.48
+  elasticAmplitude: 1.15
+  elasticPeriod: 0.38
+  useUnscaledTime: 1
+  disableAnimation: 0
 --- !u!1 &6316337211699713256
 GameObject:
   m_ObjectHideFlags: 0
@@ -1485,6 +1527,7 @@ GameObject:
   - component: {fileID: 3530405426961411232}
   - component: {fileID: 8765186906222743963}
   - component: {fileID: 6583622499397635695}
+  - component: {fileID: 519974217659513822}
   m_Layer: 0
   m_Name: setting
   m_TagString: Untagged
@@ -1605,6 +1648,26 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &519974217659513822
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6885540240232699735}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a51deaf88432a54b8e15ec4309a15d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animateTarget: {fileID: 5339880580589772882}
+  pressedScale: 0.88
+  pressDuration: 0.07
+  releaseDuration: 0.48
+  elasticAmplitude: 1.15
+  elasticPeriod: 0.38
+  useUnscaledTime: 1
+  disableAnimation: 0
 --- !u!1 &7722996828218296218
 GameObject:
   m_ObjectHideFlags: 0

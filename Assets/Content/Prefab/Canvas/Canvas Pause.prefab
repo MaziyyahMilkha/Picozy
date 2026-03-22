@@ -147,6 +147,7 @@ GameObject:
   - component: {fileID: 2391172741607729451}
   - component: {fileID: 8933979329682138915}
   - component: {fileID: 1167723435569557128}
+  - component: {fileID: 2797756303629318377}
   m_Layer: 5
   m_Name: Back Button Parent
   m_TagString: Untagged
@@ -283,6 +284,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   eventId: ResumeGameplay
   eventData: 
+--- !u!114 &2797756303629318377
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 982758469994500896}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a51deaf88432a54b8e15ec4309a15d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animateTarget: {fileID: 2864772860485061071}
+  pressedScale: 0.88
+  pressDuration: 0.07
+  releaseDuration: 0.48
+  elasticAmplitude: 1.15
+  elasticPeriod: 0.38
+  useUnscaledTime: 1
+  disableAnimation: 0
 --- !u!1 &1251141081589799650
 GameObject:
   m_ObjectHideFlags: 0
@@ -471,6 +492,7 @@ GameObject:
   - component: {fileID: 6586477183434694029}
   - component: {fileID: 2992678021840271033}
   - component: {fileID: 8582433658321677803}
+  - component: {fileID: 2068788487252073316}
   m_Layer: 5
   m_Name: 'Button Exit '
   m_TagString: Untagged
@@ -607,6 +629,26 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &2068788487252073316
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1822471896385054071}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a51deaf88432a54b8e15ec4309a15d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animateTarget: {fileID: 8083397911206186720}
+  pressedScale: 0.88
+  pressDuration: 0.07
+  releaseDuration: 0.48
+  elasticAmplitude: 1.15
+  elasticPeriod: 0.38
+  useUnscaledTime: 1
+  disableAnimation: 0
 --- !u!1 &1848361216839563007
 GameObject:
   m_ObjectHideFlags: 0
@@ -734,6 +776,7 @@ GameObject:
   - component: {fileID: 7442173741167442456}
   - component: {fileID: 5420960237050653112}
   - component: {fileID: 7978335277897407711}
+  - component: {fileID: 5375631188454667176}
   m_Layer: 5
   m_Name: Button Continue
   m_TagString: Untagged
@@ -870,6 +913,26 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &5375631188454667176
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4020658004444808193}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a51deaf88432a54b8e15ec4309a15d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animateTarget: {fileID: 6719292403038890305}
+  pressedScale: 0.88
+  pressDuration: 0.07
+  releaseDuration: 0.48
+  elasticAmplitude: 1.15
+  elasticPeriod: 0.38
+  useUnscaledTime: 1
+  disableAnimation: 0
 --- !u!1 &5397627919873778663
 GameObject:
   m_ObjectHideFlags: 0
@@ -1565,7 +1628,7 @@ Canvas:
   serializedVersion: 3
   m_RenderMode: 1
   m_Camera: {fileID: 0}
-  m_PlaneDistance: 11
+  m_PlaneDistance: 1
   m_PixelPerfect: 0
   m_ReceivesEvents: 1
   m_OverrideSorting: 0

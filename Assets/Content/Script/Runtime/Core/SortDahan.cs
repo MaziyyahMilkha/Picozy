@@ -260,6 +260,12 @@ public class SortDahan : MonoBehaviour
         int kind = slots[0].Kind;
         for (int i = 1; i < slots.Length; i++)
             if (slots[i].Kind != kind) return;
+
+        int filledSlots = slots.Length;
+        int totalKarakter = FindObjectsOfType<SortKarakter>().Length;
+        if (filledSlots == totalKarakter && SortGameplayController.Instance != null)
+            SortGameplayController.Instance.NotifyLevelWinBeforeFeedback();
+
         if (SortGameplayController.Instance != null)
             SortGameplayController.Instance.OnDahanComplete(this);
         else
@@ -286,17 +292,27 @@ public class SortDahan : MonoBehaviour
         {
             int start = topIsHighIndex ? slots.Length - 1 : 0;
             int step = topIsHighIndex ? -1 : 1;
+            int popsStarted = 0;
 
             for (int i = start; i >= 0 && i < slots.Length; i += step)
             {
                 var k = slots[i];
                 if (k == null) continue;
                 slots[i] = null;
+                popsStarted++;
                 StartCoroutine(PopAndDestroyCharacter(k));
                 yield return new WaitForSeconds(popDelayBetween);
             }
 
             yield return StartCoroutine(PlayBranchFall(destroyBranchAtEnd));
+
+            if (popsStarted > 0)
+            {
+                float lastPopEnd = (popsStarted - 1) * popDelayBetween + popDuration + popTopHoldDuration;
+                float fallEndTimeline = popsStarted * popDelayBetween + branchFallDuration;
+                float extra = Mathf.Max(0f, lastPopEnd - fallEndTimeline) + 0.08f;
+                yield return new WaitForSecondsRealtime(extra);
+            }
         }
         else
         {
@@ -309,6 +325,8 @@ public class SortDahan : MonoBehaviour
                     slots[i] = null;
                 }
             }
+
+            yield return null;
         }
 
         isBroken = false;

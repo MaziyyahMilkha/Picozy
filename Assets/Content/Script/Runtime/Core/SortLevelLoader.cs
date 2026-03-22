@@ -17,6 +17,7 @@ public class SortLevelLoader : MonoBehaviour
     [SerializeField] private GameObject characterPrefab;
 
     private List<SortDahan> spawnedDahans = new List<SortDahan>();
+    private int _spawnedCharacterCount;
 
     private void OnEnable()
     {
@@ -80,6 +81,13 @@ public class SortLevelLoader : MonoBehaviour
         return database != null && currentLevel != null ? database.GetGlobalIndexForAsset(currentLevel) : -1;
     }
 
+    public int GetTotalLevelCount()
+    {
+        return database != null ? database.GetTotalLevelCount() : 0;
+    }
+
+    public int GetSpawnedCharacterCountForCurrentLevel() => _spawnedCharacterCount;
+
     public int GetDisplayLevelNumber()
     {
         int idx = GetLevelIndexInDatabase();
@@ -95,6 +103,7 @@ public class SortLevelLoader : MonoBehaviour
 
     private void Clear()
     {
+        _spawnedCharacterCount = 0;
         for (int i = 0; i < spawnedDahans.Count; i++)
         {
             if (spawnedDahans[i] != null && spawnedDahans[i].gameObject != null)
@@ -170,6 +179,7 @@ public class SortLevelLoader : MonoBehaviour
             {
                 character.SetKind(kind);
                 dahan.AddCharacterAtSlot(character, s);
+                _spawnedCharacterCount++;
             }
         }
     }

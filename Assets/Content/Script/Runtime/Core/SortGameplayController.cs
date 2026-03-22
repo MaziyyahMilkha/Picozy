@@ -12,8 +12,7 @@ public class SortGameplayController : MonoBehaviour
 
     [Header("Canvas (by id)")]
     [SerializeField] private string gameplayCanvasId = "gameplay";
-    [SerializeField] private string winCanvasId = "win";
-    [SerializeField] private string loseCanvasId = "lose";
+    [SerializeField] private string resultCanvasId = "result";
     [SerializeField] private string pauseCanvasId = "pause";
 
     [Header("Background")]
@@ -28,6 +27,7 @@ public class SortGameplayController : MonoBehaviour
     private bool running;
     private bool ended;
     private bool paused;
+    private bool _winAnimating;
     private int _undoRemaining;
     private bool _hasLastMove;
     private SortDahan _lastSource, _lastDest;
@@ -89,10 +89,7 @@ public class SortGameplayController : MonoBehaviour
         if (levelLoader == null || levelLoader.GetCurrentLevel() == null) return;
         if (!string.IsNullOrEmpty(gameplayCanvasId))
             SortEventManager.Publish(new UIActionEvent("SwitchCanvas", gameplayCanvasId));
-        if (!string.IsNullOrEmpty(winCanvasId))
-            SortEventManager.Publish(new UIActionEvent("HidePopupCanvas", winCanvasId));
-        if (!string.IsNullOrEmpty(loseCanvasId))
-            SortEventManager.Publish(new UIActionEvent("HidePopupCanvas", loseCanvasId));
+        HideResultPopups();
         if (!string.IsNullOrEmpty(pauseCanvasId))
             SortEventManager.Publish(new UIActionEvent("HidePopupCanvas", pauseCanvasId));
         ApplyLevelTheme();
@@ -128,6 +125,7 @@ public class SortGameplayController : MonoBehaviour
     public void StartLevel()
     {
         ended = false;
+        _winAnimating = false;
         running = true;
         paused = false;
         levelDuration = GetLevelDuration();
@@ -196,7 +194,14 @@ public class SortGameplayController : MonoBehaviour
             ClearLastMove();
         var resolved = levelLoader != null ? levelLoader.GetResolvedLevelSettings() : default;
         SortLevelRules.ProcessCompleteDahan(dahan, resolved.destroyBranchWhenComplete);
-        CheckLevelComplete();
+    }
+
+    public void NotifyLevelWinBeforeFeedback()
+    {
+        if (ended || _winAnimating) return;
+        _winAnimating = true;
+        running = false;
+        RefreshTimerAndStars();
     }
 
     public bool CanMove(SortDahan source, SortDahan dest, int kind, int count)
@@ -293,8 +298,18 @@ public class SortGameplayController : MonoBehaviour
 
     public void CheckLevelComplete()
     {
-        if (FindObjectsOfType<SortKarakter>().Length == 0)
-            EndLevel(true);
+        if (ended) return;
+        if (levelLoader == null) return;
+
+        int expected = levelLoader.GetSpawnedCharacterCountForCurrentLevel();
+        if (expected <= 0)
+            return;
+
+        int alive = FindObjectsOfType<SortKarakter>().Length;
+        if (alive > 0)
+            return;
+
+        EndLevel(true);
     }
 
     private void ApplyLevelTheme()
@@ -316,6 +331,7 @@ public class SortGameplayController : MonoBehaviour
     {
         if (ended) return;
         ended = true;
+        _winAnimating = false;
         running = false;
         int stars = 0;
         if (won && levelLoader != null && SortLevelSelectManager.Instance != null)
@@ -327,8 +343,31 @@ public class SortGameplayController : MonoBehaviour
         }
         if (SortGameManager.Instance != null)
             SortGameManager.Instance.Pause();
-        SortEventManager.Publish(new UIActionEvent("ShowPopupCanvas", won ? winCanvasId : loseCanvasId));
+        if (!string.IsNullOrEmpty(resultCanvasId))
+            SortEventManager.Publish(new UIActionEvent("ShowPopupCanvas", resultCanvasId));
         SortEventManager.Publish(new UIActionEvent(won ? "Win" : "Lose", won ? stars.ToString() : null));
+    }
+
+    private void HideResultPopups()
+    {
+        if (!string.IsNullOrEmpty(resultCanvasId))
+            SortEventManager.Publish(new UIActionEvent("HidePopupCanvas", resultCanvasId));
+    }
+
+    public void ContinueToNextLevel()
+    {
+        if (levelLoader == null) return;
+        int idx = levelLoader.GetLevelIndexInDatabase();
+        if (idx < 0) return;
+        int total = levelLoader.GetTotalLevelCount();
+        int next = idx + 1;
+        if (next >= total)
+        {
+            BackToMainMenu();
+            return;
+        }
+
+        SortEventManager.Publish(new UIActionEvent("Level", next.ToString()));
     }
 
     public void Pause()
@@ -349,6 +388,7 @@ public class SortGameplayController : MonoBehaviour
 
     public void RestartLevel()
     {
+        HideResultPopups();
         if (levelLoader == null) return;
         levelLoader.LoadLevel();
         ApplyLevelTheme();
@@ -359,15 +399,12 @@ public class SortGameplayController : MonoBehaviour
     public void BackToMainMenu()
     {
         ended = true;
+        _winAnimating = false;
         running = false;
         paused = false;
         ClearLastMove();
 
-        // Close gameplay popups
-        if (!string.IsNullOrEmpty(winCanvasId))
-            SortEventManager.Publish(new UIActionEvent("HidePopupCanvas", winCanvasId));
-        if (!string.IsNullOrEmpty(loseCanvasId))
-            SortEventManager.Publish(new UIActionEvent("HidePopupCanvas", loseCanvasId));
+        HideResultPopups();
         if (!string.IsNullOrEmpty(pauseCanvasId))
             SortEventManager.Publish(new UIActionEvent("HidePopupCanvas", pauseCanvasId));
 

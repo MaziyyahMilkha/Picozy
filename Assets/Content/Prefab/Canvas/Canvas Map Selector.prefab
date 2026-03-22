@@ -100,6 +100,7 @@ GameObject:
   - component: {fileID: 494616061560184727}
   - component: {fileID: 4690928791354214596}
   - component: {fileID: 2813583230898656929}
+  - component: {fileID: 7298679208875729359}
   m_Layer: 5
   m_Name: Previous
   m_TagString: Untagged
@@ -208,6 +209,26 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &7298679208875729359
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1180799278874616027}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a51deaf88432a54b8e15ec4309a15d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animateTarget: {fileID: 6366981846942848857}
+  pressedScale: 0.88
+  pressDuration: 0.07
+  releaseDuration: 0.48
+  elasticAmplitude: 1.15
+  elasticPeriod: 0.38
+  useUnscaledTime: 1
+  disableAnimation: 0
 --- !u!1 &1485013502214820930
 GameObject:
   m_ObjectHideFlags: 0
@@ -511,6 +532,7 @@ GameObject:
   - component: {fileID: 921313557268470033}
   - component: {fileID: 5608289600178059190}
   - component: {fileID: 3306684701060977931}
+  - component: {fileID: 1878293473643161431}
   m_Layer: 5
   m_Name: Map Image
   m_TagString: Untagged
@@ -657,6 +679,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   eventId: LevelLight
   eventData: 
+--- !u!114 &1878293473643161431
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2327619750999528298}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a51deaf88432a54b8e15ec4309a15d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animateTarget: {fileID: 1262333658254901083}
+  pressedScale: 0.88
+  pressDuration: 0.07
+  releaseDuration: 0.48
+  elasticAmplitude: 1.15
+  elasticPeriod: 0.38
+  useUnscaledTime: 1
+  disableAnimation: 0
 --- !u!1 &3347171620758915596
 GameObject:
   m_ObjectHideFlags: 0
@@ -745,6 +787,7 @@ GameObject:
   - component: {fileID: 4853813545167383596}
   - component: {fileID: 1449442182028180916}
   - component: {fileID: 906037587209823952}
+  - component: {fileID: 337581825816947457}
   m_Layer: 5
   m_Name: Button
   m_TagString: Untagged
@@ -880,6 +923,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   eventId: LevelLight
   eventData: 
+--- !u!114 &337581825816947457
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3412580495705054681}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a51deaf88432a54b8e15ec4309a15d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animateTarget: {fileID: 773450101010963809}
+  pressedScale: 0.88
+  pressDuration: 0.07
+  releaseDuration: 0.48
+  elasticAmplitude: 1.15
+  elasticPeriod: 0.38
+  useUnscaledTime: 1
+  disableAnimation: 0
 --- !u!1 &3463726980285081999
 GameObject:
   m_ObjectHideFlags: 0
@@ -1521,6 +1584,7 @@ GameObject:
   - component: {fileID: 3715179979108591760}
   - component: {fileID: 2782274240833217418}
   - component: {fileID: 2922969991618345131}
+  - component: {fileID: 5787836229327542236}
   m_Layer: 5
   m_Name: Settings Button Parent
   m_TagString: Untagged
@@ -1657,6 +1721,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   eventId: 
   eventData: 
+--- !u!114 &5787836229327542236
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6010416799776532938}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a51deaf88432a54b8e15ec4309a15d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animateTarget: {fileID: 1015951302570170801}
+  pressedScale: 0.88
+  pressDuration: 0.07
+  releaseDuration: 0.48
+  elasticAmplitude: 1.15
+  elasticPeriod: 0.38
+  useUnscaledTime: 1
+  disableAnimation: 0
 --- !u!1 &6058658080316227905
 GameObject:
   m_ObjectHideFlags: 0
@@ -1804,6 +1888,7 @@ GameObject:
   - component: {fileID: 6006441683036059898}
   - component: {fileID: 3313777228787524585}
   - component: {fileID: 1202072343766844906}
+  - component: {fileID: 8154589955865815835}
   m_Layer: 5
   m_Name: Button
   m_TagString: Untagged
@@ -1939,6 +2024,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   eventId: LevelLight
   eventData: 
+--- !u!114 &8154589955865815835
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6944851228917453786}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a51deaf88432a54b8e15ec4309a15d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animateTarget: {fileID: 8563710817716305701}
+  pressedScale: 0.88
+  pressDuration: 0.07
+  releaseDuration: 0.48
+  elasticAmplitude: 1.15
+  elasticPeriod: 0.38
+  useUnscaledTime: 1
+  disableAnimation: 0
 --- !u!1 &7329086015031319033
 GameObject:
   m_ObjectHideFlags: 0
@@ -2085,6 +2190,7 @@ GameObject:
   - component: {fileID: 4882595207931545623}
   - component: {fileID: 4802907698066806134}
   - component: {fileID: 1365074359874286445}
+  - component: {fileID: 7277753100183705679}
   m_Layer: 5
   m_Name: Next
   m_TagString: Untagged
@@ -2193,6 +2299,26 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &7277753100183705679
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7569475518269487390}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a51deaf88432a54b8e15ec4309a15d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animateTarget: {fileID: 5687842381960391129}
+  pressedScale: 0.88
+  pressDuration: 0.07
+  releaseDuration: 0.48
+  elasticAmplitude: 1.15
+  elasticPeriod: 0.38
+  useUnscaledTime: 1
+  disableAnimation: 0
 --- !u!1 &8413591378580940509
 GameObject:
   m_ObjectHideFlags: 0
@@ -2255,6 +2381,7 @@ GameObject:
   - component: {fileID: 8526339619486899945}
   - component: {fileID: 5205347604620693103}
   - component: {fileID: 6079906093560889142}
+  - component: {fileID: 1902677866205799513}
   m_Layer: 5
   m_Name: Tutorial Button Parent
   m_TagString: Untagged
@@ -2365,6 +2492,26 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &1902677866205799513
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8558574018525567954}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a51deaf88432a54b8e15ec4309a15d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animateTarget: {fileID: 7653847557704407665}
+  pressedScale: 0.88
+  pressDuration: 0.07
+  releaseDuration: 0.48
+  elasticAmplitude: 1.15
+  elasticPeriod: 0.38
+  useUnscaledTime: 1
+  disableAnimation: 0
 --- !u!1 &8893978995305574617
 GameObject:
   m_ObjectHideFlags: 0
@@ -2379,6 +2526,7 @@ GameObject:
   - component: {fileID: 2801520919268342830}
   - component: {fileID: 8243941401554834275}
   - component: {fileID: 7639048231831255366}
+  - component: {fileID: 1069470474986895626}
   m_Layer: 5
   m_Name: Map Image
   m_TagString: Untagged
@@ -2525,3 +2673,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   eventId: LevelLight
   eventData: 
+--- !u!114 &1069470474986895626
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8893978995305574617}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a51deaf88432a54b8e15ec4309a15d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animateTarget: {fileID: 1235007265501807628}
+  pressedScale: 0.88
+  pressDuration: 0.07
+  releaseDuration: 0.48
+  elasticAmplitude: 1.15
+  elasticPeriod: 0.38
+  useUnscaledTime: 1
+  disableAnimation: 0

@@ -250,6 +250,7 @@ GameObject:
   - component: {fileID: 6717784436849271355}
   - component: {fileID: 2383180401878149719}
   - component: {fileID: 2622053667100813059}
+  - component: {fileID: 6420659524208501836}
   m_Layer: 5
   m_Name: Settings Button Parent
   m_TagString: Untagged
@@ -386,6 +387,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   eventId: 
   eventData: 
+--- !u!114 &6420659524208501836
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4575117323976447807}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a51deaf88432a54b8e15ec4309a15d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animateTarget: {fileID: 2795383449935756117}
+  pressedScale: 0.88
+  pressDuration: 0.07
+  releaseDuration: 0.48
+  elasticAmplitude: 1.15
+  elasticPeriod: 0.38
+  useUnscaledTime: 1
+  disableAnimation: 0
 --- !u!1 &6136960991504603747
 GameObject:
   m_ObjectHideFlags: 0
@@ -399,6 +420,7 @@ GameObject:
   - component: {fileID: 383883091947691351}
   - component: {fileID: 3372199883897023234}
   - component: {fileID: 6554883896766446196}
+  - component: {fileID: 6064967316083435634}
   m_Layer: 5
   m_Name: Back Button Parent
   m_TagString: Untagged
@@ -535,6 +557,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   eventId: 
   eventData: 
+--- !u!114 &6064967316083435634
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6136960991504603747}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a51deaf88432a54b8e15ec4309a15d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animateTarget: {fileID: 4768473502865000678}
+  pressedScale: 0.88
+  pressDuration: 0.07
+  releaseDuration: 0.48
+  elasticAmplitude: 1.15
+  elasticPeriod: 0.38
+  useUnscaledTime: 1
+  disableAnimation: 0
 --- !u!1 &6778538709981477259
 GameObject:
   m_ObjectHideFlags: 0

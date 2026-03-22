@@ -303,6 +303,7 @@ GameObject:
   - component: {fileID: 7228126109874215250}
   - component: {fileID: 3206345094728050165}
   - component: {fileID: 3564416618779023538}
+  - component: {fileID: 8251172617664200609}
   m_Layer: 5
   m_Name: 'Level '
   m_TagString: Untagged
@@ -435,6 +436,26 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &8251172617664200609
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3188349935911294084}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a51deaf88432a54b8e15ec4309a15d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animateTarget: {fileID: 2523375120501792224}
+  pressedScale: 0.88
+  pressDuration: 0.07
+  releaseDuration: 0.48
+  elasticAmplitude: 1.15
+  elasticPeriod: 0.38
+  useUnscaledTime: 1
+  disableAnimation: 0
 --- !u!1 &4638407082013504421
 GameObject:
   m_ObjectHideFlags: 0
