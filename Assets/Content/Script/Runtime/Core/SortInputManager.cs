@@ -14,6 +14,7 @@ public class SortInputManager : MonoBehaviour
     [SerializeField] private float shakeDuration = 0.15f;
     [SerializeField] private float shakeStrength = 0.08f;
     [SerializeField] private bool enableMobileVibration = false;
+    [SerializeField] private string sfxKindErrorId = "KindError";
 
     private SortDahan selectedDahan;
     private int? selectedKind;
@@ -106,6 +107,8 @@ public class SortInputManager : MonoBehaviour
         }
         else
         {
+            if (!string.IsNullOrEmpty(sfxKindErrorId) && SortEffectPoolManager.Instance != null)
+                SortEffectPoolManager.Instance.PlayAudio(sfxKindErrorId, SortAudioChannel.Sfx);
             var dahanToShake = selectedDahan;
             StartCoroutine(ShakeInvalidRoutine(dahanToShake, Deselect));
         }

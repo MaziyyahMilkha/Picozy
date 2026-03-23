@@ -553,6 +553,7 @@ MonoBehaviour:
   shakeDuration: 0.15
   shakeStrength: 0.08
   enableMobileVibration: 0
+  sfxKindErrorId: KindError
 --- !u!114 &794093510
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -613,6 +614,13 @@ MonoBehaviour:
   backgroundImage: {fileID: 586275065374126926}
   starDisplay: {fileID: 7401322777485748209}
   pauseStopsTimer: 1
+  bgmFadeOutOnGameplayStart: 0.3
+  gameplayBgmId: Gameplay
+  gameplayBgmFadeInSeconds: 0.35
+  gameplayBgmFadeOutSeconds: 0.4
+  sfxWinId: Win
+  sfxLoseId: Lose
+  sfxKindMoveId: KindMove
 --- !u!114 &794093513
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -626,6 +634,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   audioData: {fileID: 11400000, guid: 39143bb19bdd0e54597c89730062c085, type: 2}
+  prewarmAudioSources: 4
 --- !u!114 &794093514
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -641,6 +650,7 @@ MonoBehaviour:
   startWithSplash: 1
   splashCanvasId: SplashScreen
   mapCanvasId: MapSelector
+  mainMenuBgmId: Mainmenu
   debugLevel: 0
 --- !u!114 &794093515
 MonoBehaviour:
@@ -3044,26 +3054,6 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: -330
       objectReference: {fileID: 0}
-    - target: {fileID: 4082071611791898049, guid: 7548a180b1439ec468bf53c9030d9335, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4082071611791898049, guid: 7548a180b1439ec468bf53c9030d9335, type: 3}
-      propertyPath: m_AnchorMin.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4082071611791898049, guid: 7548a180b1439ec468bf53c9030d9335, type: 3}
-      propertyPath: m_SizeDelta.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4082071611791898049, guid: 7548a180b1439ec468bf53c9030d9335, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4082071611791898049, guid: 7548a180b1439ec468bf53c9030d9335, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 7849206377146583889, guid: 7548a180b1439ec468bf53c9030d9335, type: 3}
       propertyPath: m_AnchorMax.y
       value: 1
@@ -3115,26 +3105,6 @@ PrefabInstance:
     - target: {fileID: 8913476561040445552, guid: 7548a180b1439ec468bf53c9030d9335, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: -533.3333
-      objectReference: {fileID: 0}
-    - target: {fileID: 9162109466299934344, guid: 7548a180b1439ec468bf53c9030d9335, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9162109466299934344, guid: 7548a180b1439ec468bf53c9030d9335, type: 3}
-      propertyPath: m_AnchorMin.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9162109466299934344, guid: 7548a180b1439ec468bf53c9030d9335, type: 3}
-      propertyPath: m_SizeDelta.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9162109466299934344, guid: 7548a180b1439ec468bf53c9030d9335, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9162109466299934344, guid: 7548a180b1439ec468bf53c9030d9335, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

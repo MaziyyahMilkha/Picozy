@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 public class SortGameFlowManager : MonoBehaviour
 {
@@ -11,9 +12,12 @@ public class SortGameFlowManager : MonoBehaviour
     [SerializeField] private string splashCanvasId;
     [SerializeField] private string mapCanvasId;
     [SerializeField] private string mainMenuBgmId = "Mainmenu";
+    [SerializeField] private float mainMenuBgmFadeInSeconds = 0.08f;
+    [SerializeField] private float mainMenuBgmFadeOutOtherBgmSeconds = 0.12f;
 
     [Header("Debug")]
     [SerializeField] private int debugLevel;
+    private Coroutine _pendingMainMenuBgmRoutine;
 
     private void Awake()
     {
@@ -56,16 +60,53 @@ public class SortGameFlowManager : MonoBehaviour
 
     private void OnMap()
     {
+        if (SortEffectPoolManager.Instance != null)
+            SortEffectPoolManager.Instance.StopAudioChannelWithFade(SortAudioChannel.Sfx, 0f);
         SortEventManager.Publish(new UIActionEvent("SwitchCanvas", mapCanvasId));
-        if (SortEffectPoolManager.Instance != null && !string.IsNullOrEmpty(mainMenuBgmId))
+        TryPlayMainMenuBgm();
+    }
+
+    private void TryPlayMainMenuBgm()
+    {
+        if (string.IsNullOrEmpty(mainMenuBgmId)) return;
+
+        var fx = SortEffectPoolManager.Instance;
+        if (fx != null)
         {
-            SortEffectPoolManager.Instance.StopAllAudio();
-            SortEffectPoolManager.Instance.PlayAudio(mainMenuBgmId, SortAudioChannel.Bgm);
+            fx.StopAudioChannelWithFade(SortAudioChannel.Bgm, mainMenuBgmFadeOutOtherBgmSeconds);
+            fx.PlayAudioWithFadeIn(mainMenuBgmId, SortAudioChannel.Bgm, mainMenuBgmFadeInSeconds);
+            return;
         }
+
+        if (_pendingMainMenuBgmRoutine == null)
+            _pendingMainMenuBgmRoutine = StartCoroutine(WaitAndPlayMainMenuBgmRoutine());
+    }
+
+    private IEnumerator WaitAndPlayMainMenuBgmRoutine()
+    {
+        const float timeout = 2f;
+        float elapsed = 0f;
+        while (elapsed < timeout)
+        {
+            var fx = SortEffectPoolManager.Instance;
+            if (fx != null)
+            {
+                fx.StopAudioChannelWithFade(SortAudioChannel.Bgm, mainMenuBgmFadeOutOtherBgmSeconds);
+                fx.PlayAudioWithFadeIn(mainMenuBgmId, SortAudioChannel.Bgm, mainMenuBgmFadeInSeconds);
+                _pendingMainMenuBgmRoutine = null;
+                yield break;
+            }
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        _pendingMainMenuBgmRoutine = null;
     }
 
     private void OnDestroy()
     {
+        if (_pendingMainMenuBgmRoutine != null)
+            StopCoroutine(_pendingMainMenuBgmRoutine);
         if (Instance == this)
             Instance = null;
     }

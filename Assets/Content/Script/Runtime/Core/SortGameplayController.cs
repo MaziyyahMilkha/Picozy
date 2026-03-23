@@ -22,6 +22,15 @@ public class SortGameplayController : MonoBehaviour
     [SerializeField] private SortStarDisplay starDisplay;
     [SerializeField] private bool pauseStopsTimer = true;
 
+    [Header("Audio IDs")]
+    [SerializeField] private float bgmFadeOutOnGameplayStart = 0.3f;
+    [SerializeField] private string gameplayBgmId = "Gameplay";
+    [SerializeField] private float gameplayBgmFadeInSeconds = 0.35f;
+    [SerializeField] private float gameplayBgmFadeOutSeconds = 0.4f;
+    [SerializeField] private string sfxWinId = "Win";
+    [SerializeField] private string sfxLoseId = "Lose";
+    [SerializeField] private string sfxKindMoveId = "KindMove";
+
     private float levelDuration;
     private float timeRemaining;
     private bool running;
@@ -124,6 +133,7 @@ public class SortGameplayController : MonoBehaviour
 
     public void StartLevel()
     {
+        StopResultAndUiSfx();
         ended = false;
         _winAnimating = false;
         running = true;
@@ -139,10 +149,15 @@ public class SortGameplayController : MonoBehaviour
         }
         RefreshTimerAndStars();
         var resolved = levelLoader != null ? levelLoader.GetResolvedLevelSettings() : default;
-        if (!string.IsNullOrEmpty(resolved.audioId) && SortEffectPoolManager.Instance != null)
+        string bgmId = !string.IsNullOrEmpty(gameplayBgmId) ? gameplayBgmId : resolved.audioId;
+        if (SortEffectPoolManager.Instance != null)
         {
-            SortEffectPoolManager.Instance.StopAudioGroup(resolved.audioId);
-            SortEffectPoolManager.Instance.PlayAudio(resolved.audioId, SortAudioChannel.Bgm);
+            SortEffectPoolManager.Instance.StopAudioChannelWithFade(SortAudioChannel.Bgm, bgmFadeOutOnGameplayStart);
+            if (!string.IsNullOrEmpty(bgmId))
+            {
+                SortEffectPoolManager.Instance.StopAudioGroup(bgmId);
+                SortEffectPoolManager.Instance.PlayAudioWithFadeIn(bgmId, SortAudioChannel.Bgm, gameplayBgmFadeInSeconds);
+            }
         }
         if (SortGameManager.Instance != null)
             SortGameManager.Instance.Resume();
@@ -240,6 +255,9 @@ public class SortGameplayController : MonoBehaviour
 
         if (moving.Count == 0) { onComplete?.Invoke(); return; }
 
+        if (!string.IsNullOrEmpty(sfxKindMoveId) && SortEffectPoolManager.Instance != null)
+            SortEffectPoolManager.Instance.PlayAudio(sfxKindMoveId, SortAudioChannel.Sfx);
+
         int moveCountFinal = moving.Count;
         int arrived = 0;
         for (int i = 0; i < moving.Count && i < _tempDestSlots.Count; i++)
@@ -333,6 +351,11 @@ public class SortGameplayController : MonoBehaviour
         ended = true;
         _winAnimating = false;
         running = false;
+        var resolved = levelLoader != null ? levelLoader.GetResolvedLevelSettings() : default;
+        string bgmId = !string.IsNullOrEmpty(gameplayBgmId) ? gameplayBgmId : resolved.audioId;
+        if (!string.IsNullOrEmpty(bgmId) && SortEffectPoolManager.Instance != null)
+            SortEffectPoolManager.Instance.StopAudioGroupWithFade(bgmId, gameplayBgmFadeOutSeconds);
+
         int stars = 0;
         if (won && levelLoader != null && SortLevelSelectManager.Instance != null)
         {
@@ -343,6 +366,13 @@ public class SortGameplayController : MonoBehaviour
         }
         if (SortGameManager.Instance != null)
             SortGameManager.Instance.Pause();
+        if (SortEffectPoolManager.Instance != null)
+        {
+            SortEffectPoolManager.Instance.StopAudioChannelWithFade(SortAudioChannel.Sfx, 0f);
+            string sfxId = won ? sfxWinId : sfxLoseId;
+            if (!string.IsNullOrEmpty(sfxId))
+                SortEffectPoolManager.Instance.PlayAudio(sfxId, SortAudioChannel.Sfx);
+        }
         if (!string.IsNullOrEmpty(resultCanvasId))
             SortEventManager.Publish(new UIActionEvent("ShowPopupCanvas", resultCanvasId));
         SortEventManager.Publish(new UIActionEvent(won ? "Win" : "Lose", won ? stars.ToString() : null));
@@ -354,8 +384,15 @@ public class SortGameplayController : MonoBehaviour
             SortEventManager.Publish(new UIActionEvent("HidePopupCanvas", resultCanvasId));
     }
 
+    private void StopResultAndUiSfx()
+    {
+        if (SortEffectPoolManager.Instance != null)
+            SortEffectPoolManager.Instance.StopAudioChannelWithFade(SortAudioChannel.Sfx, 0f);
+    }
+
     public void ContinueToNextLevel()
     {
+        StopResultAndUiSfx();
         if (levelLoader == null) return;
         int idx = levelLoader.GetLevelIndexInDatabase();
         if (idx < 0) return;
@@ -388,6 +425,7 @@ public class SortGameplayController : MonoBehaviour
 
     public void RestartLevel()
     {
+        StopResultAndUiSfx();
         HideResultPopups();
         if (levelLoader == null) return;
         levelLoader.LoadLevel();
@@ -398,6 +436,7 @@ public class SortGameplayController : MonoBehaviour
 
     public void BackToMainMenu()
     {
+        StopResultAndUiSfx();
         ended = true;
         _winAnimating = false;
         running = false;

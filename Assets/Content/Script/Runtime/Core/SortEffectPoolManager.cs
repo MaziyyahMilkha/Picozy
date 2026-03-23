@@ -153,6 +153,50 @@ public class SortEffectPoolManager : MonoBehaviour
         }
     }
 
+    public void PlayAudioWithFadeIn(string id, SortAudioChannel channel, float fadeInDuration)
+    {
+        PlayAudio(id, channel);
+        StartCoroutine(FadeInGroupRoutine(id, channel, Mathf.Max(0f, fadeInDuration)));
+    }
+
+    private IEnumerator FadeInGroupRoutine(string groupId, SortAudioChannel channel, float fadeInDuration)
+    {
+        if (fadeInDuration <= 0f) yield break;
+        if (!_loopedByGroup.TryGetValue(groupId, out var list) || list == null || list.Count == 0) yield break;
+
+        var sources = new List<AudioSource>(list.Count);
+        var targetVolumes = new List<float>(list.Count);
+        float target = GetChannelVolume(channel);
+        for (int i = 0; i < list.Count; i++)
+        {
+            var src = list[i];
+            if (src == null) continue;
+            sources.Add(src);
+            targetVolumes.Add(target);
+            src.volume = 0f;
+        }
+        if (sources.Count == 0) yield break;
+
+        float elapsed = 0f;
+        while (elapsed < fadeInDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(elapsed / fadeInDuration);
+            for (int i = 0; i < sources.Count; i++)
+            {
+                if (sources[i] != null)
+                    sources[i].volume = targetVolumes[i] * t;
+            }
+            yield return null;
+        }
+
+        for (int i = 0; i < sources.Count; i++)
+        {
+            if (sources[i] != null)
+                sources[i].volume = targetVolumes[i];
+        }
+    }
+
     private void PlayAudioLooped(string groupId, SortAudioGroupEntry group, SortAudioPlayMode mode, SortAudioChannel channel)
     {
         var clips = group.clips;
@@ -300,6 +344,122 @@ public class SortEffectPoolManager : MonoBehaviour
             }
         }
         _loopedByGroup.Remove(groupId);
+    }
+
+    public void StopAudioGroupWithFade(string groupId, float fadeDuration)
+    {
+        if (!_loopedByGroup.TryGetValue(groupId, out var list) || list == null || list.Count == 0) return;
+        StartCoroutine(FadeOutAndStopGroupRoutine(groupId, list, Mathf.Max(0f, fadeDuration)));
+    }
+
+    public void StopAudioChannelWithFade(SortAudioChannel channel, float fadeDuration)
+    {
+        var sources = new List<AudioSource>();
+        for (int i = 0; i < _audioPool.Count; i++)
+        {
+            var src = _audioPool[i];
+            if (src == null || !src.isPlaying) continue;
+            SortAudioChannel mapped = _sourceChannels.TryGetValue(src, out var c) ? c : SortAudioChannel.Sfx;
+            if (mapped == channel)
+                sources.Add(src);
+        }
+        if (sources.Count == 0) return;
+        StartCoroutine(FadeOutAndStopSourcesRoutine(sources, Mathf.Max(0f, fadeDuration)));
+    }
+
+    private IEnumerator FadeOutAndStopGroupRoutine(string groupId, List<AudioSource> list, float fadeDuration)
+    {
+        if (fadeDuration <= 0f)
+        {
+            StopAudioGroup(groupId);
+            yield break;
+        }
+
+        var sources = new List<AudioSource>(list.Count);
+        var startVolumes = new List<float>(list.Count);
+        for (int i = 0; i < list.Count; i++)
+        {
+            var src = list[i];
+            if (src == null) continue;
+            sources.Add(src);
+            startVolumes.Add(src.volume);
+        }
+        if (sources.Count == 0)
+        {
+            _loopedByGroup.Remove(groupId);
+            yield break;
+        }
+
+        float elapsed = 0f;
+        while (elapsed < fadeDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(elapsed / fadeDuration);
+            float k = 1f - t;
+            for (int i = 0; i < sources.Count; i++)
+            {
+                if (sources[i] != null)
+                    sources[i].volume = startVolumes[i] * k;
+            }
+            yield return null;
+        }
+
+        for (int i = 0; i < sources.Count; i++)
+        {
+            var src = sources[i];
+            if (src != null)
+            {
+                src.Stop();
+                _pausedBySettings.Remove(src);
+            }
+        }
+        _loopedByGroup.Remove(groupId);
+    }
+
+    private IEnumerator FadeOutAndStopSourcesRoutine(List<AudioSource> sources, float fadeDuration)
+    {
+        if (sources == null || sources.Count == 0) yield break;
+        if (fadeDuration <= 0f)
+        {
+            for (int i = 0; i < sources.Count; i++)
+            {
+                var src = sources[i];
+                if (src != null)
+                {
+                    src.Stop();
+                    _pausedBySettings.Remove(src);
+                }
+            }
+            yield break;
+        }
+
+        var startVolumes = new List<float>(sources.Count);
+        for (int i = 0; i < sources.Count; i++)
+            startVolumes.Add(sources[i] != null ? sources[i].volume : 0f);
+
+        float elapsed = 0f;
+        while (elapsed < fadeDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(elapsed / fadeDuration);
+            float k = 1f - t;
+            for (int i = 0; i < sources.Count; i++)
+            {
+                if (sources[i] != null)
+                    sources[i].volume = startVolumes[i] * k;
+            }
+            yield return null;
+        }
+
+        for (int i = 0; i < sources.Count; i++)
+        {
+            var src = sources[i];
+            if (src != null)
+            {
+                src.Stop();
+                _pausedBySettings.Remove(src);
+            }
+        }
     }
 
     public void StopAllAudio()

@@ -23,3 +23,23 @@ MonoBehaviour:
     - {fileID: 8300000, guid: caead882f2d710c429fbf7d10c384c45, type: 3}
     looping: 1
     playMode: 3
+  - id: Gameplay
+    clips:
+    - {fileID: 8300000, guid: caead882f2d710c429fbf7d10c384c45, type: 3}
+    looping: 1
+    playMode: 3
+  - id: KindError
+    clips:
+    - {fileID: 8300000, guid: 521f2f1f257870c4d9b71b95aa678f14, type: 3}
+    looping: 0
+    playMode: 3
+  - id: Win
+    clips:
+    - {fileID: 8300000, guid: b2ef2df6506ac4c41bd3d172d4a83793, type: 3}
+    looping: 0
+    playMode: 3
+  - id: Lose
+    clips:
+    - {fileID: 8300000, guid: 1daae3f9ab7cff44b87e7c1e0b929445, type: 3}
+    looping: 0
+    playMode: 3
