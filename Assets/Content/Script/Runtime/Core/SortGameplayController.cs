@@ -327,7 +327,7 @@ public class SortGameplayController : MonoBehaviour
     private void RefreshUndoUsedCountUi()
     {
         if (undoUsedCountText == null) return;
-        undoUsedCountText.text = UndoUsedCount.ToString();
+        undoUsedCountText.text = UndoRemaining.ToString();
     }
 
     public void CheckLevelComplete()
