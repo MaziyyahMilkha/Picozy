@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -21,6 +22,7 @@ public class SortGameplayController : MonoBehaviour
     [Header("Timer & stars")]
     [SerializeField] private SortStarDisplay starDisplay;
     [SerializeField] private bool pauseStopsTimer = true;
+    [SerializeField] private TextMeshProUGUI undoUsedCountText;
 
     [Header("Audio IDs")]
     [SerializeField] private float bgmFadeOutOnGameplayStart = 0.3f;
@@ -38,6 +40,7 @@ public class SortGameplayController : MonoBehaviour
     private bool paused;
     private bool _winAnimating;
     private int _undoRemaining;
+    private int _undoStartCount;
     private bool _hasLastMove;
     private SortDahan _lastSource, _lastDest;
     private int _lastCount;
@@ -50,6 +53,7 @@ public class SortGameplayController : MonoBehaviour
     public bool IsPaused => paused;
     public bool IsInteractionBlocked => paused || ended;
     public int UndoRemaining => _undoRemaining;
+    public int UndoUsedCount => Mathf.Max(0, _undoStartCount - _undoRemaining);
     public bool CanUndo => _undoRemaining > 0 && _hasLastMove && running && !ended;
 
     private void Awake()
@@ -140,7 +144,8 @@ public class SortGameplayController : MonoBehaviour
         paused = false;
         levelDuration = GetLevelDuration();
         timeRemaining = levelDuration;
-        _undoRemaining = GetLevelUndoCount();
+        _undoStartCount = GetLevelUndoCount();
+        _undoRemaining = _undoStartCount;
         ClearLastMove();
         if (starDisplay != null)
         {
@@ -148,6 +153,7 @@ public class SortGameplayController : MonoBehaviour
             starDisplay.SetLevelNumber(levelLoader != null ? levelLoader.GetDisplayLevelNumber() : 1);
         }
         RefreshTimerAndStars();
+        RefreshUndoUsedCountUi();
         var resolved = levelLoader != null ? levelLoader.GetResolvedLevelSettings() : default;
         string bgmId = !string.IsNullOrEmpty(gameplayBgmId) ? gameplayBgmId : resolved.audioId;
         if (SortEffectPoolManager.Instance != null)
@@ -302,6 +308,7 @@ public class SortGameplayController : MonoBehaviour
     {
         if (!CanUndo) return;
         _undoRemaining--;
+        RefreshUndoUsedCountUi();
         SortDahan from = _lastDest, to = _lastSource;
         int count = _lastCount;
         ClearLastMove();
@@ -311,7 +318,16 @@ public class SortGameplayController : MonoBehaviour
     public void AddUndo(int amount)
     {
         if (amount > 0)
+        {
             _undoRemaining += amount;
+            RefreshUndoUsedCountUi();
+        }
+    }
+
+    private void RefreshUndoUsedCountUi()
+    {
+        if (undoUsedCountText == null) return;
+        undoUsedCountText.text = UndoUsedCount.ToString();
     }
 
     public void CheckLevelComplete()

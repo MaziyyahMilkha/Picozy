@@ -614,6 +614,7 @@ MonoBehaviour:
   backgroundImage: {fileID: 586275065374126926}
   starDisplay: {fileID: 7401322777485748209}
   pauseStopsTimer: 1
+  undoUsedCountText: {fileID: 1419033553}
   bgmFadeOutOnGameplayStart: 0.3
   gameplayBgmId: Gameplay
   gameplayBgmFadeInSeconds: 0.35
@@ -651,6 +652,8 @@ MonoBehaviour:
   splashCanvasId: SplashScreen
   mapCanvasId: MapSelector
   mainMenuBgmId: Mainmenu
+  mainMenuBgmFadeInSeconds: 0.08
+  mainMenuBgmFadeOutOtherBgmSeconds: 0.12
   debugLevel: 0
 --- !u!114 &794093515
 MonoBehaviour:
@@ -1071,6 +1074,17 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1291840414}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1419033553 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 944561321335236925, guid: bd41e9436f7021546b10332dbdb36759, type: 3}
+  m_PrefabInstance: {fileID: 4003137285073573683}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1473751579
 GameObject:
   m_ObjectHideFlags: 0
