@@ -10,6 +10,7 @@ public class SortGameFlowManager : MonoBehaviour
     [Header("Canvas IDs")]
     [SerializeField] private string splashCanvasId;
     [SerializeField] private string mapCanvasId;
+    [SerializeField] private string mainMenuBgmId = "Mainmenu";
 
     [Header("Debug")]
     [SerializeField] private int debugLevel;
@@ -56,6 +57,11 @@ public class SortGameFlowManager : MonoBehaviour
     private void OnMap()
     {
         SortEventManager.Publish(new UIActionEvent("SwitchCanvas", mapCanvasId));
+        if (SortEffectPoolManager.Instance != null && !string.IsNullOrEmpty(mainMenuBgmId))
+        {
+            SortEffectPoolManager.Instance.StopAllAudio();
+            SortEffectPoolManager.Instance.PlayAudio(mainMenuBgmId, SortAudioChannel.Bgm);
+        }
     }
 
     private void OnDestroy()

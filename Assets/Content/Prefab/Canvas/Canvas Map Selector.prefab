@@ -408,6 +408,9 @@ MonoBehaviour:
   elasticPeriod: 0.38
   useUnscaledTime: 1
   disableAnimation: 0
+  playClickAudio: 1
+  clickAudioId: click
+  clickAudioChannel: 0
 --- !u!1 &3347171620758915596
 GameObject:
   m_ObjectHideFlags: 0
@@ -1192,6 +1195,9 @@ MonoBehaviour:
   elasticPeriod: 0.38
   useUnscaledTime: 1
   disableAnimation: 0
+  playClickAudio: 1
+  clickAudioId: click
+  clickAudioChannel: 0
 --- !u!1001 &240176008901047490
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1298,7 +1304,7 @@ PrefabInstance:
       objectReference: {fileID: 5802971126992388050}
     - target: {fileID: 5664662615090567786, guid: e025f55e0d73b54438b64cb2f05f299e, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: OpenSettings
+      value: OpenTutorial
       objectReference: {fileID: 0}
     - target: {fileID: 5664662615090567786, guid: e025f55e0d73b54438b64cb2f05f299e, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_StringArgument

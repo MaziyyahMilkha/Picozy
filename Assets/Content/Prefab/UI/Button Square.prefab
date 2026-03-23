@@ -129,6 +129,9 @@ MonoBehaviour:
   elasticPeriod: 0.38
   useUnscaledTime: 1
   disableAnimation: 0
+  playClickAudio: 1
+  clickAudioId: Click
+  clickAudioChannel: 0
 --- !u!1 &7807361767308181712
 GameObject:
   m_ObjectHideFlags: 0

@@ -142,7 +142,7 @@ public class SortGameplayController : MonoBehaviour
         if (!string.IsNullOrEmpty(resolved.audioId) && SortEffectPoolManager.Instance != null)
         {
             SortEffectPoolManager.Instance.StopAudioGroup(resolved.audioId);
-            SortEffectPoolManager.Instance.PlayAudio(resolved.audioId);
+            SortEffectPoolManager.Instance.PlayAudio(resolved.audioId, SortAudioChannel.Bgm);
         }
         if (SortGameManager.Instance != null)
             SortGameManager.Instance.Resume();

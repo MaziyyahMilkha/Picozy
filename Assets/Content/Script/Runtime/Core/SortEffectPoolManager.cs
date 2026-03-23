@@ -7,8 +7,13 @@ public class SortEffectPoolManager : MonoBehaviour
     public static SortEffectPoolManager Instance { get; private set; }
 
     [SerializeField] private SortAudioData audioData;
+    [SerializeField] private int prewarmAudioSources = 4;
+    private string poolRootName = "_AudioPool";
     private readonly List<AudioSource> _audioPool = new List<AudioSource>();
     private readonly Dictionary<string, List<AudioSource>> _loopedByGroup = new Dictionary<string, List<AudioSource>>();
+    private readonly Dictionary<AudioSource, SortAudioChannel> _sourceChannels = new Dictionary<AudioSource, SortAudioChannel>();
+    private readonly HashSet<AudioSource> _pausedBySettings = new HashSet<AudioSource>();
+    private Transform _poolRoot;
 
     private void Awake()
     {
@@ -18,16 +23,49 @@ public class SortEffectPoolManager : MonoBehaviour
             return;
         }
         Instance = this;
+        PrewarmPool();
+    }
+
+    private void PrewarmPool()
+    {
+        EnsurePoolRoot();
+        int count = Mathf.Max(0, prewarmAudioSources);
+        for (int i = _audioPool.Count; i < count; i++)
+            GetOrCreateAudio();
     }
 
     #region Audio pool
 
+    private void EnsurePoolRoot()
+    {
+        if (_poolRoot != null) return;
+
+        string rootName = string.IsNullOrEmpty(poolRootName) ? "_AudioPool" : poolRootName;
+        Transform existing = transform.Find(rootName);
+        if (existing != null)
+        {
+            _poolRoot = existing;
+            return;
+        }
+
+        GameObject go = new GameObject(rootName);
+        go.transform.SetParent(transform, false);
+        _poolRoot = go.transform;
+    }
+
     private AudioSource GetOrCreateAudio()
     {
+        EnsurePoolRoot();
+
         foreach (var s in _audioPool)
             if (s != null && !s.isPlaying) return s;
-        var src = gameObject.AddComponent<AudioSource>();
+
+        GameObject child = new GameObject($"AudioSource_{_audioPool.Count:00}");
+        child.transform.SetParent(_poolRoot, false);
+        var src = child.AddComponent<AudioSource>();
         src.playOnAwake = false;
+        src.spatialBlend = 0f;
+        src.loop = false;
         _audioPool.Add(src);
         return src;
     }
@@ -65,14 +103,26 @@ public class SortEffectPoolManager : MonoBehaviour
     private void HandlePlayAudio(string id)
     {
         if (string.IsNullOrEmpty(id)) return;
-        PlayAudio(id);
+        PlayAudio(id, SortAudioChannel.Sfx);
     }
 
     public void PlayAudio(string id)
     {
-        if (audioData == null || string.IsNullOrEmpty(id)) return;
+        PlayAudio(id, SortAudioChannel.Sfx);
+    }
+
+    public void PlayAudio(string id, SortAudioChannel channel)
+    {
+        if (!CanPlayChannel(channel)) return;
+        if (audioData == null)
+            return;
+        if (string.IsNullOrEmpty(id))
+            return;
         var group = audioData.GetGroup(id);
-        if (group == null || group.clips == null || group.clips.Count == 0) return;
+        if (group == null)
+            return;
+        if (group.clips == null || group.clips.Count == 0)
+            return;
 
         var mode = group.playMode;
         bool loop = group.looping;
@@ -80,7 +130,7 @@ public class SortEffectPoolManager : MonoBehaviour
 
         if (loop)
         {
-            PlayAudioLooped(id, group, mode);
+            PlayAudioLooped(id, group, mode, channel);
             return;
         }
 
@@ -88,22 +138,22 @@ public class SortEffectPoolManager : MonoBehaviour
         {
             case SortAudioPlayMode.Random:
                 var r = clips[Random.Range(0, clips.Count)];
-                if (r != null) PlayOneShotPooled(r);
+                if (r != null) PlayOneShotPooled(r, channel);
                 break;
             case SortAudioPlayMode.Single:
-                if (clips[0] != null) PlayOneShotPooled(clips[0]);
+                if (clips[0] != null) PlayOneShotPooled(clips[0], channel);
                 break;
             case SortAudioPlayMode.AllSimultaneous:
                 foreach (var c in clips)
-                    if (c != null) PlayOneShotPooled(c);
+                    if (c != null) PlayOneShotPooled(c, channel);
                 break;
             case SortAudioPlayMode.Sequential:
-                StartCoroutine(PlaySequentialRoutine(clips));
+                StartCoroutine(PlaySequentialRoutine(clips, channel));
                 break;
         }
     }
 
-    private void PlayAudioLooped(string groupId, SortAudioGroupEntry group, SortAudioPlayMode mode)
+    private void PlayAudioLooped(string groupId, SortAudioGroupEntry group, SortAudioPlayMode mode, SortAudioChannel channel)
     {
         var clips = group.clips;
         switch (mode)
@@ -114,8 +164,10 @@ public class SortEffectPoolManager : MonoBehaviour
                 if (clip != null)
                 {
                     var src = GetOrCreateAudio();
+                    _sourceChannels[src] = channel;
                     src.clip = clip;
                     src.loop = true;
+                    src.volume = GetChannelVolume(channel);
                     src.Play();
                     TrackLooped(groupId, src);
                 }
@@ -125,22 +177,25 @@ public class SortEffectPoolManager : MonoBehaviour
                 {
                     if (c == null) continue;
                     var s = GetOrCreateAudio();
+                    _sourceChannels[s] = channel;
                     s.clip = c;
                     s.loop = true;
+                    s.volume = GetChannelVolume(channel);
                     s.Play();
                     TrackLooped(groupId, s);
                 }
                 break;
             case SortAudioPlayMode.Sequential:
-                StartCoroutine(PlaySequentialLoopedRoutine(groupId, clips));
+                StartCoroutine(PlaySequentialLoopedRoutine(groupId, clips, channel));
                 break;
         }
     }
 
-    private IEnumerator PlaySequentialLoopedRoutine(string groupId, List<AudioClip> clips)
+    private IEnumerator PlaySequentialLoopedRoutine(string groupId, List<AudioClip> clips, SortAudioChannel channel)
     {
         var src = GetOrCreateAudio();
         if (src == null) yield break;
+        _sourceChannels[src] = channel;
         TrackLooped(groupId, src);
         int index = 0;
         try
@@ -149,6 +204,7 @@ public class SortEffectPoolManager : MonoBehaviour
             {
                 src.clip = clips[index];
                 src.loop = false;
+                src.volume = GetChannelVolume(channel);
                 src.Play();
                 while (src != null && src.isPlaying)
                     yield return null;
@@ -161,27 +217,73 @@ public class SortEffectPoolManager : MonoBehaviour
         }
     }
 
-    private void PlayOneShotPooled(AudioClip clip)
+    private void PlayOneShotPooled(AudioClip clip, SortAudioChannel channel)
     {
         var src = GetOrCreateAudio();
         if (src == null) return;
+        _sourceChannels[src] = channel;
         src.loop = false;
+        src.volume = GetChannelVolume(channel);
         src.PlayOneShot(clip);
     }
 
-    private IEnumerator PlaySequentialRoutine(List<AudioClip> clips)
+    private IEnumerator PlaySequentialRoutine(List<AudioClip> clips, SortAudioChannel channel)
     {
         var src = GetOrCreateAudio();
         if (src == null) yield break;
+        _sourceChannels[src] = channel;
         src.loop = false;
         for (int i = 0; i < clips.Count; i++)
         {
             var clip = clips[i];
             if (clip == null) continue;
             src.clip = clip;
+            src.volume = GetChannelVolume(channel);
             src.Play();
             while (src != null && src.isPlaying)
                 yield return null;
+        }
+    }
+
+    private bool CanPlayChannel(SortAudioChannel channel)
+    {
+        var settings = SortSettingsManager.Instance;
+        return settings == null || settings.IsAudioChannelEnabled(channel);
+    }
+
+    private float GetChannelVolume(SortAudioChannel channel)
+    {
+        var settings = SortSettingsManager.Instance;
+        if (settings == null) return 1f;
+        return channel == SortAudioChannel.Bgm ? settings.BgmVolume : settings.SfxVolume;
+    }
+
+    public void ApplySettingsAudioState()
+    {
+        for (int i = _audioPool.Count - 1; i >= 0; i--)
+        {
+            var src = _audioPool[i];
+            if (src == null) continue;
+            SortAudioChannel channel = _sourceChannels.TryGetValue(src, out var mapped) ? mapped : SortAudioChannel.Sfx;
+            bool enabled = CanPlayChannel(channel);
+            src.volume = GetChannelVolume(channel);
+
+            if (enabled)
+            {
+                if (_pausedBySettings.Contains(src))
+                {
+                    src.UnPause();
+                    _pausedBySettings.Remove(src);
+                }
+            }
+            else
+            {
+                if (src.isPlaying)
+                {
+                    src.Pause();
+                    _pausedBySettings.Add(src);
+                }
+            }
         }
     }
 
@@ -191,7 +293,11 @@ public class SortEffectPoolManager : MonoBehaviour
         for (int i = list.Count - 1; i >= 0; i--)
         {
             var s = list[i];
-            if (s != null) s.Stop();
+            if (s != null)
+            {
+                s.Stop();
+                _pausedBySettings.Remove(s);
+            }
         }
         _loopedByGroup.Remove(groupId);
     }
@@ -199,7 +305,11 @@ public class SortEffectPoolManager : MonoBehaviour
     public void StopAllAudio()
     {
         foreach (var s in _audioPool)
-            if (s != null) s.Stop();
+            if (s != null)
+            {
+                s.Stop();
+                _pausedBySettings.Remove(s);
+            }
         StopAllCoroutines();
         _loopedByGroup.Clear();
     }
