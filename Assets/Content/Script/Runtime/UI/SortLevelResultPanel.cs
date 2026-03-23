@@ -27,6 +27,7 @@ public class SortLevelResultPanel : MonoBehaviour
     [SerializeField] private Button retryButton;
     [SerializeField] private Button exitButton;
     private Coroutine _starFillRoutine;
+    private bool _actionLocked;
     private Vector3 _star1BaseScale = Vector3.one;
     private Vector3 _star2BaseScale = Vector3.one;
     private Vector3 _star3BaseScale = Vector3.one;
@@ -44,6 +45,8 @@ public class SortLevelResultPanel : MonoBehaviour
 
     private void OnEnable()
     {
+        _actionLocked = false;
+        SetButtonsInteractable(true);
         SortEventManager.SubscribeAction("Win", OnWin);
         SortEventManager.SubscribeAction("Lose", OnLoseNoData);
     }
@@ -77,6 +80,8 @@ public class SortLevelResultPanel : MonoBehaviour
 
     private void OnWin(string starsData)
     {
+        _actionLocked = false;
+        SetButtonsInteractable(true);
         int earned = 1;
         if (!string.IsNullOrEmpty(starsData))
             int.TryParse(starsData, out earned);
@@ -99,6 +104,8 @@ public class SortLevelResultPanel : MonoBehaviour
 
     private void OnLoseNoData()
     {
+        _actionLocked = false;
+        SetButtonsInteractable(true);
         StopStarFillRoutine();
         ResetAllStarFill();
 
@@ -241,19 +248,35 @@ public class SortLevelResultPanel : MonoBehaviour
 
     private void OnContinueClicked()
     {
+        if (_actionLocked) return;
+        _actionLocked = true;
+        SetButtonsInteractable(false);
         if (SortGameplayController.Instance != null)
             SortGameplayController.Instance.ContinueToNextLevel();
     }
 
     private void OnRetryClicked()
     {
+        if (_actionLocked) return;
+        _actionLocked = true;
+        SetButtonsInteractable(false);
         if (SortGameplayController.Instance != null)
             SortGameplayController.Instance.RestartLevel();
     }
 
     private void OnExitClicked()
     {
+        if (_actionLocked) return;
+        _actionLocked = true;
+        SetButtonsInteractable(false);
         if (SortGameplayController.Instance != null)
             SortGameplayController.Instance.BackToMainMenu();
+    }
+
+    private void SetButtonsInteractable(bool value)
+    {
+        if (continueButton != null) continueButton.interactable = value;
+        if (retryButton != null) retryButton.interactable = value;
+        if (exitButton != null) exitButton.interactable = value;
     }
 }
