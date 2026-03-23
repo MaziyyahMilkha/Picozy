@@ -762,7 +762,7 @@ GameObject:
   - component: {fileID: 4823946693021999201}
   - component: {fileID: 8885661291026860136}
   m_Layer: 0
-  m_Name: undo
+  m_Name: Button Undo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1340,7 +1340,7 @@ GameObject:
   - component: {fileID: 2594779976106115587}
   - component: {fileID: 1413265422405787343}
   m_Layer: 0
-  m_Name: refresh
+  m_Name: Button Refresh
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1529,7 +1529,7 @@ GameObject:
   - component: {fileID: 6583622499397635695}
   - component: {fileID: 519974217659513822}
   m_Layer: 0
-  m_Name: setting
+  m_Name: Button Settings
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
