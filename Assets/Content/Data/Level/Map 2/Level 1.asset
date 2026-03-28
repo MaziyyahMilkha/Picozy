@@ -23,8 +23,8 @@ MonoBehaviour:
     backgroundTheme: {fileID: 0}
     audioId: 
     leftBranches:
-    - slots: 0a0000000a0000000b000000
-    - slots: 090000000000000000000000
-    rightBranches:
-    - slots: 090000000b00000000000000
+    - slots: 090000000b0000000a000000
     - slots: 090000000a0000000b000000
+    rightBranches:
+    - slots: 0a000000090000000b000000
+    - slots: 000000000000000000000000
