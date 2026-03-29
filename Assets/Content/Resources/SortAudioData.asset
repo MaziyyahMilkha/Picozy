@@ -12,4 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b0f5a9c6240e4f040b2c4493d50a779f, type: 3}
   m_Name: SortAudioData
   m_EditorClassIdentifier: 
-  groups: []
+  groups:
+  - id: click
+    clips:
+    - {fileID: 8300000, guid: 057133f37c76d4f43876f3908fc37b97, type: 3}
+    looping: 1
+    playMode: 0
+  - id: Click
+    clips:
+    - {fileID: 8300000, guid: 057133f37c76d4f43876f3908fc37b97, type: 3}
+    looping: 1
+    playMode: 0
