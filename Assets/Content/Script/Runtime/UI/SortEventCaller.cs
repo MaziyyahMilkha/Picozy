@@ -66,6 +66,16 @@ public class SortEventCaller : MonoBehaviour
         SortEventManager.Publish(new UIActionEvent("CloseSettings", null));
     }
 
+    public void OpenTutorial(string returnToCanvasId = null)
+    {
+        SortEventManager.Publish(new UIActionEvent("OpenTutorial", string.IsNullOrEmpty(returnToCanvasId) ? null : returnToCanvasId));
+    }
+
+    public void CloseTutorial()
+    {
+        SortEventManager.Publish(new UIActionEvent("CloseTutorial", null));
+    }
+
     public void OpenPause()
     {
         SortEventManager.Publish(new UIActionEvent("PauseGameplay", null));

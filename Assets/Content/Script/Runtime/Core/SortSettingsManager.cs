@@ -2,6 +2,12 @@ using System;
 using UnityEngine;
 using UISwitcher;
 
+public enum SortAudioChannel
+{
+    Sfx = 0,
+    Bgm = 1
+}
+
 public class SortSettingsManager : MonoBehaviour
 {
     public static SortSettingsManager Instance { get; private set; }
@@ -28,6 +34,7 @@ public class SortSettingsManager : MonoBehaviour
     public bool SfxEnabled { get; private set; } = true;
     public float BgmVolume => BgmEnabled ? 1f : 0f;
     public float SfxVolume => SfxEnabled ? 1f : 0f;
+    public bool IsAudioChannelEnabled(SortAudioChannel channel) => channel == SortAudioChannel.Bgm ? BgmEnabled : SfxEnabled;
 
     private void Awake()
     {
@@ -107,6 +114,8 @@ public class SortSettingsManager : MonoBehaviour
 
     private void ApplyToAudio()
     {
+        if (SortEffectPoolManager.Instance != null)
+            SortEffectPoolManager.Instance.ApplySettingsAudioState();
     }
 
     private void HandleOpenSettings(string returnToCanvasId)

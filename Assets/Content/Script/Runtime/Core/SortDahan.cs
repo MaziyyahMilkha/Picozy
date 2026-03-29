@@ -150,7 +150,6 @@ public class SortDahan : MonoBehaviour
     public void OnTransferOut()
     {
         if (!enableTransferFeedback) return;
-        // Small recoil on source branch when a character leaves.
         rotationSpring.Bump(-transferOutRotationBump);
         scaleSpring.Bump(transferOutScaleBump);
     }
@@ -158,7 +157,6 @@ public class SortDahan : MonoBehaviour
     public void OnTransferIn()
     {
         if (!enableTransferFeedback) return;
-        // Slight stronger bump on destination branch when character lands.
         rotationSpring.Bump(transferInRotationBump);
         scaleSpring.Bump(transferInScaleBump);
     }

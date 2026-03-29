@@ -1,25 +1,36 @@
-%YAML 1.1
-%TAG !u! tag:unity3d.com,2011:
---- !u!114 &11400000
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b0f5a9c6240e4f040b2c4493d50a779f, type: 3}
-  m_Name: SortAudioData
-  m_EditorClassIdentifier: 
-  groups:
-  - id: click
-    clips:
-    - {fileID: 8300000, guid: 057133f37c76d4f43876f3908fc37b97, type: 3}
-    looping: 1
-    playMode: 0
+groups:
   - id: Click
     clips:
-    - {fileID: 8300000, guid: 057133f37c76d4f43876f3908fc37b97, type: 3}
+    - {fileID: 8300000, guid: 1484e6f6c6a4f754cb256af0fc5a1bd8, type: 3}
+    looping: 0
+    playMode: 3
+
+  - id: Mainmenu
+    clips:
+    - {fileID: 8300000, guid: caead882f2d710c429fbf7d10c384c45, type: 3}
     looping: 1
-    playMode: 0
+    playMode: 3
+
+  - id: Gameplay
+    clips:
+    - {fileID: 8300000, guid: caead882f2d710c429fbf7d10c384c45, type: 3}
+    looping: 1
+    playMode: 3
+
+  - id: KindError
+    clips:
+    - {fileID: 8300000, guid: 521f2f1f257870c4d9b71b95aa678f14, type: 3}
+    looping: 0
+    playMode: 3
+
+  - id: Win
+    clips:
+    - {fileID: 8300000, guid: b2ef2df6506ac4c41bd3d172d4a83793, type: 3}
+    looping: 0
+    playMode: 3
+
+  - id: Lose
+    clips:
+    - {fileID: 8300000, guid: 1daae3f9ab7cff44b87e7c1e0b929445, type: 3}
+    looping: 0
+    playMode: 3
