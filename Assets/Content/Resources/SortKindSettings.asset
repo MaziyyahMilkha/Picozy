@@ -32,10 +32,14 @@ MonoBehaviour:
   - displayName: Blue Mushroom
     color: {r: 0.009938229, g: 0.035726275, b: 0.6320754, a: 1}
   - displayName: porcupine
-    color: {r: 0.38431376, g: 0.2627451, b: 0.21960786, a: 1}
+    color: {r: 0.735849, g: 0.5585643, b: 0.4956568, a: 1}
   - displayName: rat
-    color: {r: 0.38431376, g: 0.2627451, b: 0.21960786, a: 1}
+    color: {r: 0.9245283, g: 0.9245283, b: 0.9245283, a: 1}
   - displayName: owl
     color: {r: 0.38431376, g: 0.2627451, b: 0.21960786, a: 1}
   - displayName: wortel
     color: {r: 1, g: 0.5302833, b: 0.032075405, a: 1}
+  - displayName: 'tupai '
+    color: {r: 0.3584906, g: 0.2604054, b: 0, a: 1}
+  - displayName: katak
+    color: {r: 0.027839031, g: 0.8679245, b: 0.057620846, a: 1}

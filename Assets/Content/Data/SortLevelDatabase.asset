@@ -18,11 +18,11 @@ MonoBehaviour:
   - id: Map1
     levelSelectorBackground: {fileID: 21300000, guid: b2a74576c2493024e94d155df0ef7403, type: 3}
     slotLockBackground: {fileID: 21300000, guid: bf7154e826d422e4c885e79b837d4c57, type: 3}
-    globalLevelDurationSeconds: 60
+    globalLevelDurationSeconds: 210
     globalUndoCount: 3
     globalDestroyBranchWhenComplete: 1
     globalBackgroundTheme: {fileID: 21300000, guid: c6b3d7867e9c286459630e2c49da4fc4, type: 3}
-    globalAudioId: Click
+    globalAudioId: character
     levels:
     - {fileID: 11400000, guid: 1cae8469700ca0e4992a7513beeab986, type: 2}
     - {fileID: 11400000, guid: 1c0c73ba58548ff41b1cf06fa908ba23, type: 2}
@@ -37,11 +37,11 @@ MonoBehaviour:
   - id: Map2
     levelSelectorBackground: {fileID: 21300000, guid: ffc2033667d12ca46b23b9bad04bc361, type: 3}
     slotLockBackground: {fileID: 21300000, guid: efc98ea083924c540b7b1c74071dc327, type: 3}
-    globalLevelDurationSeconds: 60
+    globalLevelDurationSeconds: 210
     globalUndoCount: 3
     globalDestroyBranchWhenComplete: 1
     globalBackgroundTheme: {fileID: 21300000, guid: fc27238330e8dce419e8c51e34334d66, type: 3}
-    globalAudioId: 
+    globalAudioId: character
     levels:
     - {fileID: 11400000, guid: fb5feaff57cc8094da7675b63a9f7fd4, type: 2}
     - {fileID: 11400000, guid: 71f502985f8301a469afc1692063992f, type: 2}

@@ -130,7 +130,7 @@ MonoBehaviour:
   useUnscaledTime: 1
   disableAnimation: 0
   playClickAudio: 1
-  clickAudioId: Click
+  clickAudioId: click
   clickAudioChannel: 0
 --- !u!1 &3699446497000745077
 GameObject:
