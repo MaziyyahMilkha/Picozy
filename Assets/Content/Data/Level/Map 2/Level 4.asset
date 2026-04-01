@@ -23,6 +23,7 @@ MonoBehaviour:
     backgroundTheme: {fileID: 21300000, guid: c5a34a109c5bd9b4d9ff7bf3ce75b3f6, type: 3}
     audioId: 
     leftBranches:
+<<<<<<< HEAD
     - slots: 0a000000090000000a000000
     - slots: 0e0000000e0000000d000000
     - slots: 0a0000000d0000000e000000
@@ -30,4 +31,14 @@ MonoBehaviour:
     - slots: 0e0000000a0000000e000000
     - slots: 090000000d00000009000000
     - slots: 0e0000000a0000000a000000
+=======
+    - slots: 0d000000090000000e000000
+    - slots: 0a0000000a0000000a000000
+    - slots: 090000000e0000000e000000
+    - slots: 000000000000000000000000
+    rightBranches:
+    - slots: 0d0000000e0000000e000000
+    - slots: 0a000000090000000d000000
+    - slots: 0a0000000e0000000a000000
+>>>>>>> a81f79b9a6c25642f0ce468cad1b93dd2725228d
     - slots: 000000000000000000000000
