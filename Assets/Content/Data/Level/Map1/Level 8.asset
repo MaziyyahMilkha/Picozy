@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b11aeba5439751544a5b20a3a15fda64, type: 3}
+  m_Name: Level 8
+  m_EditorClassIdentifier: 
+  data:
+    slotsPerBranch: 3
+    kindMultipliers: 00000000010000000100000001000000010000000000000001000000010000000100000000000000000000000000000001000000000000000000000000000000
+    kindMask: 2287
+    useGlobalSettings: 1
+    levelDurationSeconds: 60
+    undoCount: 3
+    destroyBranchWhenComplete: 1
+    backgroundTheme: {fileID: 21300000, guid: fc27238330e8dce419e8c51e34334d66, type: 3}
+    audioId: 
+    leftBranches:
+    - slots: 030000000300000006000000
+    - slots: 010000000600000008000000
+    - slots: 020000000400000007000000
+    - slots: 080000000200000007000000
+    - slots: 000000000000000000000000
+    rightBranches:
+    - slots: 04000000030000000c000000
+    - slots: 0c000000070000000c000000
+    - slots: 040000000100000008000000
+    - slots: 060000000200000001000000
+    - slots: 000000000000000000000000
