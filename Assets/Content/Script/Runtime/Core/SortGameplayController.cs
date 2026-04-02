@@ -36,6 +36,7 @@ public class SortGameplayController : MonoBehaviour
     [Header("Timer & stars")]
     [SerializeField] private SortStarDisplay starDisplay;
     [SerializeField] private bool pauseStopsTimer = true;
+    [SerializeField] private bool keepTimerWhenRestartingFromGameplay = true;
     [SerializeField] private TextMeshProUGUI undoUsedCountText;
     [SerializeField] private bool allowMultipleUndo = true;
 
@@ -149,7 +150,7 @@ public class SortGameplayController : MonoBehaviour
             starDisplay.SetNormalizedTime(normalized);
     }
 
-    public void StartLevel()
+    public void StartLevel(bool resetTimer = true, float preservedTime = -1f)
     {
         StopResultAndUiSfx();
         ended = false;
@@ -159,13 +160,20 @@ public class SortGameplayController : MonoBehaviour
         running = true;
         paused = false;
         levelDuration = GetLevelDuration();
-        timeRemaining = levelDuration;
+        if (resetTimer)
+            timeRemaining = levelDuration;
+        else
+        {
+            float sourceTime = preservedTime >= 0f ? preservedTime : timeRemaining;
+            timeRemaining = Mathf.Clamp(sourceTime, 0f, levelDuration);
+        }
         _undoStartCount = GetLevelUndoCount();
         _undoRemaining = _undoStartCount;
         ClearLastMove();
         if (starDisplay != null)
         {
-            starDisplay.ResetToFull();
+            if (resetTimer)
+                starDisplay.ResetToFull();
             starDisplay.SetLevelNumber(levelLoader != null ? levelLoader.GetDisplayLevelNumber() : 1);
         }
         RefreshTimerAndStars();
@@ -483,13 +491,15 @@ public class SortGameplayController : MonoBehaviour
     {
         if (_uiTransitionInProgress) return;
         if (levelLoader == null) return;
+        bool preserveTimer = keepTimerWhenRestartingFromGameplay && running && !ended;
+        float preservedTime = timeRemaining;
         _uiTransitionInProgress = true;
         StopResultAndUiSfx();
         HideResultPopups();
         levelLoader.LoadLevel();
         ApplyLevelTheme();
         SortEventManager.Publish(new UIActionEvent("OpenCanvas", gameplayCanvasId));
-        StartLevel();
+        StartLevel(!preserveTimer, preservedTime);
     }
 
     public void BackToMainMenu()
