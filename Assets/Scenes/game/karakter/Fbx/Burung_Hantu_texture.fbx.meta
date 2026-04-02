@@ -3,7 +3,12 @@ guid: 75e6dcd9c2ac6934d9a169a5626d0364
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: M_Burung_Hantu
+    second: {fileID: 2100000, guid: dd272de9aa6c442499aa227749b74b07, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

@@ -1,14 +1,9 @@
 fileFormatVersion: 2
-guid: f293a113d0985d94798b6a25849ad268
+guid: 07cce3f5527267d4f959a7268266c726
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects:
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: T_Landak
-    second: {fileID: 2100000, guid: 780cbf2ee632a2f4986ab82325c0c17c, type: 2}
+  externalObjects: {}
   materials:
     materialImportMode: 2
     materialName: 0
