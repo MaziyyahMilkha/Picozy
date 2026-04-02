@@ -17,7 +17,7 @@ MonoBehaviour:
     kindMultipliers: 00000000010000000100000001000000010000000100000001000000000000000000000000000000000000000000000000000000000000000000000000000000
     kindMask: 15
     useGlobalSettings: 1
-    levelDurationSeconds: 60
+    levelDurationSeconds: 120
     undoCount: 3
     destroyBranchWhenComplete: 1
     backgroundTheme: {fileID: 0}
