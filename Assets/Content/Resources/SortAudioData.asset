@@ -23,3 +23,8 @@ MonoBehaviour:
     - {fileID: 8300000, guid: 1d695211261f2ae42818b43980a57465, type: 3}
     looping: 0
     playMode: 3
+  - id: Mainmenu
+    clips:
+    - {fileID: 8300000, guid: 30b4e5d763a57fd448b4aa479229ecbf, type: 3}
+    looping: 1
+    playMode: 3

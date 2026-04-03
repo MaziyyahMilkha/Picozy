@@ -1,28 +1,32 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 
 public class SortTutorialPopupManager : MonoBehaviour
 {
     [Header("Popup")]
     [SerializeField] private string tutorialCanvasId = "Tutorial";
 
-    [Header("Tutorial Image")]
-    [SerializeField] private Image tutorialImage;
-    [SerializeField] private Sprite tutorialPage1Sprite;
-    [SerializeField] private Sprite tutorialPage2Sprite;
+    [Header("Book Page Curl")]
+    [SerializeField] private AutoFlip autoFlip;
 
     [Header("Navigation Button")]
     [SerializeField] private Button navButton;
     [SerializeField] private Image navIconImage;
     [SerializeField] private Sprite navNextSprite;
     [SerializeField] private Sprite navPrevSprite;
+    [SerializeField] private float navReenableDelaySeconds = 0.1f;
 
-    private int _pageIndex; // 0 = page1, 1 = page2
+    private bool _nextClickFlipRight = true;
+    private bool _navLocked;
+    private Coroutine _unlockRoutine;
+    private Book _book;
+    private bool _bookListenerRegistered;
 
     private void Awake()
     {
         WireButtons();
-        ApplyPage(0);
+        ApplyNavIcon();
     }
 
     private void OnDestroy()
@@ -34,12 +38,17 @@ public class SortTutorialPopupManager : MonoBehaviour
     {
         SortEventManager.SubscribeAction("OpenTutorial", OnOpenTutorialEvent);
         SortEventManager.SubscribeAction("CloseTutorial", OnCloseTutorialEvent);
+        RegisterBookFlipListener();
+        SetNavLocked(false);
     }
 
     private void OnDisable()
     {
         SortEventManager.UnsubscribeAction("OpenTutorial", OnOpenTutorialEvent);
         SortEventManager.UnsubscribeAction("CloseTutorial", OnCloseTutorialEvent);
+        UnregisterBookFlipListener();
+        StopUnlockRoutine();
+        SetNavLocked(false);
     }
 
     private void WireButtons()
@@ -66,7 +75,9 @@ public class SortTutorialPopupManager : MonoBehaviour
 
     public void OpenTutorial()
     {
-        ApplyPage(0);
+        _nextClickFlipRight = true;
+        SetNavLocked(false);
+        ApplyNavIcon();
         if (!string.IsNullOrEmpty(tutorialCanvasId))
             SortEventManager.Publish(new UIActionEvent("ShowPopupCanvas", tutorialCanvasId));
     }
@@ -79,26 +90,88 @@ public class SortTutorialPopupManager : MonoBehaviour
 
     public void OnNavClicked()
     {
-        ApplyPage(_pageIndex == 0 ? 1 : 0);
+        if (_navLocked || autoFlip == null) return;
+        if (!CanFlipCurrentDirection()) return;
+
+        SetNavLocked(true);
+
+        if (_nextClickFlipRight)
+            autoFlip.FlipRightPage();
+        else
+            autoFlip.FlipLeftPage();
+
+        _nextClickFlipRight = !_nextClickFlipRight;
+        ApplyNavIcon();
     }
 
-    private void ApplyPage(int pageIndex)
+    private void ApplyNavIcon()
     {
-        _pageIndex = Mathf.Clamp(pageIndex, 0, 1);
-
-        if (tutorialImage != null)
-        {
-            Sprite sprite = _pageIndex == 0 ? tutorialPage1Sprite : tutorialPage2Sprite;
-            if (sprite != null)
-                tutorialImage.sprite = sprite;
-        }
-
-        bool onFirstPage = _pageIndex == 0;
         if (navIconImage != null)
         {
-            Sprite icon = onFirstPage ? navNextSprite : navPrevSprite;
+            Sprite icon = _nextClickFlipRight ? navNextSprite : navPrevSprite;
             if (icon != null)
                 navIconImage.sprite = icon;
         }
+    }
+
+    private bool CanFlipCurrentDirection()
+    {
+        Book book = GetBook();
+        if (book == null) return false;
+        if (_nextClickFlipRight)
+            return book.currentPage < book.TotalPageCount;
+        return book.currentPage > 0;
+    }
+
+    private Book GetBook()
+    {
+        if (_book != null) return _book;
+        if (autoFlip == null) return null;
+        _book = autoFlip.ControledBook != null ? autoFlip.ControledBook : autoFlip.GetComponent<Book>();
+        return _book;
+    }
+
+    private void RegisterBookFlipListener()
+    {
+        if (_bookListenerRegistered) return;
+        Book book = GetBook();
+        if (book == null || book.OnFlip == null) return;
+        book.OnFlip.AddListener(OnBookFlipped);
+        _bookListenerRegistered = true;
+    }
+
+    private void UnregisterBookFlipListener()
+    {
+        if (!_bookListenerRegistered) return;
+        if (_book != null && _book.OnFlip != null)
+            _book.OnFlip.RemoveListener(OnBookFlipped);
+        _bookListenerRegistered = false;
+    }
+
+    private void OnBookFlipped()
+    {
+        StopUnlockRoutine();
+        _unlockRoutine = StartCoroutine(UnlockAfterDelayRoutine());
+    }
+
+    private IEnumerator UnlockAfterDelayRoutine()
+    {
+        float delay = Mathf.Max(0f, navReenableDelaySeconds);
+        if (delay > 0f)
+            yield return new WaitForSecondsRealtime(delay);
+        SetNavLocked(false);
+        _unlockRoutine = null;
+    }
+
+    private void StopUnlockRoutine()
+    {
+        if (_unlockRoutine == null) return;
+        StopCoroutine(_unlockRoutine);
+        _unlockRoutine = null;
+    }
+
+    private void SetNavLocked(bool locked)
+    {
+        _navLocked = locked;
     }
 }
