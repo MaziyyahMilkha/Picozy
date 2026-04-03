@@ -703,9 +703,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tutorialCanvasId: Tutorial
-  tutorialImage: {fileID: 1942914500}
-  tutorialPage1Sprite: {fileID: 21300000, guid: 41e3e2bb14deaa647a9eb3a26c6a8149, type: 3}
-  tutorialPage2Sprite: {fileID: 21300000, guid: 67de2517cbafc0840bb1cd0578977818, type: 3}
+  autoFlip: {fileID: 1535788814}
   navButton: {fileID: 549627499}
   navIconImage: {fileID: 457957018}
   navNextSprite: {fileID: 21300000, guid: fdd3ee6f5fe9a4f4ca5538ae4a525667, type: 3}
@@ -1296,6 +1294,17 @@ Transform:
   m_Children: []
   m_Father: {fileID: 555507037}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1535788814 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2382030281097915982, guid: ffe99e6513750d3499e1e3292e466979, type: 3}
+  m_PrefabInstance: {fileID: 8127086826652419282}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bef881b4c6ed71248b493dcd92c831a5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1537921827
 GameObject:
   m_ObjectHideFlags: 0
@@ -1769,17 +1778,6 @@ RectTransform:
   m_AnchoredPosition: {x: -0.6994817, y: -3.388601}
   m_SizeDelta: {x: 195.35, y: 50}
   m_Pivot: {x: 0.5, y: 0}
---- !u!114 &1942914500 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 7330505631555908468, guid: ffe99e6513750d3499e1e3292e466979, type: 3}
-  m_PrefabInstance: {fileID: 8127086826652419282}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &2000219489
 GameObject:
   m_ObjectHideFlags: 0
@@ -3333,7 +3331,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1843999476561371966, guid: ffe99e6513750d3499e1e3292e466979, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4553543766783772046, guid: ffe99e6513750d3499e1e3292e466979, type: 3}
       propertyPath: m_Pivot.x
