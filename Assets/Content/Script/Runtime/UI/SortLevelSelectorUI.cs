@@ -5,10 +5,8 @@ using UnityEngine.UI;
 
 public class SortLevelSelectorUI : MonoBehaviour
 {
-    [Header("Slots & navigation")]
+    [Header("Slots")]
     [SerializeField] private List<SortLevelButtonSlot> levelSlots = new List<SortLevelButtonSlot>();
-    [SerializeField] private Button buttonNext;
-    [SerializeField] private Button buttonPrev;
 
     [SerializeField] private Image levelSelectorBackgroundImage;
 
@@ -34,26 +32,6 @@ public class SortLevelSelectorUI : MonoBehaviour
     {
         yield return null;
         RefreshDisplay();
-    }
-
-    private void Start()
-    {
-        if (buttonNext != null)
-            buttonNext.onClick.AddListener(OnNextClicked);
-        if (buttonPrev != null)
-            buttonPrev.onClick.AddListener(OnPrevClicked);
-    }
-
-    private void OnNextClicked()
-    {
-        if (SortLevelSelectManager.Instance != null)
-            SortLevelSelectManager.Instance.NextPage();
-    }
-
-    private void OnPrevClicked()
-    {
-        if (SortLevelSelectManager.Instance != null)
-            SortLevelSelectManager.Instance.PrevPage();
     }
 
     private void RefreshDisplay()
@@ -99,9 +77,5 @@ public class SortLevelSelectorUI : MonoBehaviour
             }
         }
 
-        if (buttonNext != null)
-            buttonNext.gameObject.SetActive(manager.HasNextPage());
-        if (buttonPrev != null)
-            buttonPrev.gameObject.SetActive(manager.HasPrevPage());
     }
 }

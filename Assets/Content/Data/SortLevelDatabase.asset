@@ -16,7 +16,7 @@ MonoBehaviour:
   unlockFirstLevelPerMap: 1
   maps:
   - id: Map1
-    levelSelectorBackground: {fileID: 21300000, guid: b2a74576c2493024e94d155df0ef7403, type: 3}
+    levelSelectorBackground: {fileID: 21300000, guid: 38551a1df86299e4997f2a7c3d1862ee, type: 3}
     slotLockBackground: {fileID: 21300000, guid: bf7154e826d422e4c885e79b837d4c57, type: 3}
     globalLevelDurationSeconds: 120
     globalUndoCount: 3
@@ -35,7 +35,7 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 11d187fb198e4764dbeaa16681b99d3e, type: 2}
     - {fileID: 11400000, guid: 4be39b293b727994fb3696975b6628b2, type: 2}
   - id: Map2
-    levelSelectorBackground: {fileID: 21300000, guid: ffc2033667d12ca46b23b9bad04bc361, type: 3}
+    levelSelectorBackground: {fileID: 21300000, guid: 1904d2306c1d0e24d81dec0ccad09b1c, type: 3}
     slotLockBackground: {fileID: 21300000, guid: efc98ea083924c540b7b1c74071dc327, type: 3}
     globalLevelDurationSeconds: 120
     globalUndoCount: 3
