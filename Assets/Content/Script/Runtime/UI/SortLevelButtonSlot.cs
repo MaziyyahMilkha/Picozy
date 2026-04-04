@@ -22,13 +22,44 @@ public class SortLevelButtonSlot : MonoBehaviour
     [SerializeField] private GameObject star2;
     [SerializeField] private GameObject star3;
 
+    [Header("Completed Pulse")]
+    [SerializeField] private bool pulseWhenCompleted = true;
+
+    private const float CompletedPulseScaleAmount = 0.03f;
+    private const float CompletedPulseSpeed = 1.8f;
+    private const float AvailablePulseScaleAmount = 0.055f;
+    private const float AvailablePulseSpeed = 3.1f;
+
     private Button _button;
+    private Vector3 _baseScale;
+    private bool _isPulsingCompleted;
+    private float _pulsePhase;
+    private float _pulseScaleAmountCurrent;
+    private float _pulseSpeedCurrent;
 
     public Button Button => _button != null ? _button : _button = GetComponent<Button>();
 
     private void Awake()
     {
+        _baseScale = transform.localScale;
+        _pulsePhase = Random.Range(0f, Mathf.PI * 2f);
         HideStars();
+    }
+
+    private void OnEnable()
+    {
+        transform.localScale = _baseScale;
+    }
+
+    private void Update()
+    {
+        if (!_isPulsingCompleted)
+            return;
+
+        _pulsePhase += Time.unscaledDeltaTime * Mathf.Max(0f, _pulseSpeedCurrent);
+        float wave = (Mathf.Sin(_pulsePhase) + 1f) * 0.5f;
+        float scale = 1f + Mathf.Max(0f, _pulseScaleAmountCurrent) * wave;
+        transform.localScale = _baseScale * scale;
     }
 
     private void HideStars()
@@ -47,6 +78,21 @@ public class SortLevelButtonSlot : MonoBehaviour
     public void SetState(LevelSlotState state, int levelNumber, int stars = 0)
     {
         int s = (state == LevelSlotState.Completed) ? (stars <= 0 ? 1 : Mathf.Clamp(stars, 1, 3)) : 0;
+        bool pulseCompleted = pulseWhenCompleted && state == LevelSlotState.Completed;
+        bool pulseAvailable = state == LevelSlotState.Available;
+        _isPulsingCompleted = pulseCompleted || pulseAvailable;
+        if (pulseAvailable)
+        {
+            _pulseScaleAmountCurrent = AvailablePulseScaleAmount;
+            _pulseSpeedCurrent = AvailablePulseSpeed;
+        }
+        else if (pulseCompleted)
+        {
+            _pulseScaleAmountCurrent = CompletedPulseScaleAmount;
+            _pulseSpeedCurrent = CompletedPulseSpeed;
+        }
+        if (!_isPulsingCompleted)
+            transform.localScale = _baseScale;
 
         SetLevelNumber(levelNumber);
         if (lockBackground != null)

@@ -42,7 +42,6 @@ public class SortGameplayController : MonoBehaviour
 
     [Header("Audio IDs")]
     [SerializeField] private float bgmFadeOutOnGameplayStart = 0.3f;
-    [SerializeField] private string gameplayBgmId = "Gameplay";
     [SerializeField] private float gameplayBgmFadeInSeconds = 0.35f;
     [SerializeField] private float gameplayBgmFadeOutSeconds = 0.4f;
     [SerializeField] private string sfxWinId = "Win";
@@ -150,7 +149,7 @@ public class SortGameplayController : MonoBehaviour
             starDisplay.SetNormalizedTime(normalized);
     }
 
-    public void StartLevel(bool resetTimer = true, float preservedTime = -1f)
+    public void StartLevel(bool resetTimer = true, float preservedTime = -1f, bool restartBgm = true)
     {
         StopResultAndUiSfx();
         ended = false;
@@ -179,8 +178,8 @@ public class SortGameplayController : MonoBehaviour
         RefreshTimerAndStars();
         RefreshUndoUsedCountUi();
         var resolved = levelLoader != null ? levelLoader.GetResolvedLevelSettings() : default;
-        string bgmId = !string.IsNullOrEmpty(gameplayBgmId) ? gameplayBgmId : resolved.audioId;
-        if (SortEffectPoolManager.Instance != null)
+        string bgmId = resolved.audioId;
+        if (restartBgm && SortEffectPoolManager.Instance != null)
         {
             SortEffectPoolManager.Instance.StopAudioChannelWithFade(SortAudioChannel.Bgm, bgmFadeOutOnGameplayStart);
             if (!string.IsNullOrEmpty(bgmId))
@@ -414,7 +413,7 @@ public class SortGameplayController : MonoBehaviour
         _moveInProgress = false;
         running = false;
         var resolved = levelLoader != null ? levelLoader.GetResolvedLevelSettings() : default;
-        string bgmId = !string.IsNullOrEmpty(gameplayBgmId) ? gameplayBgmId : resolved.audioId;
+        string bgmId = resolved.audioId;
         if (!string.IsNullOrEmpty(bgmId) && SortEffectPoolManager.Instance != null)
             SortEffectPoolManager.Instance.StopAudioGroupWithFade(bgmId, gameplayBgmFadeOutSeconds);
 
@@ -499,7 +498,7 @@ public class SortGameplayController : MonoBehaviour
         levelLoader.LoadLevel();
         ApplyLevelTheme();
         SortEventManager.Publish(new UIActionEvent("OpenCanvas", gameplayCanvasId));
-        StartLevel(!preserveTimer, preservedTime);
+        StartLevel(!preserveTimer, preservedTime, restartBgm: false);
     }
 
     public void BackToMainMenu()

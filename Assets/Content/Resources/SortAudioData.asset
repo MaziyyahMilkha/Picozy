@@ -28,3 +28,13 @@ MonoBehaviour:
     - {fileID: 8300000, guid: 30b4e5d763a57fd448b4aa479229ecbf, type: 3}
     looping: 1
     playMode: 3
+  - id: Map1
+    clips:
+    - {fileID: 8300000, guid: 54556c34738c3194f8b509015e12ddcf, type: 3}
+    looping: 1
+    playMode: 3
+  - id: Map2
+    clips:
+    - {fileID: 8300000, guid: f7a53c70a8914ff44ae16f2763cc38d7, type: 3}
+    looping: 1
+    playMode: 3
