@@ -131,8 +131,32 @@ public class SortLevelSelectManager : MonoBehaviour
         int total = GetTotalMaps();
         if (total == 0) return;
         _currentMapIndex = Mathf.Clamp(mapIndex, 0, total - 1);
-        _currentPageIndex = 0;
+        _currentPageIndex = GetAutoPageIndexForCurrentMap();
         OnPageOrMapChanged?.Invoke();
+    }
+
+    private int GetAutoPageIndexForCurrentMap()
+    {
+        int levelCountInMap = GetLevelCountInMap(_currentMapIndex);
+        if (levelCountInMap <= 0) return 0;
+
+        int mapStartGlobal = GetGlobalStartIndexForMap(_currentMapIndex);
+        int mapEndGlobal = mapStartGlobal + levelCountInMap - 1;
+        int nextUnlockedGlobal = _highestCompletedGlobalIndex + 1;
+        int targetGlobal = Mathf.Clamp(nextUnlockedGlobal, mapStartGlobal, mapEndGlobal);
+        int localLevelIndex = targetGlobal - mapStartGlobal;
+        int page = localLevelIndex / Mathf.Max(1, LevelsPerPage);
+        int maxPage = Mathf.Max(0, GetTotalPagesInMap(_currentMapIndex) - 1);
+        return Mathf.Clamp(page, 0, maxPage);
+    }
+
+    private int GetGlobalStartIndexForMap(int mapIndex)
+    {
+        if (mapIndex <= 0) return 0;
+        int globalStart = 0;
+        for (int m = 0; m < mapIndex; m++)
+            globalStart += GetLevelCountInMap(m);
+        return globalStart;
     }
 
     public void PlayLevelAtSlot(int slotIndex)

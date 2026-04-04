@@ -9,6 +9,8 @@ public class SortLevelSelectorUI : MonoBehaviour
     [SerializeField] private List<SortLevelButtonSlot> levelSlots = new List<SortLevelButtonSlot>();
 
     [SerializeField] private Image levelSelectorBackgroundImage;
+    [SerializeField] private Scrollbar levelPageScrollbar;
+    [SerializeField] private ScrollRect levelScrollRect;
 
     public int GetLevelButtonCount() => levelSlots != null ? levelSlots.Count : 0;
 
@@ -77,5 +79,63 @@ public class SortLevelSelectorUI : MonoBehaviour
             }
         }
 
+        EnsureAvailableLevelIsVisible(manager);
+        UpdatePageScrollbar(manager);
+    }
+
+    private void UpdatePageScrollbar(SortLevelSelectManager manager)
+    {
+        if (manager == null) return;
+        ForceScrollToDefault();
+    }
+
+    private void EnsureAvailableLevelIsVisible(SortLevelSelectManager manager)
+    {
+        if (manager == null || levelScrollRect == null) return;
+
+        SortLevelButtonSlot targetSlot = null;
+        int countOnPage = manager.GetLevelCountOnCurrentPage();
+        for (int i = 0; i < levelSlots.Count && i < countOnPage; i++)
+        {
+            var slot = levelSlots[i];
+            if (slot == null || !slot.gameObject.activeInHierarchy) continue;
+            int globalIndex = manager.GetGlobalLevelIndexForSlot(i);
+            if (manager.GetSlotState(globalIndex) == LevelSlotState.Available)
+            {
+                targetSlot = slot;
+                break;
+            }
+            if (targetSlot == null) targetSlot = slot;
+        }
+
+        if (targetSlot == null) return;
+        RectTransform viewport = levelScrollRect.viewport != null
+            ? levelScrollRect.viewport
+            : levelScrollRect.GetComponent<RectTransform>();
+        RectTransform targetRect = targetSlot.transform as RectTransform;
+        if (viewport == null || targetRect == null) return;
+
+        if (!IsRectFullyVisible(viewport, targetRect))
+            ForceScrollToDefault();
+    }
+
+    private void ForceScrollToDefault()
+    {
+        if (levelPageScrollbar != null)
+            levelPageScrollbar.value = 0f;
+        if (levelScrollRect != null)
+        {
+            levelScrollRect.StopMovement();
+            levelScrollRect.verticalNormalizedPosition = 0f;
+            levelScrollRect.horizontalNormalizedPosition = 0f;
+        }
+    }
+
+    private static bool IsRectFullyVisible(RectTransform viewport, RectTransform target)
+    {
+        Bounds bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(viewport, target);
+        Rect r = viewport.rect;
+        return bounds.min.x >= r.xMin && bounds.max.x <= r.xMax
+            && bounds.min.y >= r.yMin && bounds.max.y <= r.yMax;
     }
 }
