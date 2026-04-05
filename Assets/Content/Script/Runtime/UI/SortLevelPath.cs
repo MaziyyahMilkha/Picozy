@@ -7,33 +7,26 @@ using UnityEditor;
 #endif
 
 [ExecuteAlways]
-public class SortLevelPathDebug : MonoBehaviour
+public class SortLevelPath : MonoBehaviour
 {
     [Serializable]
     public class LinkCurveSettings
     {
-        [Tooltip("Offset handle dari start node (dalam koordinat reference space).")]
         public Vector2 startHandleOffset = new Vector2(120f, 0f);
-
-        [Tooltip("Offset handle dari end node (dalam koordinat reference space).")]
         public Vector2 endHandleOffset = new Vector2(-120f, 0f);
 
-        [Tooltip("Kalau aktif, pakai sample count manual untuk link ini.")]
+        [Tooltip("Aktifkan jika ingin sample manual untuk link ini.")]
         public bool overrideAutoSampleCount;
+        [Min(2)] public int sampleCount = 14;
 
-        [Min(2)]
-        public int sampleCount = 14;
-
-        public bool useCustomColor;
-        public Color color = Color.white;
+        [Header("Dot Position Tuning")]
+        [Range(0f, 1f)] public float dotTStart = 0f;
+        [Range(0f, 1f)] public float dotTEnd = 1f;
+        public Vector2 dotOffset = Vector2.zero;
     }
 
     [Header("Nodes (urut level)")]
     [SerializeField] private List<RectTransform> levelNodes = new List<RectTransform>();
-
-    [Header("Curve Space")]
-    [SerializeField] private RectTransform referenceSpace;
-    [SerializeField] private Color defaultGizmoColor = new Color(1f, 1f, 1f, 0.9f);
     [SerializeField] private List<LinkCurveSettings> linkCurves = new List<LinkCurveSettings>();
 
     [Header("Auto Sample By Length")]
@@ -45,28 +38,25 @@ public class SortLevelPathDebug : MonoBehaviour
     [SerializeField] private bool drawSampleDots = true;
     [SerializeField] [Min(0.001f)] private float gizmoDotRadius = 6f;
 
-    [Header("Debug Point Spawn")]
-    [SerializeField] private RectTransform debugPointParent;
-    [SerializeField] private GameObject debugPointPrefab;
-    [SerializeField] private bool clearExistingBeforeSpawn = true;
-    [SerializeField] private string debugPointNamePrefix = "PathPoint_";
-    [SerializeField] private Vector2 fallbackDotSize = new Vector2(16f, 16f);
+    [Header("Path Dot Visual")]
+    [SerializeField] private GameObject dotLightOnPrefab;
+    [SerializeField] private GameObject dotLightOffPrefab;
 
-    [Header("Runtime Light Dots")]
-    [SerializeField] private bool spawnDotsAtRuntime = true;
-    [SerializeField] private bool animateAvailablePath = true;
-    [SerializeField] [Min(0.01f)] private float animateStepSeconds = 0.06f;
-    [SerializeField] [Min(0f)] private float animateLoopDelaySeconds = 0.15f;
-    [SerializeField] private Sprite dotLightOnSprite;
-    [SerializeField] private Sprite dotLightOffSprite;
-    [SerializeField] private Color dotLightOnColor = Color.white;
-    [SerializeField] private Color dotLightOffColor = new Color(1f, 1f, 1f, 0.25f);
+    [Header("Node Display")]
+    [SerializeField] private bool showNodes = true;
+    [SerializeField] private bool useWalkAnimation = true;
 
     private const int CurveResolution = 40;
+    private const string PointNamePrefix = "PathPoint_";
+    private static readonly Vector2 FallbackDotSize = new Vector2(16f, 16f);
+
+    // Lebih pelan dari versi sebelumnya, tidak diexpose ke inspector.
+    private const float AnimateStepSeconds = 0.22f;
+    private const float AnimateLoopDelaySeconds = 0.5f;
 
     private enum LinkLightMode
     {
-        Off,
+        Hidden,
         On,
         Animate
     }
@@ -75,7 +65,8 @@ public class SortLevelPathDebug : MonoBehaviour
     {
         public int LinkIndex;
         public int OrderIndex;
-        public Image Image;
+        public GameObject OnObject;
+        public GameObject OffObject;
     }
 
     private readonly List<RuntimeDot> _runtimeDots = new List<RuntimeDot>();
@@ -100,18 +91,16 @@ public class SortLevelPathDebug : MonoBehaviour
         _runtimeDots.Clear();
     }
 
-    private void Update()
-    {
-        if (!Application.isPlaying) return;
-        if (!spawnDotsAtRuntime) return;
-
-        EnsureRuntimeDotsBuilt();
-        UpdateRuntimeLightDots();
-    }
-
     private void OnValidate()
     {
         EnsureLinkCurveSize();
+    }
+
+    private void Update()
+    {
+        if (!Application.isPlaying) return;
+        EnsureRuntimeDotsBuilt();
+        UpdateRuntimeLightDots();
     }
 
     [ContextMenu("Auto Collect Level Nodes")]
@@ -128,19 +117,17 @@ public class SortLevelPathDebug : MonoBehaviour
         EnsureLinkCurveSize();
     }
 
-    [ContextMenu("Spawn Debug Points")]
-    public void SpawnDebugPoints()
+    [ContextMenu("Spawn Path Points")]
+    public void SpawnPathPoints()
     {
-        RectTransform parent = debugPointParent != null ? debugPointParent : (transform as RectTransform);
+        RectTransform parent = transform as RectTransform;
         if (parent == null)
         {
-            Debug.LogWarning("[SortLevelPathDebug] Parent untuk spawn point tidak valid.");
+            Debug.LogWarning("[SortLevelPath] Parent RectTransform tidak valid.");
             return;
         }
 
-        if (clearExistingBeforeSpawn)
-            ClearDebugPoints();
-
+        ClearPathPoints();
         int pointIndex = 0;
         for (int i = 0; i < GetLinkCount(); i++)
         {
@@ -150,35 +137,31 @@ public class SortLevelPathDebug : MonoBehaviour
             int sample = ResolveSampleCount(start, end, settings);
             for (int s = 0; s < sample; s++)
             {
-                if (i > 0 && s == 0) continue; // Hindari duplikasi titik sambungan link.
-                float t = s / (float)(sample - 1);
-                Vector3 world = EvaluateBezier(start.position, end.position, settings, t);
-                CreatePointInstance(parent, world, pointIndex++);
+                float t = ResolveDotT(settings, s, sample);
+                Vector3 world = EvaluateDotWorldPosition(start.position, end.position, settings, t);
+                InstantiateDotPair(parent, world, pointIndex++);
             }
         }
     }
 
-    [ContextMenu("Clear Debug Points")]
-    public void ClearDebugPoints()
+    [ContextMenu("Clear Path Points")]
+    public void ClearPathPoints()
     {
-        RectTransform parent = debugPointParent != null ? debugPointParent : (transform as RectTransform);
+        RectTransform parent = transform as RectTransform;
         if (parent == null) return;
 
         var toRemove = new List<GameObject>();
         for (int i = 0; i < parent.childCount; i++)
         {
             var child = parent.GetChild(i);
-            if (child == null) continue;
-            if (child.name.StartsWith(debugPointNamePrefix, StringComparison.Ordinal))
+            if (child != null && child.name.StartsWith(PointNamePrefix, StringComparison.Ordinal))
                 toRemove.Add(child.gameObject);
         }
 
         for (int i = 0; i < toRemove.Count; i++)
         {
-            if (Application.isPlaying)
-                Destroy(toRemove[i]);
-            else
-                DestroyImmediate(toRemove[i]);
+            if (Application.isPlaying) Destroy(toRemove[i]);
+            else DestroyImmediate(toRemove[i]);
         }
         _runtimeDots.Clear();
         _runtimeBuilt = false;
@@ -187,13 +170,11 @@ public class SortLevelPathDebug : MonoBehaviour
     private void OnDrawGizmos()
     {
         EnsureLinkCurveSize();
+        Gizmos.color = Color.white;
         for (int i = 0; i < GetLinkCount(); i++)
         {
             if (!TryGetLink(i, out var start, out var end, out var settings))
                 continue;
-
-            Color color = settings.useCustomColor ? settings.color : defaultGizmoColor;
-            Gizmos.color = color;
 
             Vector3 prev = EvaluateBezier(start.position, end.position, settings, 0f);
             for (int step = 1; step <= CurveResolution; step++)
@@ -209,25 +190,20 @@ public class SortLevelPathDebug : MonoBehaviour
             float radius = gizmoDotRadius * 0.01f;
             for (int s = 0; s < sample; s++)
             {
-                float t = s / (float)(sample - 1);
-                Vector3 point = EvaluateBezier(start.position, end.position, settings, t);
+                float t = ResolveDotT(settings, s, sample);
+                Vector3 point = EvaluateDotWorldPosition(start.position, end.position, settings, t);
                 Gizmos.DrawSphere(point, radius);
             }
         }
     }
 
-    private int GetLinkCount()
-    {
-        return Mathf.Max(0, levelNodes.Count - 1);
-    }
+    private int GetLinkCount() => Mathf.Max(0, levelNodes.Count - 1);
 
     private void EnsureLinkCurveSize()
     {
         int linkCount = GetLinkCount();
-        while (linkCurves.Count < linkCount)
-            linkCurves.Add(new LinkCurveSettings());
-        if (linkCurves.Count > linkCount)
-            linkCurves.RemoveRange(linkCount, linkCurves.Count - linkCount);
+        while (linkCurves.Count < linkCount) linkCurves.Add(new LinkCurveSettings());
+        if (linkCurves.Count > linkCount) linkCurves.RemoveRange(linkCount, linkCurves.Count - linkCount);
     }
 
     private bool TryGetLink(int index, out RectTransform start, out RectTransform end, out LinkCurveSettings settings)
@@ -239,9 +215,7 @@ public class SortLevelPathDebug : MonoBehaviour
         start = levelNodes[index];
         end = levelNodes[index + 1];
         if (start == null || end == null) return false;
-        settings = index < linkCurves.Count ? linkCurves[index] : null;
-        if (settings == null)
-            settings = new LinkCurveSettings();
+        settings = index < linkCurves.Count ? linkCurves[index] : new LinkCurveSettings();
         return true;
     }
 
@@ -263,12 +237,10 @@ public class SortLevelPathDebug : MonoBehaviour
         _runtimeBuilt = false;
         _runtimeDots.Clear();
 
-        RectTransform parent = debugPointParent != null ? debugPointParent : (transform as RectTransform);
+        RectTransform parent = transform as RectTransform;
         if (parent == null) return;
 
-        if (clearExistingBeforeSpawn)
-            ClearDebugPoints();
-
+        ClearPathPoints();
         int pointIndex = 0;
         for (int i = 0; i < GetLinkCount(); i++)
         {
@@ -279,19 +251,18 @@ public class SortLevelPathDebug : MonoBehaviour
             int order = 0;
             for (int s = 0; s < sample; s++)
             {
-                if (i > 0 && s == 0) continue;
-                float t = s / (float)(sample - 1);
-                Vector3 world = EvaluateBezier(start.position, end.position, settings, t);
-                var go = InstantiatePointObject(parent, world, pointIndex++);
-                if (go == null) continue;
-                Image img = go.GetComponent<Image>();
-                if (img == null) img = go.GetComponentInChildren<Image>();
+                float t = ResolveDotT(settings, s, sample);
+                Vector3 world = EvaluateDotWorldPosition(start.position, end.position, settings, t);
+                InstantiateDotPair(parent, world, pointIndex, out GameObject onObj, out GameObject offObj);
+                if (onObj == null && offObj == null) continue;
                 _runtimeDots.Add(new RuntimeDot
                 {
                     LinkIndex = i,
                     OrderIndex = order++,
-                    Image = img
+                    OnObject = onObj,
+                    OffObject = offObj
                 });
+                pointIndex++;
             }
         }
         _runtimeBuilt = true;
@@ -299,42 +270,43 @@ public class SortLevelPathDebug : MonoBehaviour
 
     private void UpdateRuntimeLightDots()
     {
+        if (!showNodes)
+        {
+            _animatedLinkIndex = -1;
+            SetAllDotsHidden();
+            return;
+        }
+
         var manager = SortLevelSelectManager.Instance;
         if (manager == null) return;
-
         int linkCount = GetLinkCount();
-        if (linkCount <= 0 || _runtimeDots.Count == 0)
+        if (linkCount <= 0 || _runtimeDots.Count == 0) return;
+
+        if (!useWalkAnimation)
+        {
+            _animatedLinkIndex = -1;
+            SetAllDotsOn();
             return;
+        }
 
         LinkLightMode[] modes = new LinkLightMode[linkCount];
         int animatedLink = -1;
-
         for (int i = 0; i < linkCount; i++)
         {
             int globalStart = manager.GetGlobalLevelIndexForSlot(i);
             int globalEnd = manager.GetGlobalLevelIndexForSlot(i + 1);
-            if (globalStart < 0 || globalEnd < 0)
-            {
-                modes[i] = LinkLightMode.Off;
-                continue;
-            }
+            if (globalStart < 0 || globalEnd < 0) { modes[i] = LinkLightMode.Hidden; continue; }
 
             LevelSlotState startState = manager.GetSlotState(globalStart);
             LevelSlotState endState = manager.GetSlotState(globalEnd);
-            if (endState == LevelSlotState.Completed)
-            {
-                modes[i] = LinkLightMode.On;
-                continue;
-            }
-
-            if (animateAvailablePath && endState == LevelSlotState.Available && startState == LevelSlotState.Completed)
+            if (endState == LevelSlotState.Completed) { modes[i] = LinkLightMode.On; continue; }
+            if (endState == LevelSlotState.Available && startState == LevelSlotState.Completed)
             {
                 modes[i] = LinkLightMode.Animate;
                 animatedLink = i;
                 continue;
             }
-
-            modes[i] = LinkLightMode.Off;
+            modes[i] = LinkLightMode.Hidden;
         }
 
         if (_animatedLinkIndex != animatedLink)
@@ -344,41 +316,34 @@ public class SortLevelPathDebug : MonoBehaviour
             _animatedTimer = 0f;
             _animateWaitingDelay = false;
         }
-
-        if (_animatedLinkIndex >= 0)
-            StepAnimatedCursor();
-
+        if (_animatedLinkIndex >= 0) StepAnimatedCursor();
         ApplyDotModes(modes);
     }
 
     private void StepAnimatedCursor()
     {
         _animatedTimer += Time.unscaledDeltaTime;
-        float wait = _animateWaitingDelay ? animateLoopDelaySeconds : animateStepSeconds;
+        float wait = _animateWaitingDelay ? AnimateLoopDelaySeconds : AnimateStepSeconds;
         if (_animatedTimer < Mathf.Max(0.01f, wait)) return;
-
         _animatedTimer = 0f;
+
         int dotCount = CountDotsInLink(_animatedLinkIndex);
         if (dotCount <= 0) return;
-
         if (_animateWaitingDelay)
         {
             _animateWaitingDelay = false;
             _animatedDotCursor = 0;
             return;
         }
-
         _animatedDotCursor++;
-        if (_animatedDotCursor > dotCount)
-            _animateWaitingDelay = true;
+        if (_animatedDotCursor > dotCount) _animateWaitingDelay = true;
     }
 
     private int CountDotsInLink(int linkIndex)
     {
         int n = 0;
         for (int i = 0; i < _runtimeDots.Count; i++)
-            if (_runtimeDots[i].LinkIndex == linkIndex)
-                n++;
+            if (_runtimeDots[i].LinkIndex == linkIndex) n++;
         return n;
     }
 
@@ -387,41 +352,48 @@ public class SortLevelPathDebug : MonoBehaviour
         for (int i = 0; i < _runtimeDots.Count; i++)
         {
             RuntimeDot dot = _runtimeDots[i];
-            if (dot == null || dot.Image == null) continue;
-            if (dot.LinkIndex < 0 || dot.LinkIndex >= modes.Length)
-            {
-                SetDotLight(dot.Image, false);
-                continue;
-            }
+            if (dot == null) continue;
+            if (dot.LinkIndex < 0 || dot.LinkIndex >= modes.Length) { SetDotHidden(dot); continue; }
 
             switch (modes[dot.LinkIndex])
             {
                 case LinkLightMode.On:
-                    SetDotLight(dot.Image, true);
+                    SetDotLight(dot, true);
                     break;
                 case LinkLightMode.Animate:
-                    SetDotLight(dot.Image, dot.OrderIndex < _animatedDotCursor);
+                    SetDotLight(dot, dot.OrderIndex < _animatedDotCursor);
                     break;
                 default:
-                    SetDotLight(dot.Image, false);
+                    SetDotHidden(dot);
                     break;
             }
         }
     }
 
-    private void SetDotLight(Image img, bool on)
+    private void SetAllDotsOn()
     {
-        if (img == null) return;
-        if (on)
-        {
-            if (dotLightOnSprite != null) img.sprite = dotLightOnSprite;
-            img.color = dotLightOnColor;
-        }
-        else
-        {
-            if (dotLightOffSprite != null) img.sprite = dotLightOffSprite;
-            img.color = dotLightOffColor;
-        }
+        for (int i = 0; i < _runtimeDots.Count; i++)
+            SetDotLight(_runtimeDots[i], true);
+    }
+
+    private void SetAllDotsHidden()
+    {
+        for (int i = 0; i < _runtimeDots.Count; i++)
+            SetDotHidden(_runtimeDots[i]);
+    }
+
+    private static void SetDotLight(RuntimeDot dot, bool on)
+    {
+        if (dot == null) return;
+        if (dot.OnObject != null) dot.OnObject.SetActive(on);
+        if (dot.OffObject != null) dot.OffObject.SetActive(!on);
+    }
+
+    private static void SetDotHidden(RuntimeDot dot)
+    {
+        if (dot == null) return;
+        if (dot.OnObject != null) dot.OnObject.SetActive(false);
+        if (dot.OffObject != null) dot.OffObject.SetActive(false);
     }
 
     private float EstimateBezierLength(Vector3 startWorld, Vector3 endWorld, LinkCurveSettings settings, int steps)
@@ -439,9 +411,32 @@ public class SortLevelPathDebug : MonoBehaviour
         return total;
     }
 
+    private static float ResolveDotT(LinkCurveSettings settings, int index, int sampleCount)
+    {
+        float baseT = sampleCount <= 1 ? 0f : index / (float)(sampleCount - 1);
+        if (settings == null) return Mathf.Clamp01(baseT);
+        float a = Mathf.Clamp01(settings.dotTStart);
+        float b = Mathf.Clamp01(settings.dotTEnd);
+        return Mathf.Lerp(a, b, baseT);
+    }
+
+    private Vector3 EvaluateDotWorldPosition(Vector3 startWorld, Vector3 endWorld, LinkCurveSettings settings, float t)
+    {
+        Vector3 world = EvaluateBezier(startWorld, endWorld, settings, t);
+        if (settings == null || settings.dotOffset == Vector2.zero)
+            return world;
+
+        RectTransform space = transform as RectTransform;
+        if (space == null)
+            return world + (Vector3)settings.dotOffset;
+
+        Vector3 worldOffset = space.TransformVector((Vector3)settings.dotOffset);
+        return world + worldOffset;
+    }
+
     private Vector3 EvaluateBezier(Vector3 startWorld, Vector3 endWorld, LinkCurveSettings settings, float t)
     {
-        RectTransform space = referenceSpace != null ? referenceSpace : (transform as RectTransform);
+        RectTransform space = transform as RectTransform;
         if (space == null)
             return CubicBezier(startWorld, startWorld, endWorld, endWorld, t);
 
@@ -467,44 +462,52 @@ public class SortLevelPathDebug : MonoBehaviour
         return (uuu * p0) + (3f * uu * t * p1) + (3f * u * tt * p2) + (ttt * p3);
     }
 
-    private void CreatePointInstance(RectTransform parent, Vector3 worldPosition, int index)
+    private void InstantiateDotPair(RectTransform parent, Vector3 worldPosition, int index)
     {
-        GameObject pointObj = InstantiatePointObject(parent, worldPosition, index);
-        if (pointObj == null) return;
+        InstantiateDotPair(parent, worldPosition, index, out _, out _);
     }
 
-    private GameObject InstantiatePointObject(RectTransform parent, Vector3 worldPosition, int index)
+    private void InstantiateDotPair(RectTransform parent, Vector3 worldPosition, int index, out GameObject onObj, out GameObject offObj)
     {
-        GameObject pointObj;
-        if (debugPointPrefab != null)
+        onObj = InstantiateDotObject(dotLightOnPrefab, parent, PointNamePrefix + index.ToString("000") + "_On");
+        offObj = InstantiateDotObject(dotLightOffPrefab, parent, PointNamePrefix + index.ToString("000") + "_Off");
+
+        if (onObj == null && offObj == null)
         {
+            // Fallback kalau kedua prefab belum diisi.
+            offObj = new GameObject("DotOff", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            offObj.transform.SetParent(parent, false);
+            RectTransform rt = offObj.GetComponent<RectTransform>();
+            if (rt != null) rt.sizeDelta = FallbackDotSize;
+            Image img = offObj.GetComponent<Image>();
+            if (img != null) img.raycastTarget = false;
+        }
+
+        if (onObj != null)
+        {
+            onObj.transform.position = worldPosition;
+            onObj.SetActive(false);
+        }
+        if (offObj != null)
+        {
+            offObj.transform.position = worldPosition;
+            offObj.SetActive(true);
+        }
+    }
+
+    private GameObject InstantiateDotObject(GameObject prefab, RectTransform parent, string name)
+    {
+        if (prefab == null) return null;
+        GameObject obj;
 #if UNITY_EDITOR
-            if (!Application.isPlaying)
-                pointObj = PrefabUtility.InstantiatePrefab(debugPointPrefab, parent) as GameObject;
-            else
-                pointObj = Instantiate(debugPointPrefab, parent);
-#else
-            pointObj = Instantiate(debugPointPrefab, parent);
-#endif
-        }
+        if (!Application.isPlaying)
+            obj = PrefabUtility.InstantiatePrefab(prefab, parent) as GameObject;
         else
-        {
-            pointObj = new GameObject("Dot", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-            pointObj.transform.SetParent(parent, false);
-            RectTransform rt = pointObj.GetComponent<RectTransform>();
-            if (rt != null)
-                rt.sizeDelta = fallbackDotSize;
-            Image img = pointObj.GetComponent<Image>();
-            if (img != null)
-            {
-                img.raycastTarget = false;
-                if (dotLightOffSprite != null) img.sprite = dotLightOffSprite;
-                img.color = dotLightOffColor;
-            }
-        }
-        if (pointObj == null) return null;
-        pointObj.name = debugPointNamePrefix + index.ToString("000");
-        pointObj.transform.position = worldPosition;
-        return pointObj;
+            obj = Instantiate(prefab, parent);
+#else
+        obj = Instantiate(prefab, parent);
+#endif
+        if (obj != null) obj.name = name;
+        return obj;
     }
 }

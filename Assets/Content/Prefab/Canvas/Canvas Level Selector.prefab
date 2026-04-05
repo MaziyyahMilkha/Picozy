@@ -35,7 +35,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -0.00024414062}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &4527290146323710400
@@ -167,7 +167,6 @@ GameObject:
   - component: {fileID: 5366397330144150815}
   - component: {fileID: 486177087439919364}
   - component: {fileID: 2164281356164539959}
-  - component: {fileID: 7958882368947716070}
   m_Layer: 5
   m_Name: Canvas Level Selector
   m_TagString: Untagged
@@ -285,103 +284,6 @@ MonoBehaviour:
   levelSelectorBackgroundImage: {fileID: 582400142674312781}
   levelPageScrollbar: {fileID: 5940033932239317420}
   levelScrollRect: {fileID: 6188400946770946196}
---- !u!114 &7958882368947716070
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1085900815111973601}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e3167a7cea1f07745a4d57c469fe7a37, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  levelNodes:
-  - {fileID: 88633132994114396}
-  - {fileID: 9126332325696723061}
-  - {fileID: 9163315392451335972}
-  - {fileID: 369896460802174040}
-  - {fileID: 6662557617269047201}
-  - {fileID: 7004083006945206651}
-  - {fileID: 9132238561136953912}
-  - {fileID: 2869031723548934100}
-  - {fileID: 5913283819298351821}
-  - {fileID: 2945390820104228543}
-  referenceSpace: {fileID: 88633132994114396}
-  defaultGizmoColor: {r: 1, g: 1, b: 1, a: 0.9}
-  linkCurves:
-  - startHandleOffset: {x: -851.94, y: 207.6}
-    endHandleOffset: {x: -120, y: 0}
-    overrideAutoSampleCount: 0
-    sampleCount: 14
-    useCustomColor: 0
-    color: {r: 1, g: 1, b: 1, a: 1}
-  - startHandleOffset: {x: 253.3, y: 81.75}
-    endHandleOffset: {x: -195.7, y: -165.47}
-    overrideAutoSampleCount: 0
-    sampleCount: 4
-    useCustomColor: 0
-    color: {r: 1, g: 1, b: 1, a: 1}
-  - startHandleOffset: {x: 424, y: 322.8}
-    endHandleOffset: {x: -117.2, y: -47.1}
-    overrideAutoSampleCount: 0
-    sampleCount: 14
-    useCustomColor: 0
-    color: {r: 1, g: 1, b: 1, a: 1}
-  - startHandleOffset: {x: -122.08, y: 244.5}
-    endHandleOffset: {x: -189.2, y: 0}
-    overrideAutoSampleCount: 0
-    sampleCount: 14
-    useCustomColor: 0
-    color: {r: 1, g: 1, b: 1, a: 1}
-  - startHandleOffset: {x: 366.21, y: 190.9}
-    endHandleOffset: {x: -95.8, y: 27}
-    overrideAutoSampleCount: 0
-    sampleCount: 14
-    useCustomColor: 0
-    color: {r: 1, g: 1, b: 1, a: 1}
-  - startHandleOffset: {x: 72.17, y: 33.2}
-    endHandleOffset: {x: -30.2, y: -202.9}
-    overrideAutoSampleCount: 0
-    sampleCount: 14
-    useCustomColor: 0
-    color: {r: 1, g: 1, b: 1, a: 1}
-  - startHandleOffset: {x: -116, y: -86.2}
-    endHandleOffset: {x: 332.1, y: -201.23}
-    overrideAutoSampleCount: 0
-    sampleCount: 14
-    useCustomColor: 0
-    color: {r: 1, g: 1, b: 1, a: 1}
-  - startHandleOffset: {x: 53.3, y: 128.3}
-    endHandleOffset: {x: -308, y: -295.4}
-    overrideAutoSampleCount: 0
-    sampleCount: 14
-    useCustomColor: 0
-    color: {r: 1, g: 1, b: 1, a: 1}
-  - startHandleOffset: {x: 206.4, y: 111.2}
-    endHandleOffset: {x: 38.04, y: -408.95}
-    overrideAutoSampleCount: 0
-    sampleCount: 14
-    useCustomColor: 0
-    color: {r: 1, g: 1, b: 1, a: 1}
-  samplesPer100Units: 8
-  autoSampleMin: 8
-  autoSampleMax: 80
-  drawSampleDots: 1
-  gizmoDotRadius: 6
-  debugPointParent: {fileID: 0}
-  debugPointPrefab: {fileID: 0}
-  clearExistingBeforeSpawn: 1
-  debugPointNamePrefix: PathPoint_
-  spawnDotsAtRuntime: 1
-  animateAvailablePath: 1
-  animateStepSeconds: 0.06
-  animateLoopDelaySeconds: 0.15
-  dotLightOnSprite: {fileID: 21300000, guid: ef741d948dcdfd14e85a4c15e4b6cb62, type: 3}
-  dotLightOffSprite: {fileID: 21300000, guid: 535cc6bf17f4f80419192aadc5ea4974, type: 3}
-  dotLightOnColor: {r: 1, g: 1, b: 1, a: 1}
-  dotLightOffColor: {r: 1, g: 1, b: 1, a: 0.25}
 --- !u!1 &1163683815025999940
 GameObject:
   m_ObjectHideFlags: 0
@@ -536,6 +438,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2640255980479684444}
+  - component: {fileID: 8056765233976917900}
   m_Layer: 5
   m_Name: Level Button Parent
   m_TagString: Untagged
@@ -572,6 +475,100 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &8056765233976917900
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3964062507129049161}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18c8893c338cd694db9b211fc922b387, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  levelNodes:
+  - {fileID: 88633132994114396}
+  - {fileID: 9126332325696723061}
+  - {fileID: 9163315392451335972}
+  - {fileID: 369896460802174040}
+  - {fileID: 6662557617269047201}
+  - {fileID: 7004083006945206651}
+  - {fileID: 9132238561136953912}
+  - {fileID: 2869031723548934100}
+  - {fileID: 5913283819298351821}
+  - {fileID: 2945390820104228543}
+  linkCurves:
+  - startHandleOffset: {x: -365.2, y: 99.8}
+    endHandleOffset: {x: -375.8, y: -210.3}
+    overrideAutoSampleCount: 1
+    sampleCount: 6
+    dotTStart: 0.13
+    dotTEnd: 0.804
+    dotOffset: {x: 0, y: 0}
+  - startHandleOffset: {x: 187.4, y: 51.02}
+    endHandleOffset: {x: -164, y: -127.2}
+    overrideAutoSampleCount: 1
+    sampleCount: 3
+    dotTStart: 0.269
+    dotTEnd: 0.678
+    dotOffset: {x: 0, y: 0}
+  - startHandleOffset: {x: 366.67, y: 389.21}
+    endHandleOffset: {x: -120, y: -89.4}
+    overrideAutoSampleCount: 1
+    sampleCount: 5
+    dotTStart: 0.135
+    dotTEnd: 0.664
+    dotOffset: {x: 0, y: 0}
+  - startHandleOffset: {x: -91.1, y: 364.41}
+    endHandleOffset: {x: -120, y: 0}
+    overrideAutoSampleCount: 1
+    sampleCount: 3
+    dotTStart: 0.168
+    dotTEnd: 0.66
+    dotOffset: {x: 0, y: 0}
+  - startHandleOffset: {x: 310.5, y: 201.65}
+    endHandleOffset: {x: -120, y: 50.43}
+    overrideAutoSampleCount: 1
+    sampleCount: 2
+    dotTStart: 0.237
+    dotTEnd: 0.483
+    dotOffset: {x: 0, y: 0}
+  - startHandleOffset: {x: -12.7, y: 0}
+    endHandleOffset: {x: -135.7, y: 0}
+    overrideAutoSampleCount: 1
+    sampleCount: 2
+    dotTStart: 0.372
+    dotTEnd: 0.568
+    dotOffset: {x: 0, y: 0}
+  - startHandleOffset: {x: -130.84, y: -18}
+    endHandleOffset: {x: 300.2, y: -291.8}
+    overrideAutoSampleCount: 1
+    sampleCount: 4
+    dotTStart: 0.353
+    dotTEnd: 0.796
+    dotOffset: {x: 0, y: 0}
+  - startHandleOffset: {x: -161, y: 178.42}
+    endHandleOffset: {x: -203.64, y: -298.4}
+    overrideAutoSampleCount: 1
+    sampleCount: 4
+    dotTStart: 0.233
+    dotTEnd: 0.766
+    dotOffset: {x: 0, y: 0}
+  - startHandleOffset: {x: 293.5, y: 99.6}
+    endHandleOffset: {x: 129.3, y: -207.1}
+    overrideAutoSampleCount: 1
+    sampleCount: 4
+    dotTStart: 0.2
+    dotTEnd: 0.703
+    dotOffset: {x: 0, y: 0}
+  samplesPer100Units: 8
+  autoSampleMin: 8
+  autoSampleMax: 80
+  drawSampleDots: 1
+  gizmoDotRadius: 6
+  dotLightOnPrefab: {fileID: 6954555462226801773, guid: 71831da8819bbeb4086e90f486e2ffb8, type: 3}
+  dotLightOffPrefab: {fileID: 6726922756358668325, guid: 1ade370e884340843ade503712e7ab4e, type: 3}
 --- !u!1 &4598654224778538734
 GameObject:
   m_ObjectHideFlags: 0
@@ -1081,8 +1078,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 608784913851334079}
   m_HandleRect: {fileID: 1104388786666256361}
   m_Direction: 2
-  m_Value: 1.0000002
-  m_Size: 0.49512237
+  m_Value: 1
+  m_Size: 0.49512234
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:

@@ -1932,10 +1932,6 @@ PrefabInstance:
       propertyPath: m_Camera
       value: 
       objectReference: {fileID: 1106833746}
-    - target: {fileID: 1138380679500411548, guid: b00d9c3d080f86c4b9f3ce46e3fbdb36, type: 3}
-      propertyPath: m_PlaneDistance
-      value: 11
-      objectReference: {fileID: 0}
     - target: {fileID: 2228478517947162239, guid: b00d9c3d080f86c4b9f3ce46e3fbdb36, type: 3}
       propertyPath: m_SizeDelta.x
       value: 329.61
@@ -2281,10 +2277,6 @@ PrefabInstance:
       propertyPath: m_Camera
       value: 
       objectReference: {fileID: 1106833746}
-    - target: {fileID: 6977172649788993334, guid: 6adc90bc32d89ce419f249a2f7578f8e, type: 3}
-      propertyPath: m_PlaneDistance
-      value: 11
-      objectReference: {fileID: 0}
     - target: {fileID: 7382137471674239704, guid: 6adc90bc32d89ce419f249a2f7578f8e, type: 3}
       propertyPath: m_AnchorMax.y
       value: 1
@@ -2311,26 +2303,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8028322325634012230, guid: 6adc90bc32d89ce419f249a2f7578f8e, type: 3}
       propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8083397911206186720, guid: 6adc90bc32d89ce419f249a2f7578f8e, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8083397911206186720, guid: 6adc90bc32d89ce419f249a2f7578f8e, type: 3}
-      propertyPath: m_AnchorMin.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8083397911206186720, guid: 6adc90bc32d89ce419f249a2f7578f8e, type: 3}
-      propertyPath: m_SizeDelta.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8083397911206186720, guid: 6adc90bc32d89ce419f249a2f7578f8e, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8083397911206186720, guid: 6adc90bc32d89ce419f249a2f7578f8e, type: 3}
-      propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
@@ -2442,7 +2414,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1072110486277389873, guid: 98b729b3ed7c1d84481b21dfa97c786b, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 2315.9998
+      value: 1158
       objectReference: {fileID: 0}
     - target: {fileID: 1085900815111973601, guid: 98b729b3ed7c1d84481b21dfa97c786b, type: 3}
       propertyPath: m_Name
@@ -2474,11 +2446,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1104388786666256361, guid: 98b729b3ed7c1d84481b21dfa97c786b, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0.50487775
+      value: 0.75243884
       objectReference: {fileID: 0}
     - target: {fileID: 1104388786666256361, guid: 98b729b3ed7c1d84481b21dfa97c786b, type: 3}
       propertyPath: m_AnchorMin.y
-      value: 0.00975538
+      value: 0.2573165
       objectReference: {fileID: 0}
     - target: {fileID: 1652080915280390024, guid: 98b729b3ed7c1d84481b21dfa97c786b, type: 3}
       propertyPath: m_Camera
@@ -2726,10 +2698,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5940033932239317420, guid: 98b729b3ed7c1d84481b21dfa97c786b, type: 3}
       propertyPath: m_Size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5940033932239317420, guid: 98b729b3ed7c1d84481b21dfa97c786b, type: 3}
-      propertyPath: m_Value
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6014652955111755842, guid: 98b729b3ed7c1d84481b21dfa97c786b, type: 3}
@@ -3010,10 +2978,6 @@ PrefabInstance:
       propertyPath: m_Camera
       value: 
       objectReference: {fileID: 1106833746}
-    - target: {fileID: 2402681568215929438, guid: bd41e9436f7021546b10332dbdb36759, type: 3}
-      propertyPath: m_PlaneDistance
-      value: 11
-      objectReference: {fileID: 0}
     - target: {fileID: 2594779976106115587, guid: bd41e9436f7021546b10332dbdb36759, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
@@ -3219,10 +3183,6 @@ PrefabInstance:
       propertyPath: m_Camera
       value: 
       objectReference: {fileID: 1106833746}
-    - target: {fileID: 2871788017288008575, guid: 88941a2b0324ac24f8e740c97467d55d, type: 3}
-      propertyPath: m_PlaneDistance
-      value: 11
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -3268,10 +3228,6 @@ PrefabInstance:
       propertyPath: m_Camera
       value: 
       objectReference: {fileID: 1106833746}
-    - target: {fileID: 4577255000524919371, guid: ff4fe7fdd70f26647a5fa6f0024241de, type: 3}
-      propertyPath: m_PlaneDistance
-      value: 11
-      objectReference: {fileID: 0}
     - target: {fileID: 7839568102487924366, guid: ff4fe7fdd70f26647a5fa6f0024241de, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -3583,10 +3539,6 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: -533.3333
       objectReference: {fileID: 0}
-    - target: {fileID: 9058867844812388982, guid: 7548a180b1439ec468bf53c9030d9335, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -3625,10 +3577,6 @@ PrefabInstance:
       propertyPath: m_Camera
       value: 
       objectReference: {fileID: 1106833746}
-    - target: {fileID: 35592834576845788, guid: ffe99e6513750d3499e1e3292e466979, type: 3}
-      propertyPath: m_PlaneDistance
-      value: 11
-      objectReference: {fileID: 0}
     - target: {fileID: 1843999476561371966, guid: ffe99e6513750d3499e1e3292e466979, type: 3}
       propertyPath: m_Name
       value: Canvas Tutorial
