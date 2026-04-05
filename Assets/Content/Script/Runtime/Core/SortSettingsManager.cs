@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UISwitcher;
+using System.Collections;
 
 public enum SortAudioChannel
 {
@@ -29,12 +30,14 @@ public class SortSettingsManager : MonoBehaviour
     [Header("Defaults")]
     [SerializeField] private bool defaultBgmEnabled = true;
     [SerializeField] private bool defaultSfxEnabled = true;
+    [SerializeField] private float applyRetryDurationSeconds = 2f;
 
     public bool BgmEnabled { get; private set; } = true;
     public bool SfxEnabled { get; private set; } = true;
     public float BgmVolume => BgmEnabled ? 1f : 0f;
     public float SfxVolume => SfxEnabled ? 1f : 0f;
     public bool IsAudioChannelEnabled(SortAudioChannel channel) => channel == SortAudioChannel.Bgm ? BgmEnabled : SfxEnabled;
+    private Coroutine _applyRetryRoutine;
 
     private void Awake()
     {
@@ -48,6 +51,7 @@ public class SortSettingsManager : MonoBehaviour
 
         Load();
         ApplyToAudio();
+        StartApplyRetryIfNeeded();
         SyncSwitchesFromSettings();
     }
 
@@ -56,8 +60,8 @@ public class SortSettingsManager : MonoBehaviour
         SortEventManager.SubscribeAction("OpenSettings", HandleOpenSettings);
         SortEventManager.SubscribeAction("CloseSettings", HandleCloseSettings);
 
-        if (bgmUiSwitcher != null) bgmUiSwitcher.onValueChanged.AddListener(OnBgmSwitchChanged);
-        if (sfxUiSwitcher != null) sfxUiSwitcher.onValueChanged.AddListener(OnSfxSwitchChanged);
+        if (bgmUiSwitcher != null) bgmUiSwitcher.onValueChangedNullable.AddListener(OnBgmSwitchChangedNullable);
+        if (sfxUiSwitcher != null) sfxUiSwitcher.onValueChangedNullable.AddListener(OnSfxSwitchChangedNullable);
     }
 
     private void OnDisable()
@@ -65,8 +69,8 @@ public class SortSettingsManager : MonoBehaviour
         SortEventManager.UnsubscribeAction("OpenSettings", HandleOpenSettings);
         SortEventManager.UnsubscribeAction("CloseSettings", HandleCloseSettings);
 
-        if (bgmUiSwitcher != null) bgmUiSwitcher.onValueChanged.RemoveListener(OnBgmSwitchChanged);
-        if (sfxUiSwitcher != null) sfxUiSwitcher.onValueChanged.RemoveListener(OnSfxSwitchChanged);
+        if (bgmUiSwitcher != null) bgmUiSwitcher.onValueChangedNullable.RemoveListener(OnBgmSwitchChangedNullable);
+        if (sfxUiSwitcher != null) sfxUiSwitcher.onValueChangedNullable.RemoveListener(OnSfxSwitchChangedNullable);
     }
 
     public void Load()
@@ -118,6 +122,28 @@ public class SortSettingsManager : MonoBehaviour
             SortEffectPoolManager.Instance.ApplySettingsAudioState();
     }
 
+    private void StartApplyRetryIfNeeded()
+    {
+        if (_applyRetryRoutine != null)
+            StopCoroutine(_applyRetryRoutine);
+        _applyRetryRoutine = StartCoroutine(ApplyToAudioRetryRoutine());
+    }
+
+    private IEnumerator ApplyToAudioRetryRoutine()
+    {
+        float elapsed = 0f;
+        float timeout = Mathf.Max(0.1f, applyRetryDurationSeconds);
+        while (elapsed < timeout)
+        {
+            var fx = SortEffectPoolManager.Instance;
+            if (fx != null)
+                fx.ApplySettingsAudioState();
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+        _applyRetryRoutine = null;
+    }
+
     private void HandleOpenSettings(string returnToCanvasId)
     {
         _returnToCanvasId = string.IsNullOrEmpty(returnToCanvasId) ? null : returnToCanvasId;
@@ -138,20 +164,21 @@ public class SortSettingsManager : MonoBehaviour
         if (sfxUiSwitcher != null) sfxUiSwitcher.SetWithoutNotify(SfxEnabled);
     }
 
-    private void OnBgmSwitchChanged(bool enabled)
+    private void OnBgmSwitchChangedNullable(bool? enabled)
     {
-        SetBgmEnabled(enabled);
+        SetBgmEnabled(enabled ?? false);
     }
 
-    private void OnSfxSwitchChanged(bool enabled)
+    private void OnSfxSwitchChangedNullable(bool? enabled)
     {
-        SetSfxEnabled(enabled);
+        SetSfxEnabled(enabled ?? false);
     }
 
     private void OnDestroy()
     {
+        if (_applyRetryRoutine != null)
+            StopCoroutine(_applyRetryRoutine);
         if (Instance == this)
             Instance = null;
     }
 }
-

@@ -446,6 +446,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5496651330166728167}
   - component: {fileID: 4403719064167221344}
+  - component: {fileID: 9073195714050736405}
   m_Layer: 5
   m_Name: UISwitcher
   m_TagString: Untagged
@@ -528,6 +529,25 @@ MonoBehaviour:
   offColor: {r: 0.68235296, g: 0.67058825, b: 0.67058825, a: 1}
   nullColor: {r: 0.88, g: 0.88, b: 0.88, a: 1}
   tipRect: {fileID: 4307606309235060716}
+--- !u!114 &9073195714050736405
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2247522788281678736}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63bffff4f26a66d41b4652a2d69ce892, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetSwitcher: {fileID: 4403719064167221344}
+  playOnClick: 1
+  clickSfxId: Click
+  playOnValueChanged: 0
+  onValueTrueSfxId: SwitchOn
+  onValueFalseSfxId: SwitchOff
+  onValueNullSfxId: SwitchNull
 --- !u!1 &2464560764642202185
 GameObject:
   m_ObjectHideFlags: 0
@@ -1665,6 +1685,7 @@ GameObject:
   m_Component:
   - component: {fileID: 297640379590149820}
   - component: {fileID: 4540126569147507751}
+  - component: {fileID: 5806859229166012594}
   m_Layer: 5
   m_Name: UISwitcher
   m_TagString: Untagged
@@ -1747,6 +1768,25 @@ MonoBehaviour:
   offColor: {r: 0.68235296, g: 0.67058825, b: 0.67058825, a: 1}
   nullColor: {r: 0.88, g: 0.88, b: 0.88, a: 1}
   tipRect: {fileID: 607807185820931285}
+--- !u!114 &5806859229166012594
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7755066763869088772}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63bffff4f26a66d41b4652a2d69ce892, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetSwitcher: {fileID: 4540126569147507751}
+  playOnClick: 1
+  clickSfxId: Click
+  playOnValueChanged: 0
+  onValueTrueSfxId: SwitchOn
+  onValueFalseSfxId: SwitchOff
+  onValueNullSfxId: SwitchNull
 --- !u!1 &7789757627601486961
 GameObject:
   m_ObjectHideFlags: 0

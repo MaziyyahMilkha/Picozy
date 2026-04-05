@@ -11,11 +11,19 @@ public class SortLevelResultPanel : MonoBehaviour
     [SerializeField] private Image starFill3;
     [SerializeField] private float starFillDuration = 0.28f;
     [SerializeField] private float starFillDelayBetween = 0.1f;
+    [SerializeField] private float starEffectDelayAfterFillComplete = 0.2f;
     [SerializeField] private float starPopScale = 1.25f;
     [SerializeField] private float starPopUpDuration = 0.07f;
     [SerializeField] private float starPopDownDuration = 0.12f;
-    [SerializeField] private string starFillStartSfxId = "StarFill";
+    [SerializeField] private string star1FillCompleteSfxId = "StarFill";
+    [SerializeField] private string star2FillCompleteSfxId = "StarFill";
+    [SerializeField] private string star3FillCompleteSfxId = "StarFill";
     [SerializeField] private string starFillCompleteSfxId = "StarFillComplete";
+
+    [Header("Star Confetti")]
+    [SerializeField] private ParticleSystem star1Confetti;
+    [SerializeField] private ParticleSystem star2Confetti;
+    [SerializeField] private ParticleSystem star3Confetti;
 
     [Header("Title")]
     [SerializeField] private TextMeshProUGUI titleText;
@@ -87,6 +95,7 @@ public class SortLevelResultPanel : MonoBehaviour
             int.TryParse(starsData, out earned);
         earned = Mathf.Clamp(earned, 0, 3);
 
+        StopAllStarConfetti();
         ResetAllStarFill();
         StopStarFillRoutine();
         _starFillRoutine = StartCoroutine(FillStarsSequentialRoutine(earned));
@@ -107,6 +116,7 @@ public class SortLevelResultPanel : MonoBehaviour
         _actionLocked = false;
         SetButtonsInteractable(true);
         StopStarFillRoutine();
+        StopAllStarConfetti();
         ResetAllStarFill();
 
         if (titleText != null)
@@ -190,7 +200,6 @@ public class SortLevelResultPanel : MonoBehaviour
     {
         if (star == null) yield break;
 
-        PlaySfx(starFillStartSfxId);
         float duration = Mathf.Max(0.01f, starFillDuration);
         float elapsed = 0f;
         while (elapsed < duration)
@@ -202,7 +211,10 @@ public class SortLevelResultPanel : MonoBehaviour
         }
 
         star.fillAmount = 1f;
-        PlaySfx(starFillCompleteSfxId);
+        string perStarCompleteSfx = GetFillCompleteSfxForStar(star);
+        string sfxToPlay = !string.IsNullOrEmpty(perStarCompleteSfx) ? perStarCompleteSfx : starFillCompleteSfxId;
+        StartCoroutine(PlaySfxDelayedRoutine(sfxToPlay, starEffectDelayAfterFillComplete));
+        PlayStarConfetti(star);
         yield return StartCoroutine(PopStarRoutine(star));
     }
 
@@ -244,6 +256,68 @@ public class SortLevelResultPanel : MonoBehaviour
         if (string.IsNullOrEmpty(audioId)) return;
         if (SortEffectPoolManager.Instance == null) return;
         SortEffectPoolManager.Instance.PlayAudio(audioId, SortAudioChannel.Sfx);
+    }
+
+    private IEnumerator PlaySfxDelayedRoutine(string audioId, float delaySeconds)
+    {
+        if (delaySeconds > 0f)
+            yield return new WaitForSecondsRealtime(delaySeconds);
+        PlaySfx(audioId);
+    }
+
+    private string GetFillCompleteSfxForStar(Image star)
+    {
+        if (star == starFill1) return star1FillCompleteSfxId;
+        if (star == starFill2) return star2FillCompleteSfxId;
+        if (star == starFill3) return star3FillCompleteSfxId;
+        return star1FillCompleteSfxId;
+    }
+
+    private void PlayStarConfetti(Image star)
+    {
+        ParticleSystem fx = GetConfettiForStar(star);
+        if (fx == null) return;
+        fx.transform.SetAsLastSibling();
+        ParticleSystem[] systems = fx.GetComponentsInChildren<ParticleSystem>(true);
+        for (int i = 0; i < systems.Length; i++)
+        {
+            if (systems[i] == null) continue;
+            var main = systems[i].main;
+            main.useUnscaledTime = true;
+            systems[i].Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
+
+        for (int i = 0; i < systems.Length; i++)
+        {
+            if (systems[i] == null) continue;
+            systems[i].Play(true);
+        }
+    }
+
+    private void StopAllStarConfetti()
+    {
+        StopConfetti(star1Confetti);
+        StopConfetti(star2Confetti);
+        StopConfetti(star3Confetti);
+    }
+
+    private ParticleSystem GetConfettiForStar(Image star)
+    {
+        if (star == starFill1) return star1Confetti;
+        if (star == starFill2) return star2Confetti;
+        if (star == starFill3) return star3Confetti;
+        return null;
+    }
+
+    private static void StopConfetti(ParticleSystem fx)
+    {
+        if (fx == null) return;
+        ParticleSystem[] systems = fx.GetComponentsInChildren<ParticleSystem>(true);
+        for (int i = 0; i < systems.Length; i++)
+        {
+            if (systems[i] == null) continue;
+            systems[i].Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
     }
 
     private void OnContinueClicked()

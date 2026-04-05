@@ -18,6 +18,9 @@ public class SortGameFlowManager : MonoBehaviour
     [Header("Debug")]
     [SerializeField] private int debugLevel;
     private Coroutine _pendingMainMenuBgmRoutine;
+    private Coroutine _settingsBindRoutine;
+    private bool _settingsSubscribed;
+    private bool _isMapFlowActive = true;
 
     private void Awake()
     {
@@ -33,12 +36,21 @@ public class SortGameFlowManager : MonoBehaviour
     {
         SortEventManager.SubscribeAction("Start", OnStart);
         SortEventManager.SubscribeAction("Map", OnMap);
+        SortEventManager.SubscribeAction("Level", OnLevelRequested);
+        TryBindSettingsEvents();
     }
 
     private void OnDisable()
     {
         SortEventManager.UnsubscribeAction("Start", OnStart);
         SortEventManager.UnsubscribeAction("Map", OnMap);
+        SortEventManager.UnsubscribeAction("Level", OnLevelRequested);
+        UnbindSettingsEvents();
+        if (_settingsBindRoutine != null)
+        {
+            StopCoroutine(_settingsBindRoutine);
+            _settingsBindRoutine = null;
+        }
     }
 
     private void Start()
@@ -60,10 +72,16 @@ public class SortGameFlowManager : MonoBehaviour
 
     private void OnMap()
     {
+        _isMapFlowActive = true;
         if (SortEffectPoolManager.Instance != null)
             SortEffectPoolManager.Instance.StopAudioChannelWithFade(SortAudioChannel.Sfx, 0f);
         SortEventManager.Publish(new UIActionEvent("SwitchCanvas", mapCanvasId));
         TryPlayMainMenuBgm();
+    }
+
+    private void OnLevelRequested(string _)
+    {
+        _isMapFlowActive = false;
     }
 
     private void TryPlayMainMenuBgm()
@@ -73,6 +91,11 @@ public class SortGameFlowManager : MonoBehaviour
         var fx = SortEffectPoolManager.Instance;
         if (fx != null)
         {
+            if (fx.IsAudioGroupPlaying(mainMenuBgmId))
+            {
+                fx.ApplySettingsAudioState();
+                return;
+            }
             fx.StopAudioChannelWithFade(SortAudioChannel.Bgm, mainMenuBgmFadeOutOtherBgmSeconds);
             fx.PlayAudioWithFadeIn(mainMenuBgmId, SortAudioChannel.Bgm, mainMenuBgmFadeInSeconds);
             return;
@@ -91,6 +114,12 @@ public class SortGameFlowManager : MonoBehaviour
             var fx = SortEffectPoolManager.Instance;
             if (fx != null)
             {
+                if (fx.IsAudioGroupPlaying(mainMenuBgmId))
+                {
+                    fx.ApplySettingsAudioState();
+                    _pendingMainMenuBgmRoutine = null;
+                    yield break;
+                }
                 fx.StopAudioChannelWithFade(SortAudioChannel.Bgm, mainMenuBgmFadeOutOtherBgmSeconds);
                 fx.PlayAudioWithFadeIn(mainMenuBgmId, SortAudioChannel.Bgm, mainMenuBgmFadeInSeconds);
                 _pendingMainMenuBgmRoutine = null;
@@ -103,10 +132,71 @@ public class SortGameFlowManager : MonoBehaviour
         _pendingMainMenuBgmRoutine = null;
     }
 
+    private void TryBindSettingsEvents()
+    {
+        var settings = SortSettingsManager.Instance;
+        if (settings != null)
+        {
+            settings.OnSettingsChanged -= HandleSettingsChanged;
+            settings.OnSettingsChanged += HandleSettingsChanged;
+            _settingsSubscribed = true;
+            return;
+        }
+
+        if (_settingsBindRoutine == null)
+            _settingsBindRoutine = StartCoroutine(WaitAndBindSettingsRoutine());
+    }
+
+    private IEnumerator WaitAndBindSettingsRoutine()
+    {
+        const float timeout = 5f;
+        float elapsed = 0f;
+        while (elapsed < timeout)
+        {
+            var settings = SortSettingsManager.Instance;
+            if (settings != null)
+            {
+                settings.OnSettingsChanged -= HandleSettingsChanged;
+                settings.OnSettingsChanged += HandleSettingsChanged;
+                _settingsSubscribed = true;
+                _settingsBindRoutine = null;
+                yield break;
+            }
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+        _settingsBindRoutine = null;
+    }
+
+    private void UnbindSettingsEvents()
+    {
+        if (!_settingsSubscribed) return;
+        var settings = SortSettingsManager.Instance;
+        if (settings != null)
+            settings.OnSettingsChanged -= HandleSettingsChanged;
+        _settingsSubscribed = false;
+    }
+
+    private void HandleSettingsChanged()
+    {
+        var fx = SortEffectPoolManager.Instance;
+        if (fx == null) return;
+        if (SortSettingsManager.Instance == null) return;
+
+        if (!SortSettingsManager.Instance.BgmEnabled)
+            fx.ApplySettingsAudioState();
+
+        if (_isMapFlowActive)
+            TryPlayMainMenuBgm();
+    }
+
     private void OnDestroy()
     {
         if (_pendingMainMenuBgmRoutine != null)
             StopCoroutine(_pendingMainMenuBgmRoutine);
+        if (_settingsBindRoutine != null)
+            StopCoroutine(_settingsBindRoutine);
+        UnbindSettingsEvents();
         if (Instance == this)
             Instance = null;
     }

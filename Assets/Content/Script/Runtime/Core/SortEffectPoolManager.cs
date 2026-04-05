@@ -5,6 +5,9 @@ using UnityEngine;
 public class SortEffectPoolManager : MonoBehaviour
 {
     public static SortEffectPoolManager Instance { get; private set; }
+    private const string KeyBgmEnabled = "sort_settings_bgm_enabled";
+    private const string KeySfxEnabled = "sort_settings_sfx_enabled";
+    private const int DefaultAudioEnabled = 1;
 
     [SerializeField] private SortAudioData audioData;
     [SerializeField] private int prewarmAudioSources = 4;
@@ -12,7 +15,6 @@ public class SortEffectPoolManager : MonoBehaviour
     private readonly List<AudioSource> _audioPool = new List<AudioSource>();
     private readonly Dictionary<string, List<AudioSource>> _loopedByGroup = new Dictionary<string, List<AudioSource>>();
     private readonly Dictionary<AudioSource, SortAudioChannel> _sourceChannels = new Dictionary<AudioSource, SortAudioChannel>();
-    private readonly HashSet<AudioSource> _pausedBySettings = new HashSet<AudioSource>();
     private Transform _poolRoot;
 
     private void Awake()
@@ -58,7 +60,12 @@ public class SortEffectPoolManager : MonoBehaviour
         EnsurePoolRoot();
 
         foreach (var s in _audioPool)
-            if (s != null && !s.isPlaying) return s;
+        {
+            if (s == null) continue;
+            if (s.isPlaying) continue;
+            CleanupSourceTracking(s);
+            return s;
+        }
 
         GameObject child = new GameObject($"AudioSource_{_audioPool.Count:00}");
         child.transform.SetParent(_poolRoot, false);
@@ -68,6 +75,23 @@ public class SortEffectPoolManager : MonoBehaviour
         src.loop = false;
         _audioPool.Add(src);
         return src;
+    }
+
+    private void CleanupSourceTracking(AudioSource src)
+    {
+        if (src == null) return;
+        _sourceChannels.Remove(src);
+
+        if (_loopedByGroup.Count == 0) return;
+        var emptyKeys = new List<string>();
+        foreach (var kv in _loopedByGroup)
+        {
+            if (kv.Value == null) { emptyKeys.Add(kv.Key); continue; }
+            kv.Value.Remove(src);
+            if (kv.Value.Count == 0) emptyKeys.Add(kv.Key);
+        }
+        for (int i = 0; i < emptyKeys.Count; i++)
+            _loopedByGroup.Remove(emptyKeys[i]);
     }
 
     private void TrackLooped(string groupId, AudioSource src)
@@ -103,17 +127,36 @@ public class SortEffectPoolManager : MonoBehaviour
     private void HandlePlayAudio(string id)
     {
         if (string.IsNullOrEmpty(id)) return;
+        if (audioData != null)
+        {
+            var group = audioData.GetGroup(id);
+            if (group != null && group.looping)
+            {
+                PlayAudio(id, SortAudioChannel.Bgm);
+                return;
+            }
+        }
         PlayAudio(id, SortAudioChannel.Sfx);
     }
 
     public void PlayAudio(string id)
     {
+        if (string.IsNullOrEmpty(id))
+            return;
+        if (audioData != null)
+        {
+            var group = audioData.GetGroup(id);
+            if (group != null && group.looping)
+            {
+                PlayAudio(id, SortAudioChannel.Bgm);
+                return;
+            }
+        }
         PlayAudio(id, SortAudioChannel.Sfx);
     }
 
     public void PlayAudio(string id, SortAudioChannel channel)
     {
-        if (!CanPlayChannel(channel)) return;
         if (audioData == null)
             return;
         if (string.IsNullOrEmpty(id))
@@ -157,6 +200,19 @@ public class SortEffectPoolManager : MonoBehaviour
     {
         PlayAudio(id, channel);
         StartCoroutine(FadeInGroupRoutine(id, channel, Mathf.Max(0f, fadeInDuration)));
+    }
+
+    public bool IsAudioGroupPlaying(string groupId)
+    {
+        if (string.IsNullOrEmpty(groupId)) return false;
+        if (!_loopedByGroup.TryGetValue(groupId, out var list) || list == null) return false;
+        for (int i = 0; i < list.Count; i++)
+        {
+            var src = list[i];
+            if (src != null && src.isPlaying)
+                return true;
+        }
+        return false;
     }
 
     private IEnumerator FadeInGroupRoutine(string groupId, SortAudioChannel channel, float fadeInDuration)
@@ -289,16 +345,15 @@ public class SortEffectPoolManager : MonoBehaviour
         }
     }
 
-    private bool CanPlayChannel(SortAudioChannel channel)
-    {
-        var settings = SortSettingsManager.Instance;
-        return settings == null || settings.IsAudioChannelEnabled(channel);
-    }
-
     private float GetChannelVolume(SortAudioChannel channel)
     {
         var settings = SortSettingsManager.Instance;
-        if (settings == null) return 1f;
+        if (settings == null)
+        {
+            int bgmPref = PlayerPrefs.GetInt(KeyBgmEnabled, DefaultAudioEnabled);
+            int sfxPref = PlayerPrefs.GetInt(KeySfxEnabled, DefaultAudioEnabled);
+            return channel == SortAudioChannel.Bgm ? (bgmPref != 0 ? 1f : 0f) : (sfxPref != 0 ? 1f : 0f);
+        }
         return channel == SortAudioChannel.Bgm ? settings.BgmVolume : settings.SfxVolume;
     }
 
@@ -309,25 +364,7 @@ public class SortEffectPoolManager : MonoBehaviour
             var src = _audioPool[i];
             if (src == null) continue;
             SortAudioChannel channel = _sourceChannels.TryGetValue(src, out var mapped) ? mapped : SortAudioChannel.Sfx;
-            bool enabled = CanPlayChannel(channel);
             src.volume = GetChannelVolume(channel);
-
-            if (enabled)
-            {
-                if (_pausedBySettings.Contains(src))
-                {
-                    src.UnPause();
-                    _pausedBySettings.Remove(src);
-                }
-            }
-            else
-            {
-                if (src.isPlaying)
-                {
-                    src.Pause();
-                    _pausedBySettings.Add(src);
-                }
-            }
         }
     }
 
@@ -340,7 +377,6 @@ public class SortEffectPoolManager : MonoBehaviour
             if (s != null)
             {
                 s.Stop();
-                _pausedBySettings.Remove(s);
             }
         }
         _loopedByGroup.Remove(groupId);
@@ -410,7 +446,6 @@ public class SortEffectPoolManager : MonoBehaviour
             if (src != null)
             {
                 src.Stop();
-                _pausedBySettings.Remove(src);
             }
         }
         _loopedByGroup.Remove(groupId);
@@ -427,7 +462,6 @@ public class SortEffectPoolManager : MonoBehaviour
                 if (src != null)
                 {
                     src.Stop();
-                    _pausedBySettings.Remove(src);
                 }
             }
             yield break;
@@ -457,7 +491,6 @@ public class SortEffectPoolManager : MonoBehaviour
             if (src != null)
             {
                 src.Stop();
-                _pausedBySettings.Remove(src);
             }
         }
     }
@@ -468,7 +501,6 @@ public class SortEffectPoolManager : MonoBehaviour
             if (s != null)
             {
                 s.Stop();
-                _pausedBySettings.Remove(s);
             }
         StopAllCoroutines();
         _loopedByGroup.Clear();
