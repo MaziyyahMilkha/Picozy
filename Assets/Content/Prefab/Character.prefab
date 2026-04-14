@@ -79,8 +79,8 @@ Transform:
   - {fileID: 4637748097459909843}
   - {fileID: 6420417213732856501}
   - {fileID: 6083541224445613720}
-  - {fileID: 8767428746119308922}
   - {fileID: 8732445403545592349}
+  - {fileID: 8767428746119308922}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!65 &2260336527715968879
@@ -412,10 +412,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2040214179966287663}
     m_Modifications:
-    - target: {fileID: 79462156441256436, guid: 7f5856e351540004993a71ef08538121, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 2
-      objectReference: {fileID: 0}
     - target: {fileID: 2155470122268845318, guid: 7f5856e351540004993a71ef08538121, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -553,10 +549,6 @@ PrefabInstance:
     - target: {fileID: 512110150005160506, guid: 3dee6b44b2de2b14b9ca395a63c491d8, type: 3}
       propertyPath: m_Name
       value: Jamur
-      objectReference: {fileID: 0}
-    - target: {fileID: 512110150005160506, guid: 3dee6b44b2de2b14b9ca395a63c491d8, type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2104260354499266319, guid: 3dee6b44b2de2b14b9ca395a63c491d8, type: 3}
       propertyPath: m_LocalPosition.x
@@ -840,7 +832,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5700842165579984084, guid: 45734a562ba490544b40fef4ad301889, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5700842165579984084, guid: 45734a562ba490544b40fef4ad301889, type: 3}
       propertyPath: m_LocalRotation.x
@@ -848,7 +840,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5700842165579984084, guid: 45734a562ba490544b40fef4ad301889, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5700842165579984084, guid: 45734a562ba490544b40fef4ad301889, type: 3}
       propertyPath: m_LocalRotation.z
@@ -860,7 +852,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5700842165579984084, guid: 45734a562ba490544b40fef4ad301889, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: 180
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5700842165579984084, guid: 45734a562ba490544b40fef4ad301889, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
@@ -892,10 +884,6 @@ PrefabInstance:
     - target: {fileID: 3056018841845289114, guid: 52898c01bbcd5de44af86b59cc3028e3, type: 3}
       propertyPath: m_Name
       value: Tomat
-      objectReference: {fileID: 0}
-    - target: {fileID: 3056018841845289114, guid: 52898c01bbcd5de44af86b59cc3028e3, type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6267956817137878518, guid: 52898c01bbcd5de44af86b59cc3028e3, type: 3}
       propertyPath: m_LocalPosition.x

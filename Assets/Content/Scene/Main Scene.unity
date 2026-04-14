@@ -655,7 +655,12 @@ MonoBehaviour:
   mainMenuBgmId: Mainmenu
   mainMenuBgmFadeInSeconds: 0.08
   mainMenuBgmFadeOutOtherBgmSeconds: 0.12
+  warmupAudioOnSplash: 1
+  warmupLoopingAudioOnly: 1
+  warmupFrameBudgetMs: 2.5
+  warmupTotalBudgetSeconds: 1.5
   debugLevel: 0
+  debugAudioWarmupLog: 1
 --- !u!114 &794093515
 MonoBehaviour:
   m_ObjectHideFlags: 0

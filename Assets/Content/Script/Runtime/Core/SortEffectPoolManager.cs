@@ -16,6 +16,8 @@ public class SortEffectPoolManager : MonoBehaviour
     private readonly Dictionary<string, List<AudioSource>> _loopedByGroup = new Dictionary<string, List<AudioSource>>();
     private readonly Dictionary<AudioSource, SortAudioChannel> _sourceChannels = new Dictionary<AudioSource, SortAudioChannel>();
     private Transform _poolRoot;
+    private Coroutine _warmupAllRoutine;
+    private const bool WarmupDebugLog = true;
 
     private void Awake()
     {
@@ -200,6 +202,119 @@ public class SortEffectPoolManager : MonoBehaviour
     {
         PlayAudio(id, channel);
         StartCoroutine(FadeInGroupRoutine(id, channel, Mathf.Max(0f, fadeInDuration)));
+    }
+
+    public void WarmupAudioGroup(string id)
+    {
+        if (audioData == null || string.IsNullOrEmpty(id)) return;
+        var group = audioData.GetGroup(id);
+        if (group == null || group.clips == null) return;
+        for (int i = 0; i < group.clips.Count; i++)
+        {
+            var clip = group.clips[i];
+            if (clip == null) continue;
+            if (clip.loadState == AudioDataLoadState.Unloaded || !clip.preloadAudioData)
+                clip.LoadAudioData();
+        }
+    }
+
+    public void WarmupAllAudioGroups(bool loopingOnly, float frameBudgetMs = 2.5f, float totalBudgetSeconds = 1.5f)
+    {
+        if (_warmupAllRoutine != null)
+            StopCoroutine(_warmupAllRoutine);
+        _warmupAllRoutine = StartCoroutine(WarmupAllAudioGroupsRoutine(loopingOnly, frameBudgetMs, totalBudgetSeconds));
+    }
+
+    private IEnumerator WarmupAllAudioGroupsRoutine(bool loopingOnly, float frameBudgetMs, float totalBudgetSeconds)
+    {
+        if (audioData == null || audioData.groups == null || audioData.groups.Count == 0)
+        {
+            _warmupAllRoutine = null;
+            yield break;
+        }
+
+        float totalStart = Time.realtimeSinceStartup;
+        float frameStart = totalStart;
+        float frameBudget = Mathf.Max(0.1f, frameBudgetMs) / 1000f;
+        float totalBudget = Mathf.Max(0f, totalBudgetSeconds);
+        int groupsVisited = 0;
+        int clipsRequestedLoad = 0;
+        int clipsAlreadyLoaded = 0;
+        int clipsNull = 0;
+        bool hitTotalBudget = false;
+
+        for (int g = 0; g < audioData.groups.Count; g++)
+        {
+            if (totalBudget > 0f && Time.realtimeSinceStartup - totalStart > totalBudget)
+            {
+                hitTotalBudget = true;
+                break;
+            }
+
+            var group = audioData.groups[g];
+            if (group == null) continue;
+            if (loopingOnly && !group.looping) continue;
+            if (group.clips == null) continue;
+            groupsVisited++;
+
+            for (int i = 0; i < group.clips.Count; i++)
+            {
+                if (totalBudget > 0f && Time.realtimeSinceStartup - totalStart > totalBudget)
+                {
+                    hitTotalBudget = true;
+                    break;
+                }
+
+                var clip = group.clips[i];
+                if (clip == null) { clipsNull++; continue; }
+                if (clip.loadState == AudioDataLoadState.Loaded)
+                {
+                    clipsAlreadyLoaded++;
+                }
+                if (clip.loadState == AudioDataLoadState.Unloaded || !clip.preloadAudioData)
+                {
+                    clip.LoadAudioData();
+                    clipsRequestedLoad++;
+                    frameStart = Time.realtimeSinceStartup;
+                    yield return null;
+                }
+
+                if (Time.realtimeSinceStartup - frameStart > frameBudget)
+                {
+                    frameStart = Time.realtimeSinceStartup;
+                    yield return null;
+                }
+            }
+        }
+
+        if (WarmupDebugLog)
+        {
+            float elapsedMs = (Time.realtimeSinceStartup - totalStart) * 1000f;
+            Debug.LogWarning(
+                $"[Perf][AudioWarmup] loopingOnly={loopingOnly} frameBudgetMs={frameBudgetMs:0.0} totalBudgetS={totalBudgetSeconds:0.00} " +
+                $"groupsVisited={groupsVisited} clipsLoadReq={clipsRequestedLoad} clipsLoaded={clipsAlreadyLoaded} clipsNull={clipsNull} " +
+                $"hitTotalBudget={hitTotalBudget} total={elapsedMs:0.0}ms");
+        }
+
+        _warmupAllRoutine = null;
+    }
+
+    public bool IsAudioGroupLoaded(string id)
+    {
+        if (audioData == null || string.IsNullOrEmpty(id)) return true;
+        var group = audioData.GetGroup(id);
+        if (group == null || group.clips == null || group.clips.Count == 0) return true;
+
+        for (int i = 0; i < group.clips.Count; i++)
+        {
+            var clip = group.clips[i];
+            if (clip == null) continue;
+            if (clip.loadState == AudioDataLoadState.Loading)
+                return false;
+            if (clip.loadState == AudioDataLoadState.Unloaded)
+                return false;
+        }
+        return true;
     }
 
     public bool IsAudioGroupPlaying(string groupId)

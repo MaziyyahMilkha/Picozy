@@ -870,8 +870,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: SortGameplayController, Assembly-CSharp
+      - m_Target: {fileID: 8885661291026860136}
+        m_TargetAssemblyTypeName: UIButtonClickAnimate, Assembly-CSharp
         m_MethodName: Undo
         m_Mode: 1
         m_Arguments:

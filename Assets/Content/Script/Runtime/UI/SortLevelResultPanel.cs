@@ -103,8 +103,9 @@ public class SortLevelResultPanel : MonoBehaviour
         if (titleText != null)
             titleText.text = winTitle;
 
+        bool canContinue = SortGameplayController.Instance != null && SortGameplayController.Instance.HasNextLevel;
         if (continueButton != null)
-            continueButton.gameObject.SetActive(true);
+            continueButton.gameObject.SetActive(canContinue);
         if (retryButton != null)
             retryButton.gameObject.SetActive(true);
         if (exitButton != null)

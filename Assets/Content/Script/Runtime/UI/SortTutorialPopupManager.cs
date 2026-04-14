@@ -78,12 +78,14 @@ public class SortTutorialPopupManager : MonoBehaviour
         _nextClickFlipRight = true;
         SetNavLocked(false);
         ApplyNavIcon();
+        ResetBookToStart();
         if (!string.IsNullOrEmpty(tutorialCanvasId))
             SortEventManager.Publish(new UIActionEvent("ShowPopupCanvas", tutorialCanvasId));
     }
 
     public void CloseTutorial()
     {
+        ResetBookToStart();
         if (!string.IsNullOrEmpty(tutorialCanvasId))
             SortEventManager.Publish(new UIActionEvent("HidePopupCanvas", tutorialCanvasId));
     }
@@ -173,5 +175,15 @@ public class SortTutorialPopupManager : MonoBehaviour
     private void SetNavLocked(bool locked)
     {
         _navLocked = locked;
+    }
+
+    private void ResetBookToStart()
+    {
+        if (autoFlip != null)
+            autoFlip.ResetState();
+
+        Book book = GetBook();
+        if (book != null)
+            book.ResetToFirstPage();
     }
 }

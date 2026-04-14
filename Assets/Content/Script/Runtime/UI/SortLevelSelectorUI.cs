@@ -5,6 +5,8 @@ using UnityEngine.UI;
 
 public class SortLevelSelectorUI : MonoBehaviour
 {
+    private const bool UseDebugLog = true;
+
     [Header("Slots")]
     [SerializeField] private List<SortLevelButtonSlot> levelSlots = new List<SortLevelButtonSlot>();
 
@@ -38,6 +40,7 @@ public class SortLevelSelectorUI : MonoBehaviour
 
     private void RefreshDisplay()
     {
+        float t0 = Time.realtimeSinceStartup;
         var manager = SortLevelSelectManager.Instance;
         if (manager == null) return;
 
@@ -81,6 +84,14 @@ public class SortLevelSelectorUI : MonoBehaviour
 
         EnsureAvailableLevelIsVisible(manager);
         UpdatePageScrollbar(manager);
+
+        float elapsed = Time.realtimeSinceStartup - t0;
+        if (UseDebugLog)
+        {
+            Debug.LogWarning(
+                $"[Perf][LevelSelectorUI] RefreshDisplay map={manager.CurrentMapIndex} page={manager.CurrentPageIndex} " +
+                $"slots={levelSlots.Count} visible={countOnPage} total={elapsed * 1000f:0.0}ms");
+        }
     }
 
     private void UpdatePageScrollbar(SortLevelSelectManager manager)

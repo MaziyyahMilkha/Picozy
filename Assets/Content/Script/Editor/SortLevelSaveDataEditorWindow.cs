@@ -127,6 +127,7 @@ public class SortLevelSaveDataEditorWindow : EditorWindow
             var list = map.levels;
             int levelCount = list != null ? list.Count : 0;
             string mapLabel = string.IsNullOrEmpty(map.id) ? $"Map {m + 1}" : map.id;
+            int mapStartGlobalIndex = globalIndex;
 
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             EditorGUILayout.BeginHorizontal();
@@ -152,27 +153,27 @@ public class SortLevelSaveDataEditorWindow : EditorWindow
                 GUILayout.Space(4);
                 if (GUILayout.Button("Reset", GUILayout.Width(BtnResetWidth)))
                 {
-                    SetHighestCompleted(globalIndex - 1);
+                    SetStarsForLevel(globalIndex, 0);
                     Debug.Log($"[Sort Save Data Editor] {mapLabel} Level {displayLevelNum} di-reset.");
                 }
                 if (GUILayout.Button("Tamat", GUILayout.Width(48)))
                 {
-                    SetHighestCompleted(globalIndex);
+                    SetStarsUpToInMap(mapStartGlobalIndex, i, levelCount, 1, fillPreviousAsOneStar: true);
                     Debug.Log($"[Sort Save Data Editor] {mapLabel} Level {displayLevelNum} set tamat (1★).");
                 }
                 if (GUILayout.Button("1", GUILayout.Width(BtnStarWidth)))
                 {
-                    SetStarsForLevel(globalIndex, 1);
+                    SetStarsUpToInMap(mapStartGlobalIndex, i, levelCount, 1, fillPreviousAsOneStar: true);
                     Debug.Log($"[Sort Save Data Editor] {mapLabel} Level {displayLevelNum} → 1★.");
                 }
                 if (GUILayout.Button("2", GUILayout.Width(BtnStarWidth)))
                 {
-                    SetStarsForLevel(globalIndex, 2);
+                    SetStarsUpToInMap(mapStartGlobalIndex, i, levelCount, 2, fillPreviousAsOneStar: true);
                     Debug.Log($"[Sort Save Data Editor] {mapLabel} Level {displayLevelNum} → 2★.");
                 }
                 if (GUILayout.Button("3", GUILayout.Width(BtnStarWidth)))
                 {
-                    SetStarsForLevel(globalIndex, 3);
+                    SetStarsUpToInMap(mapStartGlobalIndex, i, levelCount, 3, fillPreviousAsOneStar: true);
                     Debug.Log($"[Sort Save Data Editor] {mapLabel} Level {displayLevelNum} → 3★.");
                 }
                 EditorGUILayout.EndHorizontal();
@@ -190,7 +191,7 @@ public class SortLevelSaveDataEditorWindow : EditorWindow
         GUI.backgroundColor = new Color(0.85f, 1f, 0.9f);
         if (GUILayout.Button("Set Tamat Semua", GUILayout.Height(28)))
         {
-            SetHighestCompleted(_totalLevels - 1);
+            SetAllStars(1);
             Debug.Log($"[Sort Save Data Editor] Semua {_totalLevels} level set tamat.");
         }
         GUI.backgroundColor = oldColor;
@@ -205,29 +206,26 @@ public class SortLevelSaveDataEditorWindow : EditorWindow
     private bool IsLevelCompleted(int globalIndex)
     {
         if (_cachedData == null) return false;
-        return globalIndex <= _cachedData.highestCompletedGlobalIndex;
+        if (_cachedData.starsPerLevel == null) return false;
+        if (globalIndex < 0 || globalIndex >= _cachedData.starsPerLevel.Count) return false;
+        return _cachedData.starsPerLevel[globalIndex] > 0;
     }
 
     private int GetStarsForLevel(int globalIndex)
     {
-        if (_cachedData == null || _cachedData.starsPerLevel == null || globalIndex > _cachedData.highestCompletedGlobalIndex) return 0;
-        if (globalIndex >= _cachedData.starsPerLevel.Count) return 1;
-        return Mathf.Clamp(_cachedData.starsPerLevel[globalIndex], 1, 3);
+        if (_cachedData == null || _cachedData.starsPerLevel == null) return 0;
+        if (globalIndex < 0 || globalIndex >= _cachedData.starsPerLevel.Count) return 0;
+        return Mathf.Clamp(_cachedData.starsPerLevel[globalIndex], 0, 3);
     }
 
     private void SetHighestCompleted(int newHighest)
     {
-        var data = LoadOrCreateSaveData();
-        data.highestCompletedGlobalIndex = Mathf.Max(-1, newHighest);
-        data.lastSavedTimestampUtc = System.DateTime.UtcNow.Ticks;
-        if (data.starsPerLevel == null) data.starsPerLevel = new System.Collections.Generic.List<int>();
-        while (data.starsPerLevel.Count <= newHighest)
-            data.starsPerLevel.Add(1);
-        if (newHighest >= 0)
-            data.starsPerLevel[newHighest] = 1;
-        ES3.Save(SortLevelSelectManager.SaveKey, data);
-        _cachedData = data;
-        RefreshStatus();
+        if (newHighest < 0)
+        {
+            SetAllStars(0);
+            return;
+        }
+        SetStarsForLevel(newHighest, 1);
     }
 
     private void SetStarsForLevel(int globalIndex, int starCount)
@@ -235,14 +233,69 @@ public class SortLevelSaveDataEditorWindow : EditorWindow
         var data = LoadOrCreateSaveData();
         if (data.starsPerLevel == null) data.starsPerLevel = new System.Collections.Generic.List<int>();
         while (data.starsPerLevel.Count <= globalIndex)
-            data.starsPerLevel.Add(1);
-        data.starsPerLevel[globalIndex] = Mathf.Clamp(starCount, 1, 3);
-        if (data.highestCompletedGlobalIndex < globalIndex)
-            data.highestCompletedGlobalIndex = globalIndex;
+            data.starsPerLevel.Add(0);
+        data.starsPerLevel[globalIndex] = Mathf.Clamp(starCount, 0, 3);
+        data.highestCompletedGlobalIndex = ComputeHighestCompletedIndex(data);
         data.lastSavedTimestampUtc = System.DateTime.UtcNow.Ticks;
         ES3.Save(SortLevelSelectManager.SaveKey, data);
         _cachedData = data;
         RefreshStatus();
+    }
+
+    private void SetStarsUpToInMap(int mapStartGlobalIndex, int localIndexInclusive, int mapLevelCount, int starCountForTarget, bool fillPreviousAsOneStar)
+    {
+        if (localIndexInclusive < 0) return;
+        if (mapLevelCount <= 0) return;
+        if (database == null) return;
+
+        int clampedLocal = Mathf.Clamp(localIndexInclusive, 0, mapLevelCount - 1);
+        int targetGlobal = mapStartGlobalIndex + clampedLocal;
+
+        var data = LoadOrCreateSaveData();
+        if (data.starsPerLevel == null) data.starsPerLevel = new System.Collections.Generic.List<int>();
+        while (data.starsPerLevel.Count < mapStartGlobalIndex + mapLevelCount)
+            data.starsPerLevel.Add(0);
+
+        if (fillPreviousAsOneStar)
+        {
+            for (int g = mapStartGlobalIndex; g < targetGlobal; g++)
+            {
+                if (g < 0 || g >= data.starsPerLevel.Count) continue;
+                if (data.starsPerLevel[g] <= 0)
+                    data.starsPerLevel[g] = 1;
+            }
+        }
+
+        data.starsPerLevel[targetGlobal] = Mathf.Clamp(starCountForTarget, 0, 3);
+        data.highestCompletedGlobalIndex = ComputeHighestCompletedIndex(data);
+        data.lastSavedTimestampUtc = System.DateTime.UtcNow.Ticks;
+        ES3.Save(SortLevelSelectManager.SaveKey, data);
+        _cachedData = data;
+        RefreshStatus();
+    }
+
+    private void SetAllStars(int starCount)
+    {
+        var data = LoadOrCreateSaveData();
+        int total = GetTotalLevelCount();
+        int s = Mathf.Clamp(starCount, 0, 3);
+        if (data.starsPerLevel == null) data.starsPerLevel = new System.Collections.Generic.List<int>(total);
+        data.starsPerLevel.Clear();
+        for (int i = 0; i < total; i++)
+            data.starsPerLevel.Add(s);
+        data.highestCompletedGlobalIndex = ComputeHighestCompletedIndex(data);
+        data.lastSavedTimestampUtc = System.DateTime.UtcNow.Ticks;
+        ES3.Save(SortLevelSelectManager.SaveKey, data);
+        _cachedData = data;
+        RefreshStatus();
+    }
+
+    private static int ComputeHighestCompletedIndex(SortLevelSaveData data)
+    {
+        if (data == null || data.starsPerLevel == null) return -1;
+        for (int i = data.starsPerLevel.Count - 1; i >= 0; i--)
+            if (data.starsPerLevel[i] > 0) return i;
+        return -1;
     }
 
     private SortLevelSaveData LoadOrCreateSaveData()

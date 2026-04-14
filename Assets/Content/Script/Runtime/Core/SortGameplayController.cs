@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -6,17 +7,22 @@ using UnityEngine.UI;
 
 public class SortGameplayController : MonoBehaviour
 {
+    private const bool UseDebugLog = true;
     private struct MoveRecord
     {
         public SortDahan Source;
         public SortDahan Dest;
-        public int Count;
+        public SortKarakter[] Movers;
+        public int[] SourceSlotIndices;
 
-        public MoveRecord(SortDahan source, SortDahan dest, int count)
+        public int Count => Movers != null ? Movers.Length : 0;
+
+        public MoveRecord(SortDahan source, SortDahan dest, SortKarakter[] movers, int[] sourceSlotIndices)
         {
             Source = source;
             Dest = dest;
-            Count = count;
+            Movers = movers;
+            SourceSlotIndices = sourceSlotIndices;
         }
     }
 
@@ -56,9 +62,12 @@ public class SortGameplayController : MonoBehaviour
     private bool _winAnimating;
     private bool _moveInProgress;
     private bool _uiTransitionInProgress;
+    private bool _undoQueued;
+    private Coroutine _startBgmRoutine;
     private int _undoRemaining;
     private int _undoStartCount;
     private readonly List<MoveRecord> _undoHistory = new List<MoveRecord>(16);
+    private readonly HashSet<SortDahan> _completedDahansThisMove = new HashSet<SortDahan>();
     private static readonly List<int> _tempSlots = new List<int>(8);
     private static readonly List<int> _tempDestSlots = new List<int>(8);
 
@@ -69,6 +78,16 @@ public class SortGameplayController : MonoBehaviour
     public int UndoRemaining => _undoRemaining;
     public int UndoUsedCount => Mathf.Max(0, _undoStartCount - _undoRemaining);
     public bool CanUndo => _undoRemaining > 0 && _undoHistory.Count > 0 && running && !ended && !_moveInProgress;
+    public bool HasNextLevel
+    {
+        get
+        {
+            if (levelLoader == null) return false;
+            int idx = levelLoader.GetLevelIndexInDatabase();
+            int total = levelLoader.GetTotalLevelCount();
+            return idx >= 0 && idx + 1 < total;
+        }
+    }
 
     private void Awake()
     {
@@ -113,14 +132,26 @@ public class SortGameplayController : MonoBehaviour
 
     private void OnLevelLoaded(string _)
     {
+        float t0 = Time.realtimeSinceStartup;
         if (levelLoader == null || levelLoader.GetCurrentLevel() == null) return;
+        float tCheck = Time.realtimeSinceStartup;
         if (!string.IsNullOrEmpty(gameplayCanvasId))
             SortEventManager.Publish(new UIActionEvent("SwitchCanvas", gameplayCanvasId));
+        float tCanvas = Time.realtimeSinceStartup;
         HideResultPopups();
         if (!string.IsNullOrEmpty(pauseCanvasId))
             SortEventManager.Publish(new UIActionEvent("HidePopupCanvas", pauseCanvasId));
         ApplyLevelTheme();
+        float tTheme = Time.realtimeSinceStartup;
         StartLevel();
+        float tStart = Time.realtimeSinceStartup;
+        if (UseDebugLog)
+        {
+            Debug.LogWarning(
+                $"[Perf][Gameplay] OnLevelLoaded check={(tCheck - t0) * 1000f:0.0}ms " +
+                $"canvas={(tCanvas - tCheck) * 1000f:0.0}ms theme+ui={(tTheme - tCanvas) * 1000f:0.0}ms " +
+                $"startLevel={(tStart - tTheme) * 1000f:0.0}ms total={(tStart - t0) * 1000f:0.0}ms");
+        }
     }
 
     private void Update()
@@ -151,6 +182,7 @@ public class SortGameplayController : MonoBehaviour
 
     public void StartLevel(bool resetTimer = true, float preservedTime = -1f, bool restartBgm = true)
     {
+        float t0 = Time.realtimeSinceStartup;
         StopResultAndUiSfx();
         ended = false;
         _winAnimating = false;
@@ -158,6 +190,7 @@ public class SortGameplayController : MonoBehaviour
         _uiTransitionInProgress = false;
         running = true;
         paused = false;
+        _completedDahansThisMove.Clear();
         levelDuration = GetLevelDuration();
         if (resetTimer)
             timeRemaining = levelDuration;
@@ -179,17 +212,45 @@ public class SortGameplayController : MonoBehaviour
         RefreshUndoUsedCountUi();
         var resolved = levelLoader != null ? levelLoader.GetResolvedLevelSettings() : default;
         string bgmId = resolved.audioId;
-        if (restartBgm && SortEffectPoolManager.Instance != null)
+        if (_startBgmRoutine != null)
         {
-            SortEffectPoolManager.Instance.StopAudioChannelWithFade(SortAudioChannel.Bgm, bgmFadeOutOnGameplayStart);
-            if (!string.IsNullOrEmpty(bgmId))
-            {
-                SortEffectPoolManager.Instance.StopAudioGroup(bgmId);
-                SortEffectPoolManager.Instance.PlayAudioWithFadeIn(bgmId, SortAudioChannel.Bgm, gameplayBgmFadeInSeconds);
-            }
+            StopCoroutine(_startBgmRoutine);
+            _startBgmRoutine = null;
         }
+        if (restartBgm)
+            _startBgmRoutine = StartCoroutine(StartGameplayBgmNextFrame(bgmId));
         if (SortGameManager.Instance != null)
             SortGameManager.Instance.Resume();
+        if (UseDebugLog)
+        {
+            float tEnd = Time.realtimeSinceStartup;
+            Debug.LogWarning(
+                $"[Perf][Gameplay] StartLevel resetTimer={resetTimer} restartBgm={restartBgm} " +
+                $"duration={(tEnd - t0) * 1000f:0.0}ms bgmId={(string.IsNullOrEmpty(bgmId) ? "<none>" : bgmId)}");
+        }
+    }
+
+    private IEnumerator StartGameplayBgmNextFrame(string bgmId)
+    {
+        yield return null;
+        _startBgmRoutine = null;
+        if (SortEffectPoolManager.Instance == null) yield break;
+        var fx = SortEffectPoolManager.Instance;
+        fx.StopAudioChannelWithFade(SortAudioChannel.Bgm, bgmFadeOutOnGameplayStart);
+        if (string.IsNullOrEmpty(bgmId)) yield break;
+        fx.WarmupAudioGroup(bgmId);
+        float warmupTimeout = 1.25f;
+        float elapsed = 0f;
+        float t0 = Time.realtimeSinceStartup;
+        while (elapsed < warmupTimeout && !fx.IsAudioGroupLoaded(bgmId))
+        {
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+        if (UseDebugLog)
+            Debug.LogWarning($"[Perf][AudioWarmup] gameplayBgmId={bgmId} waited={(Time.realtimeSinceStartup - t0) * 1000f:0.0}ms loaded={fx.IsAudioGroupLoaded(bgmId)}");
+        fx.StopAudioGroup(bgmId);
+        fx.PlayAudioWithFadeIn(bgmId, SortAudioChannel.Bgm, gameplayBgmFadeInSeconds);
     }
 
     private int GetLevelUndoCount()
@@ -234,9 +295,15 @@ public class SortGameplayController : MonoBehaviour
     public void OnDahanComplete(SortDahan dahan)
     {
         if (dahan == null) return;
-        RemoveInvalidUndoRecords(dahan);
+        _completedDahansThisMove.Add(dahan);
         var resolved = levelLoader != null ? levelLoader.GetResolvedLevelSettings() : default;
         SortLevelRules.ProcessCompleteDahan(dahan, resolved.destroyBranchWhenComplete);
+    }
+
+    public void OnDahanCollectionStarted(SortDahan dahan)
+    {
+        if (dahan == null) return;
+        ClearLastMove();
     }
 
     public void NotifyLevelWinBeforeFeedback()
@@ -261,6 +328,7 @@ public class SortGameplayController : MonoBehaviour
     {
         if (_moveInProgress) { onComplete?.Invoke(); return; }
         if (source == null || dest == null || count <= 0) { onComplete?.Invoke(); return; }
+        _completedDahansThisMove.Clear();
 
         source.GetTopGroup(out int? topKind, out int actualCount, _tempSlots);
         if (!topKind.HasValue || actualCount == 0 || _tempSlots.Count == 0) { onComplete?.Invoke(); return; }
@@ -272,18 +340,22 @@ public class SortGameplayController : MonoBehaviour
         _moveInProgress = true;
         source.OnTransferOut();
 
-        var moving = new List<SortKarakter>(moveCount);
+        var moversTemp = new SortKarakter[moveCount];
+        var sourceSlotsTemp = new int[moveCount];
+        int moverCount = 0;
         for (int i = 0; i < moveCount; i++)
         {
             var c = source.RemoveCharacterAtSlot(_tempSlots[i]);
             if (c != null)
             {
                 c.transform.SetParent(dest.transform, true);
-                moving.Add(c);
+                moversTemp[moverCount] = c;
+                sourceSlotsTemp[moverCount] = _tempSlots[i];
+                moverCount++;
             }
         }
 
-        if (moving.Count == 0)
+        if (moverCount == 0)
         {
             _moveInProgress = false;
             onComplete?.Invoke();
@@ -293,13 +365,18 @@ public class SortGameplayController : MonoBehaviour
         if (!string.IsNullOrEmpty(sfxKindMoveId) && SortEffectPoolManager.Instance != null)
             SortEffectPoolManager.Instance.PlayAudio(sfxKindMoveId, SortAudioChannel.Sfx);
 
-        int moveCountFinal = moving.Count;
+        var movers = new SortKarakter[moverCount];
+        var sourceSlots = new int[moverCount];
+        Array.Copy(moversTemp, movers, moverCount);
+        Array.Copy(sourceSlotsTemp, sourceSlots, moverCount);
+
+        int moveCountFinal = moverCount;
         int arrived = 0;
-        for (int i = 0; i < moving.Count && i < _tempDestSlots.Count; i++)
+        for (int i = 0; i < moverCount && i < _tempDestSlots.Count; i++)
         {
             int slotIndex = _tempDestSlots[i];
             Vector3 targetPos = dest.GetSlotPosition(slotIndex);
-            SortKarakter c = moving[i];
+            SortKarakter c = movers[i];
             c.MoveTo(targetPos, () =>
             {
                 dest.AddCharacterAtSlot(c, slotIndex);
@@ -309,8 +386,19 @@ public class SortGameplayController : MonoBehaviour
                 {
                     dest.CompactSlots();
                     if (recordAsLastMove)
-                        AddUndoRecord(source, dest, moveCountFinal);
+                    {
+                        if (!_completedDahansThisMove.Contains(dest))
+                            AddUndoRecord(source, dest, movers, sourceSlots);
+                    }
                     _moveInProgress = false;
+                    if (_undoQueued)
+                    {
+                        _undoQueued = false;
+                        if (UseDebugLog)
+                            Debug.LogWarning("[Undo] dequeued after move complete");
+                        Undo();
+                        return;
+                    }
                     onComplete?.Invoke();
                     CheckLevelComplete();
                 }
@@ -318,15 +406,19 @@ public class SortGameplayController : MonoBehaviour
         }
     }
 
-    private void AddUndoRecord(SortDahan source, SortDahan dest, int count)
+    private void AddUndoRecord(SortDahan source, SortDahan dest, SortKarakter[] movers, int[] sourceSlots)
     {
-        if (source == null || dest == null || count <= 0) return;
+        if (source == null || dest == null) return;
+        if (movers == null || movers.Length == 0) return;
+        if (sourceSlots == null || sourceSlots.Length != movers.Length) return;
         if (_undoStartCount <= 0) return;
 
         if (!allowMultipleUndo)
             _undoHistory.Clear();
 
-        _undoHistory.Add(new MoveRecord(source, dest, count));
+        _undoHistory.Add(new MoveRecord(source, dest, movers, sourceSlots));
+        if (UseDebugLog)
+            Debug.LogWarning($"[Undo] record add count={movers.Length} source={source.name} dest={dest.name} history={_undoHistory.Count}");
 
         if (allowMultipleUndo && _undoStartCount > 0 && _undoHistory.Count > _undoStartCount)
             _undoHistory.RemoveAt(0);
@@ -335,6 +427,7 @@ public class SortGameplayController : MonoBehaviour
     private void ClearLastMove()
     {
         _undoHistory.Clear();
+        _undoQueued = false;
     }
 
     private void RemoveInvalidUndoRecords(SortDahan dahan)
@@ -350,13 +443,115 @@ public class SortGameplayController : MonoBehaviour
 
     public void Undo()
     {
-        if (!CanUndo) return;
-        _undoRemaining--;
-        RefreshUndoUsedCountUi();
-        int lastIndex = _undoHistory.Count - 1;
-        MoveRecord record = _undoHistory[lastIndex];
-        _undoHistory.RemoveAt(lastIndex);
-        DoMove(record.Dest, record.Source, record.Count, onComplete: null, recordAsLastMove: false);
+        if (UseDebugLog)
+            Debug.LogWarning($"[Undo] request remaining={_undoRemaining} running={running} ended={ended} paused={paused} moveInProgress={_moveInProgress} uiTransition={_uiTransitionInProgress} history={_undoHistory.Count} queued={_undoQueued}");
+        if (_undoRemaining <= 0) { if (UseDebugLog) Debug.LogWarning("[Undo] blocked: undoRemaining<=0"); return; }
+        if (!running || ended) { if (UseDebugLog) Debug.LogWarning("[Undo] blocked: not running or ended"); return; }
+        if (_moveInProgress)
+        {
+            _undoQueued = true;
+            if (UseDebugLog) Debug.LogWarning("[Undo] queued: move in progress");
+            return;
+        }
+
+        while (_undoHistory.Count > 0)
+        {
+            int lastIndex = _undoHistory.Count - 1;
+            MoveRecord record = _undoHistory[lastIndex];
+            _undoHistory.RemoveAt(lastIndex);
+            if (!IsUndoRecordValid(record, out string invalidReason))
+            {
+                if (UseDebugLog)
+                    Debug.LogWarning($"[Undo] skip invalid record count={record.Count} reason={invalidReason} source={(record.Source != null ? record.Source.name : "<null>")} dest={(record.Dest != null ? record.Dest.name : "<null>")}");
+                continue;
+            }
+            _undoRemaining--;
+            RefreshUndoUsedCountUi();
+            if (UseDebugLog)
+                Debug.LogWarning($"[Undo] execute count={record.Count} from={record.Dest.name} to={record.Source.name} remaining={_undoRemaining} historyLeft={_undoHistory.Count}");
+            DoUndoMove(record);
+            return;
+        }
+        if (UseDebugLog)
+            Debug.LogWarning("[Undo] no history record to undo");
+    }
+
+    private bool IsUndoRecordValid(MoveRecord record, out string invalidReason)
+    {
+        invalidReason = null;
+        if (record.Source == null || record.Dest == null) { invalidReason = "source/dest null"; return false; }
+        if (record.Movers == null || record.Movers.Length == 0) { invalidReason = "movers empty"; return false; }
+        if (record.SourceSlotIndices == null || record.SourceSlotIndices.Length != record.Movers.Length) { invalidReason = "slot indices mismatch"; return false; }
+        for (int i = 0; i < record.Movers.Length; i++)
+        {
+            var mover = record.Movers[i];
+            if (mover == null) { invalidReason = $"mover null at {i}"; return false; }
+            if (mover.GetDahan() != record.Dest) { invalidReason = $"mover not in dest at {i}"; return false; }
+            int slotIndex = record.SourceSlotIndices[i];
+            if (!record.Source.IsSlotEmpty(slotIndex)) { invalidReason = $"source slot not empty at {slotIndex}"; return false; }
+        }
+        return true;
+    }
+
+    private void DoUndoMove(MoveRecord record)
+    {
+        if (_moveInProgress) return;
+        if (record.Source == null || record.Dest == null) return;
+        if (record.Movers == null || record.Movers.Length == 0) return;
+        if (record.SourceSlotIndices == null || record.SourceSlotIndices.Length != record.Movers.Length) return;
+
+        _moveInProgress = true;
+        record.Dest.OnTransferOut();
+
+        int moveCountFinal = record.Movers.Length;
+        int arrived = 0;
+        for (int i = 0; i < record.Movers.Length; i++)
+        {
+            var c = record.Movers[i];
+            int slotIndex = record.SourceSlotIndices[i];
+            if (c == null)
+            {
+                arrived++;
+                continue;
+            }
+            record.Dest.RemoveCharacter(c);
+            c.transform.SetParent(record.Source.transform, true);
+            Vector3 targetPos = record.Source.GetSlotPosition(slotIndex);
+            c.MoveTo(targetPos, () =>
+            {
+                record.Source.AddCharacterAtSlot(c, slotIndex);
+                record.Source.OnTransferIn();
+                arrived++;
+                if (arrived >= moveCountFinal)
+                {
+                    record.Dest.CompactSlots();
+                    _moveInProgress = false;
+                    if (_undoQueued)
+                    {
+                        _undoQueued = false;
+                        if (UseDebugLog)
+                            Debug.LogWarning("[Undo] dequeued after undo complete");
+                        Undo();
+                        return;
+                    }
+                    CheckLevelComplete();
+                }
+            });
+        }
+        if (arrived >= moveCountFinal)
+        {
+            record.Dest.CompactSlots();
+            _moveInProgress = false;
+            if (_undoQueued)
+            {
+                _undoQueued = false;
+                if (UseDebugLog)
+                    Debug.LogWarning("[Undo] dequeued after undo complete");
+                Undo();
+                return;
+            }
+            CheckLevelComplete();
+        }
     }
 
     public void AddUndo(int amount)
@@ -458,15 +653,14 @@ public class SortGameplayController : MonoBehaviour
         if (levelLoader == null) return;
         int idx = levelLoader.GetLevelIndexInDatabase();
         if (idx < 0) return;
-        _uiTransitionInProgress = true;
         int total = levelLoader.GetTotalLevelCount();
         int next = idx + 1;
         if (next >= total)
         {
-            BackToMainMenu();
+            DoBackToMainMenu(ignoreTransitionGuard: true);
             return;
         }
-
+        _uiTransitionInProgress = true;
         SortEventManager.Publish(new UIActionEvent("Level", next.ToString()));
     }
 
@@ -503,7 +697,12 @@ public class SortGameplayController : MonoBehaviour
 
     public void BackToMainMenu()
     {
-        if (_uiTransitionInProgress) return;
+        DoBackToMainMenu(ignoreTransitionGuard: false);
+    }
+
+    private void DoBackToMainMenu(bool ignoreTransitionGuard)
+    {
+        if (!ignoreTransitionGuard && _uiTransitionInProgress) return;
         _uiTransitionInProgress = true;
         StopResultAndUiSfx();
         ended = true;
@@ -531,6 +730,8 @@ public class SortGameplayController : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (_startBgmRoutine != null)
+            StopCoroutine(_startBgmRoutine);
         if (Instance == this)
             Instance = null;
     }

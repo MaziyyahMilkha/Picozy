@@ -9,6 +9,8 @@ using UnityEditor;
 [ExecuteAlways]
 public class SortLevelPath : MonoBehaviour
 {
+    private const bool UseDebugLog = true;
+
     [Serializable]
     public class LinkCurveSettings
     {
@@ -78,7 +80,6 @@ public class SortLevelPath : MonoBehaviour
 
     private void OnEnable()
     {
-        _runtimeBuilt = false;
         _animatedLinkIndex = -1;
         _animatedDotCursor = 0;
         _animatedTimer = 0f;
@@ -87,8 +88,10 @@ public class SortLevelPath : MonoBehaviour
 
     private void OnDisable()
     {
-        _runtimeBuilt = false;
-        _runtimeDots.Clear();
+        _animatedLinkIndex = -1;
+        _animatedDotCursor = 0;
+        _animatedTimer = 0f;
+        _animateWaitingDelay = false;
     }
 
     private void OnValidate()
@@ -234,6 +237,7 @@ public class SortLevelPath : MonoBehaviour
     private void EnsureRuntimeDotsBuilt()
     {
         if (_runtimeBuilt) return;
+        float t0 = Time.realtimeSinceStartup;
         _runtimeBuilt = false;
         _runtimeDots.Clear();
 
@@ -266,6 +270,13 @@ public class SortLevelPath : MonoBehaviour
             }
         }
         _runtimeBuilt = true;
+
+        float elapsed = Time.realtimeSinceStartup - t0;
+        if (UseDebugLog)
+        {
+            Debug.LogWarning(
+                $"[Perf][SortLevelPath] BuildDots links={GetLinkCount()} dots={_runtimeDots.Count} total={elapsed * 1000f:0.0}ms");
+        }
     }
 
     private void UpdateRuntimeLightDots()

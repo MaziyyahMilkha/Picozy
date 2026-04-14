@@ -159,4 +159,12 @@ public class UIButtonClickAnimate : MonoBehaviour,
     {
         TryPlayClickAudio();
     }
+
+    public void Undo()
+    {
+        var gameplay = SortGameplayController.Instance;
+        Debug.LogWarning($"[UndoButton] click gameplay={(gameplay != null ? gameplay.name : "<null>")}");
+        if (gameplay != null)
+            gameplay.Undo();
+    }
 }

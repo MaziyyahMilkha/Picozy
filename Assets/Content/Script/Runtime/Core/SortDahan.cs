@@ -285,6 +285,8 @@ public class SortDahan : MonoBehaviour
         isBroken = true;
         var col = GetComponent<Collider>();
         if (col != null) col.enabled = false;
+        if (SortGameplayController.Instance != null)
+            SortGameplayController.Instance.OnDahanCollectionStarted(this);
 
         if (enableCompleteFeedback)
         {

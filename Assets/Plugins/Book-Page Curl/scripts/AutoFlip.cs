@@ -10,13 +10,18 @@ public class AutoFlip : MonoBehaviour {
     public Book ControledBook;
     public int AnimationFramesCount = 40;
     bool isFlipping = false;
+    private Coroutine _sequenceRoutine;
+    private UnityEngine.Events.UnityAction _pageFlippedAction;
     // Use this for initialization
     void Start () {
         if (!ControledBook)
             ControledBook = GetComponent<Book>();
         if (AutoStartFlip)
             StartFlipping();
-        ControledBook.OnFlip.AddListener(new UnityEngine.Events.UnityAction(PageFlipped));
+        if (_pageFlippedAction == null)
+            _pageFlippedAction = new UnityEngine.Events.UnityAction(PageFlipped);
+        if (ControledBook != null && ControledBook.OnFlip != null)
+            ControledBook.OnFlip.AddListener(_pageFlippedAction);
 	}
     void PageFlipped()
     {
@@ -24,7 +29,9 @@ public class AutoFlip : MonoBehaviour {
     }
 	public void StartFlipping()
     {
-        StartCoroutine(FlipToEnd());
+        if (_sequenceRoutine != null)
+            StopCoroutine(_sequenceRoutine);
+        _sequenceRoutine = StartCoroutine(FlipToEnd());
     }
     public void FlipRightPage()
     {
@@ -92,6 +99,7 @@ public class AutoFlip : MonoBehaviour {
                 }
                 break;
         }
+        _sequenceRoutine = null;
     }
     IEnumerator FlipRTL(float xc, float xl, float h, float frameTime, float dx)
     {
@@ -121,5 +129,23 @@ public class AutoFlip : MonoBehaviour {
             x += dx;
         }
         ControledBook.ReleasePage();
+    }
+
+    public void ResetState()
+    {
+        StopAllCoroutines();
+        _sequenceRoutine = null;
+        isFlipping = false;
+    }
+
+    private void OnDisable()
+    {
+        ResetState();
+    }
+
+    private void OnDestroy()
+    {
+        if (ControledBook != null && ControledBook.OnFlip != null && _pageFlippedAction != null)
+            ControledBook.OnFlip.RemoveListener(_pageFlippedAction);
     }
 }

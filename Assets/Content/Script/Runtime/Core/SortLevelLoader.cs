@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class SortLevelLoader : MonoBehaviour
 {
+    private const bool UseDebugLog = true;
     [Header("Level")]
     private SortLevelAsset currentLevel;
     [SerializeField] private SortLevelDatabase database;
@@ -31,17 +32,33 @@ public class SortLevelLoader : MonoBehaviour
 
     private void OnLevelEvent(string levelIndexStr)
     {
+        float t0 = Time.realtimeSinceStartup;
         if (database == null) return;
         if (!int.TryParse(levelIndexStr, out int globalIndex) || globalIndex < 0 || globalIndex >= database.GetTotalLevelCount()) return;
+        float tParsed = Time.realtimeSinceStartup;
         SortLevelAsset asset = database.GetLevelAssetByGlobalIndex(globalIndex);
         if (asset == null) return;
+        var resolved = database.GetResolvedSettings(globalIndex);
+        if (SortEffectPoolManager.Instance != null && !string.IsNullOrEmpty(resolved.audioId))
+            SortEffectPoolManager.Instance.WarmupAudioGroup(resolved.audioId);
+        float tAsset = Time.realtimeSinceStartup;
         SetLevel(asset);
         LoadLevel();
+        float tLoad = Time.realtimeSinceStartup;
         SortEventManager.Publish(new UIActionEvent("LevelLoaded", levelIndexStr));
+        float tPublish = Time.realtimeSinceStartup;
+        if (UseDebugLog)
+        {
+            Debug.LogWarning(
+                $"[Perf][LevelLoad] OnLevelEvent global={globalIndex} " +
+                $"parse={(tParsed - t0) * 1000f:0.0}ms getAsset={(tAsset - tParsed) * 1000f:0.0}ms " +
+                $"loadLevel={(tLoad - tAsset) * 1000f:0.0}ms publish={(tPublish - tLoad) * 1000f:0.0}ms total={(tPublish - t0) * 1000f:0.0}ms");
+        }
     }
 
     public void LoadLevel()
     {
+        float t0 = Time.realtimeSinceStartup;
         if (currentLevel == null) return;
         SortLevelData data = currentLevel.GetData();
         if (data == null) return;
@@ -60,7 +77,15 @@ public class SortLevelLoader : MonoBehaviour
         if (rightDahanPrefab == null) rightDahanPrefab = leftDahanPrefab;
 
         Clear();
+        float tClear = Time.realtimeSinceStartup;
         SpawnLevel(data);
+        float tSpawn = Time.realtimeSinceStartup;
+        if (UseDebugLog)
+        {
+            Debug.LogWarning(
+                $"[Perf][LevelLoad] LoadLevel clear={(tClear - t0) * 1000f:0.0}ms " +
+                $"spawn={(tSpawn - tClear) * 1000f:0.0}ms total={(tSpawn - t0) * 1000f:0.0}ms chars={_spawnedCharacterCount} branches={spawnedDahans.Count}");
+        }
     }
 
     public void SetLevel(SortLevelAsset level)

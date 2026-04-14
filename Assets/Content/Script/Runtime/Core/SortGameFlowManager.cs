@@ -15,10 +15,18 @@ public class SortGameFlowManager : MonoBehaviour
     [SerializeField] private float mainMenuBgmFadeInSeconds = 0.08f;
     [SerializeField] private float mainMenuBgmFadeOutOtherBgmSeconds = 0.12f;
 
+    [Header("Audio warmup")]
+    [SerializeField] private bool warmupAudioOnSplash = true;
+    [SerializeField] private bool warmupLoopingAudioOnly = true;
+    [SerializeField] private float warmupFrameBudgetMs = 2.5f;
+    [SerializeField] private float warmupTotalBudgetSeconds = 1.5f;
+
     [Header("Debug")]
     [SerializeField] private int debugLevel;
+    [SerializeField] private bool debugAudioWarmupLog = true;
     private Coroutine _pendingMainMenuBgmRoutine;
     private Coroutine _settingsBindRoutine;
+    private Coroutine _audioWarmupRoutine;
     private bool _settingsSubscribed;
     private bool _isMapFlowActive = true;
 
@@ -68,6 +76,7 @@ public class SortGameFlowManager : MonoBehaviour
     private void OnStart()
     {
         SortEventManager.Publish(new UIActionEvent("SwitchCanvas", splashCanvasId));
+        TryStartAudioWarmup();
     }
 
     private void OnMap()
@@ -190,12 +199,46 @@ public class SortGameFlowManager : MonoBehaviour
             TryPlayMainMenuBgm();
     }
 
+    private void TryStartAudioWarmup()
+    {
+        if (!warmupAudioOnSplash) return;
+        if (_audioWarmupRoutine != null) return;
+        _audioWarmupRoutine = StartCoroutine(AudioWarmupRoutine());
+    }
+
+    private IEnumerator AudioWarmupRoutine()
+    {
+        const float timeout = 2f;
+        float t0 = Time.realtimeSinceStartup;
+        float elapsed = 0f;
+        while (elapsed < timeout)
+        {
+            var fx = SortEffectPoolManager.Instance;
+            if (fx != null)
+            {
+                yield return null;
+                if (debugAudioWarmupLog)
+                    Debug.LogWarning($"[Perf][AudioWarmup] start loopingOnly={warmupLoopingAudioOnly} frameBudgetMs={warmupFrameBudgetMs:0.0} totalBudgetS={warmupTotalBudgetSeconds:0.00}");
+                fx.WarmupAllAudioGroups(warmupLoopingAudioOnly, warmupFrameBudgetMs, warmupTotalBudgetSeconds);
+                _audioWarmupRoutine = null;
+                yield break;
+            }
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+        if (debugAudioWarmupLog)
+            Debug.LogWarning($"[Perf][AudioWarmup] skipped (SortEffectPoolManager not ready) waited={(Time.realtimeSinceStartup - t0) * 1000f:0.0}ms");
+        _audioWarmupRoutine = null;
+    }
+
     private void OnDestroy()
     {
         if (_pendingMainMenuBgmRoutine != null)
             StopCoroutine(_pendingMainMenuBgmRoutine);
         if (_settingsBindRoutine != null)
             StopCoroutine(_settingsBindRoutine);
+        if (_audioWarmupRoutine != null)
+            StopCoroutine(_audioWarmupRoutine);
         UnbindSettingsEvents();
         if (Instance == this)
             Instance = null;

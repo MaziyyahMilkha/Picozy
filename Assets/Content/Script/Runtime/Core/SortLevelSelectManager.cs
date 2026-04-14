@@ -5,6 +5,7 @@ using System.Collections.Generic;
 public class SortLevelSelectManager : MonoBehaviour
 {
     public const string SaveKey = "SortLevelProgress";
+    private const bool UseDebugLog = true;
 
     public static SortLevelSelectManager Instance { get; private set; }
 
@@ -50,11 +51,24 @@ public class SortLevelSelectManager : MonoBehaviour
     private void OnOpenLevelSelector(string mapId)
     {
         if (database == null || string.IsNullOrEmpty(mapId)) return;
+        float t0 = Time.realtimeSinceStartup;
         int mapIndex = database.GetMapIndexById(mapId);
+        float tLookup = Time.realtimeSinceStartup;
         if (mapIndex >= 0)
             SetMap(mapIndex);
+        float tSetMap = Time.realtimeSinceStartup;
         if (!string.IsNullOrEmpty(levelSelectorCanvasId))
             SortEventManager.Publish(new UIActionEvent("SwitchCanvas", levelSelectorCanvasId));
+        float tEnd = Time.realtimeSinceStartup;
+
+        float total = tEnd - t0;
+        if (UseDebugLog)
+        {
+            Debug.LogWarning(
+                $"[Perf][LevelSelector] OpenLevelSelector mapId={mapId} mapIndex={mapIndex} " +
+                $"lookup={(tLookup - t0) * 1000f:0.0}ms setMap={(tSetMap - tLookup) * 1000f:0.0}ms " +
+                $"switchCanvas={(tEnd - tSetMap) * 1000f:0.0}ms total={total * 1000f:0.0}ms");
+        }
     }
 
     private void OnDestroy()
@@ -141,10 +155,17 @@ public class SortLevelSelectManager : MonoBehaviour
         if (levelCountInMap <= 0) return 0;
 
         int mapStartGlobal = GetGlobalStartIndexForMap(_currentMapIndex);
-        int mapEndGlobal = mapStartGlobal + levelCountInMap - 1;
-        int nextUnlockedGlobal = _highestCompletedGlobalIndex + 1;
-        int targetGlobal = Mathf.Clamp(nextUnlockedGlobal, mapStartGlobal, mapEndGlobal);
-        int localLevelIndex = targetGlobal - mapStartGlobal;
+        int localLevelIndex = 0;
+        for (int i = 0; i < levelCountInMap; i++)
+        {
+            int global = mapStartGlobal + i;
+            if (GetSlotState(global) == LevelSlotState.Available)
+            {
+                localLevelIndex = i;
+                break;
+            }
+        }
+
         int page = localLevelIndex / Mathf.Max(1, LevelsPerPage);
         int maxPage = Mathf.Max(0, GetTotalPagesInMap(_currentMapIndex) - 1);
         return Mathf.Clamp(page, 0, maxPage);
@@ -163,6 +184,8 @@ public class SortLevelSelectManager : MonoBehaviour
     {
         int globalIndex = GetGlobalLevelIndexForSlot(slotIndex);
         if (globalIndex < 0) return;
+        if (UseDebugLog)
+            Debug.LogWarning($"[Perf][LevelSelector] PlayLevelAtSlot slot={slotIndex} globalIndex={globalIndex} map={_currentMapIndex} page={_currentPageIndex}");
         SortEventManager.Publish(new UIActionEvent("Level", globalIndex.ToString()));
     }
 
@@ -190,7 +213,7 @@ public class SortLevelSelectManager : MonoBehaviour
         if (globalLevelIndex < 0) return;
         starCount = Mathf.Clamp(starCount, 1, 3);
         while (_starsPerLevel.Count <= globalLevelIndex)
-            _starsPerLevel.Add(1);
+            _starsPerLevel.Add(0);
         _starsPerLevel[globalLevelIndex] = starCount;
         if (globalLevelIndex > _highestCompletedGlobalIndex)
             _highestCompletedGlobalIndex = globalLevelIndex;
@@ -199,9 +222,8 @@ public class SortLevelSelectManager : MonoBehaviour
 
     public int GetStarsForLevel(int globalLevelIndex)
     {
-        if (globalLevelIndex < 0 || globalLevelIndex > _highestCompletedGlobalIndex) return 0;
-        if (globalLevelIndex >= _starsPerLevel.Count) return 1;
-        return Mathf.Clamp(_starsPerLevel[globalLevelIndex], 1, 3);
+        if (globalLevelIndex < 0 || globalLevelIndex >= _starsPerLevel.Count) return 0;
+        return Mathf.Clamp(_starsPerLevel[globalLevelIndex], 0, 3);
     }
 
     private void LoadProgress()
@@ -235,11 +257,34 @@ public class SortLevelSelectManager : MonoBehaviour
 
     public LevelSlotState GetSlotState(int globalLevelIndex)
     {
-        if (globalLevelIndex <= _highestCompletedGlobalIndex) return LevelSlotState.Completed;
-        if (globalLevelIndex == _highestCompletedGlobalIndex + 1) return LevelSlotState.Available;
-        if (database != null && database.unlockFirstLevelPerMap && database.IsFirstLevelOfAnyMap(globalLevelIndex))
+        if (IsLevelCompleted(globalLevelIndex))
+            return LevelSlotState.Completed;
+
+        if (database != null && database.IsFirstLevelOfAnyMap(globalLevelIndex))
             return LevelSlotState.Available;
+
+        int prev = GetPreviousLevelInSameMap(globalLevelIndex);
+        if (prev >= 0 && IsLevelCompleted(prev))
+            return LevelSlotState.Available;
+
         return LevelSlotState.Locked;
+    }
+
+    private bool IsLevelCompleted(int globalLevelIndex)
+    {
+        if (globalLevelIndex < 0 || globalLevelIndex >= _starsPerLevel.Count) return false;
+        return _starsPerLevel[globalLevelIndex] > 0;
+    }
+
+    private int GetPreviousLevelInSameMap(int globalLevelIndex)
+    {
+        if (database == null || globalLevelIndex < 0) return -1;
+        int mapIndex = database.GetMapIndexForGlobalIndex(globalLevelIndex);
+        if (mapIndex < 0) return -1;
+        int mapStart = GetGlobalStartIndexForMap(mapIndex);
+        int local = globalLevelIndex - mapStart;
+        if (local <= 0) return -1;
+        return globalLevelIndex - 1;
     }
 
     public Sprite GetCurrentMapLevelSelectorBackground()

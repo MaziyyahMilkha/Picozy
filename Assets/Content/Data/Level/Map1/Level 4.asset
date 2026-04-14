@@ -20,14 +20,15 @@ MonoBehaviour:
     levelDurationSeconds: 135
     undoCount: 3
     destroyBranchWhenComplete: 1
-    backgroundTheme: {fileID: 21300000, guid: c5a34a109c5bd9b4d9ff7bf3ce75b3f6, type: 3}
-    audioId: 
+    backgroundTheme: {fileID: 21300000, guid: c6b3d7867e9c286459630e2c49da4fc4, type: 3}
+    audioId: Map1
     leftBranches:
-    - slots: 060000000200000007000000
+    - slots: 060000000600000007000000
+    - slots: 010000000200000000000000
     - slots: 070000000300000002000000
-    - slots: 070000000600000007000000
-    - slots: 000000000000000000000000
+    - slots: 070000000000000000000000
     rightBranches:
-    - slots: 010000000700000003000000
-    - slots: 030000000600000007000000
-    - slots: 010000000200000001000000
+    - slots: 030000000200000001000000
+    - slots: 070000000100000000000000
+    - slots: 070000000300000000000000
+    - slots: 070000000600000000000000

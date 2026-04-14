@@ -1,4 +1,4 @@
-﻿//The implementation is based on this article:http://rbarraza.com/html5-canvas-pageflip/
+//The implementation is based on this article:http://rbarraza.com/html5-canvas-pageflip/
 //As the rbarraza.com website is not live anymore you can get an archived version from web archive 
 //or check an archived version that I uploaded on my website: https://dandarawy.com/html5-canvas-pageflip/
 
@@ -444,5 +444,42 @@ public class Book : MonoBehaviour {
         }
         if (onFinish != null)
             onFinish();
+    }
+
+    public void ResetToFirstPage()
+    {
+        ResetToPage(0);
+    }
+
+    public void ResetToPage(int pageIndex)
+    {
+        if (currentCoroutine != null)
+        {
+            StopCoroutine(currentCoroutine);
+            currentCoroutine = null;
+        }
+
+        pageDragging = false;
+
+        int max = bookPages != null ? Mathf.Max(0, bookPages.Length) : 0;
+        if (max == 0)
+            currentPage = 0;
+        else
+        {
+            int clamped = Mathf.Clamp(pageIndex, 0, max - 1);
+            currentPage = clamped - (clamped % 2);
+        }
+
+        if (LeftNext != null) LeftNext.transform.SetParent(BookPanel.transform, true);
+        if (Left != null) Left.transform.SetParent(BookPanel.transform, true);
+        if (Right != null) Right.transform.SetParent(BookPanel.transform, true);
+        if (RightNext != null) RightNext.transform.SetParent(BookPanel.transform, true);
+
+        if (Left != null) Left.gameObject.SetActive(false);
+        if (Right != null) Right.gameObject.SetActive(false);
+        if (Shadow != null) Shadow.gameObject.SetActive(false);
+        if (ShadowLTR != null) ShadowLTR.gameObject.SetActive(false);
+
+        UpdateSprites();
     }
 }
