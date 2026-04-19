@@ -870,7 +870,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 8885661291026860136}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: UIButtonClickAnimate, Assembly-CSharp
         m_MethodName: Undo
         m_Mode: 1
@@ -961,7 +961,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &7802848886969408525
 RectTransform:
   m_ObjectHideFlags: 0

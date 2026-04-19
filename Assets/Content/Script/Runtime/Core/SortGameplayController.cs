@@ -42,7 +42,7 @@ public class SortGameplayController : MonoBehaviour
     [Header("Timer & stars")]
     [SerializeField] private SortStarDisplay starDisplay;
     [SerializeField] private bool pauseStopsTimer = true;
-    [SerializeField] private bool keepTimerWhenRestartingFromGameplay = true;
+    [SerializeField] private bool keepTimerWhenRestartingFromGameplay = false;
     [SerializeField] private TextMeshProUGUI undoUsedCountText;
     [SerializeField] private bool allowMultipleUndo = true;
 
@@ -684,7 +684,9 @@ public class SortGameplayController : MonoBehaviour
     {
         if (_uiTransitionInProgress) return;
         if (levelLoader == null) return;
-        bool preserveTimer = keepTimerWhenRestartingFromGameplay && running && !ended;
+        // The user requested that restarting the level should reset everything.
+        // So we do not preserve the timer, and we restart the BGM.
+        bool preserveTimer = false;
         float preservedTime = timeRemaining;
         _uiTransitionInProgress = true;
         StopResultAndUiSfx();
@@ -692,7 +694,7 @@ public class SortGameplayController : MonoBehaviour
         levelLoader.LoadLevel();
         ApplyLevelTheme();
         SortEventManager.Publish(new UIActionEvent("OpenCanvas", gameplayCanvasId));
-        StartLevel(!preserveTimer, preservedTime, restartBgm: false);
+        StartLevel(!preserveTimer, preservedTime, restartBgm: true);
     }
 
     public void BackToMainMenu()
